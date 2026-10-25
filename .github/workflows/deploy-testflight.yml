@@ -76,6 +76,11 @@ jobs:
           cp -r build/luksMusic.xcarchive/Products/Applications/luksMusic.app build/ipa/Payload/
           cp embedded.mobileprovision build/ipa/Payload/luksMusic.app/embedded.mobileprovision
           
+          # Explicitly set CFBundleVersion to 2
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 2" build/ipa/Payload/luksMusic.app/Info.plist || \
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string 2" build/ipa/Payload/luksMusic.app/Info.plist
+          echo "Verified CFBundleVersion: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' build/ipa/Payload/luksMusic.app/Info.plist)"
+          
           # Copy App Icon files directly into app root for explicit legacy bundle validation
           cp luksMusic/icon-120.png build/ipa/Payload/luksMusic.app/AppIcon60x60@2x.png || true
           cp luksMusic/icon-152.png build/ipa/Payload/luksMusic.app/AppIcon76x76@2x~ipad.png || true
@@ -112,7 +117,6 @@ jobs:
           path: build/luksMusic-TestFlight.ipa
 
       - name: Upload to TestFlight (App Store Connect)
-        if: env.APP_STORE_CONNECT_API_KEY != ''
         env:
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
