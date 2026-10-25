@@ -243,7 +243,7 @@ final class MIDIFilePlayer {
             return
         }
         
-        guard engine.isRunning else {
+        if !engine.isRunning {
             do {
                 try engine.start()
             } catch {
