@@ -39,6 +39,7 @@ jobs:
         run: |
           mkdir -p build/ipa/Payload
           cp -r build/luksMusic.xcarchive/Products/Applications/luksMusic.app build/ipa/Payload/
+          cp embedded.mobileprovision build/ipa/Payload/luksMusic.app/embedded.mobileprovision
           cd build/ipa
           zip -qr ../luksMusic-TestFlight.ipa Payload
           cd ../..
