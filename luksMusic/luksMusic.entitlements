@@ -2,5 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>beta-reports-active</key>
+	<true/>
+	<key>application-identifier</key>
+	<string>74MT6TY59M.com.lukstrike.luksMusic</string>
+	<key>com.apple.developer.team-identifier</key>
+	<string>74MT6TY59M</string>
+	<key>get-task-allow</key>
+	<false/>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>74MT6TY59M.*</string>
+	</array>
 </dict>
 </plist>

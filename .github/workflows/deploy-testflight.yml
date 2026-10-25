@@ -24,6 +24,23 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
+      - name: Install Apple Distribution Certificate
+        env:
+          APPLE_DIST_CERTIFICATE_P12: ${{ secrets.APPLE_DIST_CERTIFICATE_P12 }}
+          APPLE_DIST_P12_PASSWORD: ${{ secrets.APPLE_DIST_P12_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD="temp_runner_password"
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          echo "$APPLE_DIST_CERTIFICATE_P12" | base64 --decode > $RUNNER_TEMP/cert.p12
+          security import $RUNNER_TEMP/cert.p12 -k $KEYCHAIN_PATH -P "$APPLE_DIST_P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychains -d user -s $KEYCHAIN_PATH $(security list-keychains -d user | tr -d '"')
+
       - name: Build Archive for App Store
         run: |
           xcodebuild archive \
@@ -35,11 +52,31 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
-      - name: Export IPA
+      - name: Export and Sign IPA
         run: |
           mkdir -p build/ipa/Payload
           cp -r build/luksMusic.xcarchive/Products/Applications/luksMusic.app build/ipa/Payload/
           cp embedded.mobileprovision build/ipa/Payload/luksMusic.app/embedded.mobileprovision
+          
+          # Extract entitlements directly from provisioning profile
+          security cms -D -i embedded.mobileprovision > build/profile.plist
+          /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' build/profile.plist > build/entitlements.plist
+          
+          # Sign embedded frameworks if any exist
+          if [ -d "build/ipa/Payload/luksMusic.app/Frameworks" ]; then
+            for framework in build/ipa/Payload/luksMusic.app/Frameworks/*; do
+              if [ -e "$framework" ]; then
+                /usr/bin/codesign --force --sign "Apple Distribution" --timestamp "$framework"
+              fi
+            done
+          fi
+          
+          # Sign main app bundle
+          /usr/bin/codesign --force --sign "Apple Distribution" --entitlements build/entitlements.plist --timestamp --generate-entitlement-der build/ipa/Payload/luksMusic.app
+          
+          # Verify signature
+          /usr/bin/codesign -vvv --deep --strict build/ipa/Payload/luksMusic.app
+          
           cd build/ipa
           zip -qr ../luksMusic-TestFlight.ipa Payload
           cd ../..
