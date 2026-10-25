@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>luksMusic - Dark Dream (MuseScore Web Player)</title>
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --paper-color: #ffffff;
+            --ink-color: #111111;
+            --accent-color: #2563eb;
+            --cursor-color: rgba(37, 99, 235, 0.35);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Toolbar */
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 18px;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .title-block p {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        button.btn-play {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+            transition: all 0.15s ease;
+        }
+
+        button.btn-play:hover {
+            transform: scale(1.05);
+            background: #1d4ed8;
+        }
+
+        button.btn-secondary {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        button.btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .tempo-ctrl {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        /* Score Display Area */
+        .score-container {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: auto;
+            background: #e5e7eb;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .sheet-paper {
+            background: var(--paper-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            padding: 40px 48px;
+            border-radius: 4px;
+            min-width: 960px;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .score-header-engraved {
+            text-align: center;
+            border-bottom: 1px solid #111;
+            padding-bottom: 12px;
+            position: relative;
+        }
+
+        .score-header-engraved h2 {
+            margin: 0;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 26px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .score-header-engraved .composer {
+            font-family: "Times New Roman", Times, serif;
+            font-style: italic;
+            font-size: 14px;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        .score-header-engraved .tempo-mark {
+            position: absolute;
+            left: 0;
+            bottom: 4px;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        /* System Rows */
+        .system-row {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        svg.system-svg {
+            width: 100%;
+            height: 220px;
+            overflow: visible;
+        }
+
+        /* Cursor */
+        .playback-cursor {
+            position: absolute;
+            top: 20px;
+            width: 3px;
+            height: 170px;
+            background: var(--accent-color);
+            opacity: 0.45;
+            pointer-events: none;
+            transition: left 0.03s linear;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-block">
+            <h1>Dark Dream (Lord of the Mysteries ED)</h1>
+            <p>Curley Gao • Arr. 11Minnie11 • C Minor / Eb Major • 70 BPM</p>
+        </div>
+
+        <div class="controls">
+            <button id="playBtn" class="btn-play">▶</button>
+            <button id="stopBtn" class="btn-secondary">Parar</button>
+            <div class="tempo-ctrl">
+                <span>♩ = <strong id="bpmDisplay">70</strong> BPM</span>
+                <input type="range" id="bpmSlider" min="40" max="140" value="70">
+            </div>
+            <button id="measureSelectBtn" class="btn-secondary">Compasso: <span id="currentMDisplay">1 / 9</span></button>
+        </div>
+    </header>
+
+    <div class="score-container">
+        <div class="sheet-paper">
+            <div class="score-header-engraved">
+                <span class="tempo-mark">♩ = 70</span>
+                <h2>DARK DREAM (LOTM ED)</h2>
+                <div class="composer">Curley Gao • Arr. 11Minnie11</div>
+            </div>
+
+            <!-- System 1: Measures 1, 2, 3 -->
+            <div class="system-row" id="sysRow1">
+                <div class="playback-cursor" id="cursor1"></div>
+                <svg id="sys1Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+
+            <!-- System 2: Measures 4, 5, 6 -->
+            <div class="system-row" id="sysRow2">
+                <div class="playback-cursor" id="cursor2"></div>
+                <svg id="sys2Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+
+            <!-- System 3: Measures 7, 8, 9 -->
+            <div class="system-row" id="sysRow3">
+                <div class="playback-cursor" id="cursor3"></div>
+                <svg id="sys3Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // -------------------------------------------------------------
+        // 1. DATA MODEL: All 9 Measures of Dark Dream
+        // -------------------------------------------------------------
+        const SCORE_DATA = [
+            // Measure 1
+            {
+                number: 1,
+                treble: [
+                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "When" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 3.0, dur: "8th", triplet: true, lyric: "my" },
+                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 4.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.0, dur: "8th", triplet: true, lyric: "eyes" },
+                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 4.667, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.667, dur: "8th", triplet: true, lyric: "a-wake" }
+                ],
+                bass: [
+                    { midi: 48, name: "C3", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 2.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 3.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 2
+            {
+                number: 2,
+                treble: [
+                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "Skies" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true, lyric: "start" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 3.0, dur: "8th", triplet: true, lyric: "to" },
+                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 4.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.0, dur: "8th", triplet: true, lyric: "break" },
+                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 4.667, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.667, dur: "8th", triplet: true, lyric: "break" }
+                ],
+                bass: [
+                    { midi: 46, name: "Bb2", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 2.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 3.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 3
+            {
+                number: 3,
+                treble: [
+                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "Storms" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true, lyric: "o-" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 68, name: "Ab4", beat: 3.0, dur: "8th", triplet: true },
+                    { midi: 80, name: "Ab5", beat: 3.0, dur: "quarter", lyric: "-ver-" },
+                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 68, name: "Ab4", beat: 4.0, dur: "8th", triplet: true, lyric: "take" },
+                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 4.667, dur: "8th", triplet: true }
+                ],
+                bass: [
+                    { midi: 56, name: "Ab3", beat: 1.0, dur: "quarter" },
+                    { midi: 60, name: "C4", beat: 1.0, dur: "quarter" },
+                    { midi: 60, name: "C4", beat: 2.0, dur: "quarter" },
+                    { midi: 53, name: "F3", beat: 3.0, dur: "quarter" },
+                    { midi: 53, name: "F3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 4
+            {
+                number: 4,
+                treble: [
+                    { midi: 68, name: "Ab4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 1.0, dur: "quarter", lyric: "Clocks" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 68, name: "Ab4", beat: 2.0, dur: "8th", triplet: true, lyric: "cease" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 65, name: "F4", beat: 3.0, dur: "8th", triplet: true, lyric: "to" },
+                    { midi: 71, name: "B4", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 74, name: "D5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 65, name: "F4", beat: 4.0, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 4.0, dur: "8th", triplet: true, lyric: "shake" },
+                    { midi: 71, name: "B4", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 74, name: "D5", beat: 4.667, dur: "8th", triplet: true },
+                    { midi: 80, name: "Ab5", beat: 4.667, dur: "8th", triplet: true }
+                ],
+                bass: [
+                    { midi: 47, name: "B2", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 1.0, dur: "quarter" },
+                    { midi: 53, name: "F3", beat: 2.0, dur: "quarter" },
+                    { midi: 51, name: "Eb3", beat: 3.0, dur: "quarter" },
+                    { midi: 50, name: "D3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 5
+            {
+                number: 5,
+                treble: [
+                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "Home-" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true, lyric: "-less" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 3.0, dur: "8th", triplet: true, lyric: "for-" },
+                    { midi: 72, name: "C5", beat: 3.0, dur: "8th", triplet: true },
+                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 4.0, dur: "8th", triplet: true },
+                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true, lyric: "sake" },
+                    { midi: 75, name: "Eb5", beat: 4.667, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.667, dur: "8th", triplet: true }
+                ],
+                bass: [
+                    { midi: 36, name: "C2", beat: 1.0, dur: "quarter" },
+                    { midi: 43, name: "G2", beat: 1.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 2.0, dur: "quarter" },
+                    { midi: 38, name: "D2", beat: 3.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 3.0, dur: "quarter" },
+                    { midi: 39, name: "Eb2", beat: 4.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 6
+            {
+                number: 6,
+                treble: [
+                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "Dream" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true, lyric: "I'll" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 3.0, dur: "8th", triplet: true, lyric: "cre-" },
+                    { midi: 72, name: "C5", beat: 3.0, dur: "8th", triplet: true },
+                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 4.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.0, dur: "8th", triplet: true, lyric: "-ate" },
+                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 4.667, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 4.667, dur: "8th", triplet: true }
+                ],
+                bass: [
+                    { midi: 34, name: "Bb1", beat: 1.0, dur: "quarter" },
+                    { midi: 41, name: "F2", beat: 1.0, dur: "quarter" },
+                    { midi: 46, name: "Bb2", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 2.0, dur: "quarter" },
+                    { midi: 43, name: "G2", beat: 3.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 3.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 7
+            {
+                number: 7,
+                treble: [
+                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "Burns" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true, lyric: "to" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 68, name: "Ab4", beat: 3.0, dur: "8th", triplet: true, lyric: "re-" },
+                    { midi: 72, name: "C5", beat: 3.0, dur: "8th", triplet: true },
+                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 68, name: "Ab4", beat: 4.0, dur: "8th", triplet: true, lyric: "make" },
+                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 4.667, dur: "8th", triplet: true }
+                ],
+                bass: [
+                    { midi: 51, name: "Eb3", beat: 1.0, dur: "quarter" },
+                    { midi: 56, name: "Ab3", beat: 1.0, dur: "quarter" },
+                    { midi: 60, name: "C4", beat: 1.0, dur: "quarter" },
+                    { midi: 60, name: "C4", beat: 2.0, dur: "quarter" },
+                    { midi: 53, name: "F3", beat: 3.0, dur: "quarter" },
+                    { midi: 62, name: "D4", beat: 3.0, dur: "quarter" },
+                    { midi: 53, name: "F3", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 8
+            {
+                number: 8,
+                treble: [
+                    { midi: 68, name: "Ab4", beat: 1.0, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 1.0, dur: "quarter", lyric: "Craft" },
+                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 1.667, dur: "8th", triplet: true },
+
+                    { midi: 68, name: "Ab4", beat: 2.0, dur: "8th", triplet: true, lyric: "dic-" },
+                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
+                    { midi: 77, name: "F5", beat: 2.667, dur: "8th", triplet: true },
+
+                    { midi: 65, name: "F4", beat: 3.0, dur: "8th", triplet: true, lyric: "-tates" },
+                    { midi: 67, name: "G4", beat: 3.333, dur: "8th", triplet: true },
+                    { midi: 72, name: "C5", beat: 3.667, dur: "8th", triplet: true },
+
+                    { midi: 86, name: "D6", beat: 4.0, dur: "16th" },
+                    { midi: 87, name: "Eb6", beat: 4.25, dur: "16th" },
+                    { midi: 86, name: "D6", beat: 4.5, dur: "16th" },
+                    { midi: 84, name: "C6", beat: 4.75, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 4.75, dur: "8th" },
+                    { midi: 91, name: "G6", beat: 4.75, dur: "8th", lyric: "fate" }
+                ],
+                bass: [
+                    { midi: 43, name: "G2", beat: 1.0, dur: "quarter" },
+                    { midi: 50, name: "D3", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 1.0, dur: "quarter" },
+                    { midi: 56, name: "Ab3", beat: 2.0, dur: "quarter" },
+                    { midi: 43, name: "G2", beat: 3.0, dur: "quarter" },
+                    { midi: 50, name: "D3", beat: 3.0, dur: "quarter" },
+                    { midi: 58, name: "Bb3", beat: 3.0, dur: "quarter" },
+                    { midi: 43, name: "G2", beat: 4.0, dur: "quarter" },
+                    { midi: 50, name: "D3", beat: 4.0, dur: "quarter" },
+                    { midi: 60, name: "C4", beat: 4.0, dur: "quarter" }
+                ]
+            },
+            // Measure 9
+            {
+                number: 9,
+                treble: [
+                    { midi: 84, name: "C6", beat: 1.0, dur: "16th", lyric: "Fate..." },
+                    { midi: 79, name: "G5", beat: 1.17, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 1.33, dur: "16th" },
+                    { midi: 72, name: "C5", beat: 1.5, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 1.67, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 1.83, dur: "16th" },
+
+                    { midi: 84, name: "C6", beat: 2.0, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 2.17, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 2.33, dur: "16th" },
+                    { midi: 72, name: "C5", beat: 2.5, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 2.67, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 2.83, dur: "16th" },
+
+                    { midi: 84, name: "C6", beat: 3.0, dur: "16th", lyric: "I've made..." },
+                    { midi: 79, name: "G5", beat: 3.17, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 3.33, dur: "16th" },
+                    { midi: 72, name: "C5", beat: 3.5, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 3.67, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 3.83, dur: "16th" },
+
+                    { midi: 84, name: "C6", beat: 4.0, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 4.17, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 4.33, dur: "16th" },
+                    { midi: 72, name: "C5", beat: 4.5, dur: "16th" },
+                    { midi: 75, name: "Eb5", beat: 4.67, dur: "16th" },
+                    { midi: 79, name: "G5", beat: 4.83, dur: "16th" }
+                ],
+                bass: [
+                    { midi: 48, name: "C3", beat: 1.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 1.0, dur: "quarter" },
+                    { midi: 62, name: "D4", beat: 1.0, dur: "quarter" },
+                    { midi: 36, name: "C2", beat: 2.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 2.0, dur: "quarter" },
+                    { midi: 48, name: "C3", beat: 3.0, dur: "quarter" },
+                    { midi: 51, name: "Eb3", beat: 3.0, dur: "quarter" },
+                    { midi: 55, name: "G3", beat: 3.0, dur: "quarter" },
+                    { midi: 38, name: "D2", beat: 4.0, dur: "quarter" },
+                    { midi: 50, name: "D3", beat: 4.0, dur: "quarter" }
+                ]
+            }
+        ];
+
+        // Diatonic Staff Position (lineSpacing = 10)
+        // Treble Center Line (B4 = 71): diatonic index 34
+        // Bass Center Line (D3 = 50): diatonic index 22
+        const DIATONIC = { 0:0, 2:1, 4:2, 5:3, 7:4, 9:5, 11:6 }; // Semitones from C to diatonic step
+        function getDiatonicStaffPos(midi, isTreble) {
+            const octave = Math.floor(midi / 12) - 1;
+            const semi = midi % 12;
+            // Map accidentals to base note
+            let baseSemi = semi;
+            if (semi === 1) baseSemi = 0; // C# -> C
+            if (semi === 3) baseSemi = 4; // Eb -> E
+            if (semi === 6) baseSemi = 5; // F# -> F
+            if (semi === 8) baseSemi = 7; // Ab -> A
+            if (semi === 10) baseSemi = 11; // Bb -> B
+            const diatonicStep = DIATONIC[baseSemi] !== undefined ? DIATONIC[baseSemi] : 0;
+            const absoluteStep = octave * 7 + diatonicStep;
+            return isTreble ? (absoluteStep - 34) : (absoluteStep - 22);
+        }
+
+        // -------------------------------------------------------------
+        // 2. SVG ENGRAVER: Clean MuseScore Engraving
+        // -------------------------------------------------------------
+        function renderSystemSVG(svgId, measures, startMeasureNum) {
+            const svg = document.getElementById(svgId);
+            svg.innerHTML = "";
+            const W = 1000;
+            const H = 220;
+            const lineSpacing = 10;
+            const trebleY = 50;  // Center line of treble staff
+            const bassY = 145;    // Center line of bass staff
+            const leftMargin = 65;
+            const measureWidth = (W - leftMargin) / 3;
+
+            // 1. Grand staff brace & vertical bar
+            let braceHtml = `
+                <path d="M 18,${trebleY - 20} L 18,${bassY + 20}" stroke="#000" stroke-width="2" />
+                <path d="M 18,${trebleY - 20} Q 6,${(trebleY + bassY)/2 - 20} 2,${(trebleY + bassY)/2} Q 6,${(trebleY + bassY)/2 + 20} 18,${bassY + 20}" fill="none" stroke="#000" stroke-width="2.5" />
+            `;
+            svg.innerHTML += braceHtml;
+
+            // 2. Staff lines (Treble & Bass)
+            for (let i = -2; i <= 2; i++) {
+                const yT = trebleY + i * lineSpacing;
+                const yB = bassY + i * lineSpacing;
+                svg.innerHTML += `<line x1="18" y1="${yT}" x2="${W}" y2="${yT}" stroke="#000" stroke-width="1.1" />`;
+                svg.innerHTML += `<line x1="18" y1="${yB}" x2="${W}" y2="${yB}" stroke="#000" stroke-width="1.1" />`;
+            }
+
+            // 3. Clefs and Key Signature (on the left)
+            svg.innerHTML += `<text x="24" y="${trebleY + 12}" font-size="34" font-family="serif">𝄞</text>`;
+            svg.innerHTML += `<text x="24" y="${bassY + 10}" font-size="28" font-family="serif">𝄢</text>`;
+
+            // Key Signature: 3 Flats (Bb, Eb, Ab)
+            // Treble flats: Bb on Line 3 (y=0), Eb in Space 4 (y=-15), Ab in Space 2 (y=5)
+            svg.innerHTML += `<text x="44" y="${trebleY + 4}" font-size="16" font-weight="bold">♭</text>`;
+            svg.innerHTML += `<text x="50" y="${trebleY - 6}" font-size="16" font-weight="bold">♭</text>`;
+            svg.innerHTML += `<text x="56" y="${trebleY + 9}" font-size="16" font-weight="bold">♭</text>`;
+
+            // Bass flats: Bb on Line 2 (y=10), Eb in Space 3 (y=-5), Ab on Line 1 (y=20)
+            svg.innerHTML += `<text x="44" y="${bassY + 14}" font-size="16" font-weight="bold">♭</text>`;
+            svg.innerHTML += `<text x="50" y="${bassY + 4}" font-size="16" font-weight="bold">♭</text>`;
+            svg.innerHTML += `<text x="56" y="${bassY + 24}" font-size="16" font-weight="bold">♭</text>`;
+
+            // Time Signature (4/4 on System 1 only)
+            if (startMeasureNum === 1) {
+                svg.innerHTML += `<text x="66" y="${trebleY - 2}" font-size="15" font-family="serif" font-weight="bold">4</text>`;
+                svg.innerHTML += `<text x="66" y="${trebleY + 14}" font-size="15" font-family="serif" font-weight="bold">4</text>`;
+                svg.innerHTML += `<text x="66" y="${bassY - 2}" font-size="15" font-family="serif" font-weight="bold">4</text>`;
+                svg.innerHTML += `<text x="66" y="${bassY + 14}" font-size="15" font-family="serif" font-weight="bold">4</text>`;
+            }
+
+            // 4. Render 3 Measures
+            measures.forEach((m, mIdx) => {
+                const mX = leftMargin + mIdx * measureWidth + (startMeasureNum === 1 ? 18 : 0);
+                const curW = measureWidth - (startMeasureNum === 1 ? 6 : 0);
+
+                // Barline
+                const barX = mX + curW;
+                svg.innerHTML += `<line x1="${barX}" y1="${trebleY - 20}" x2="${barX}" y2="${bassY + 20}" stroke="#000" stroke-width="1.2" />`;
+
+                // Measure number badge
+                svg.innerHTML += `<text x="${mX + 6}" y="${trebleY - 28}" font-size="11" font-family="sans-serif" font-weight="bold" fill="#333">${m.number}</text>`;
+
+                // Render Treble Notes
+                renderStaffNotes(svg, m.treble, mX, curW, trebleY, lineSpacing, true);
+
+                // Render Bass Notes
+                renderStaffNotes(svg, m.bass, mX, curW, bassY, lineSpacing, false);
+            });
+        }
+
+        function renderStaffNotes(svg, notes, mX, mWidth, centerY, lineSpacing, isTreble) {
+            const usableW = mWidth - 36;
+            const startX = mX + 18;
+
+            // Group eighth/sixteenth notes by integer beat for horizontal beaming
+            const beamedGroups = {};
+            notes.forEach(n => {
+                if (n.triplet || n.dur === "8th" || n.dur === "16th") {
+                    const b = Math.floor(n.beat);
+                    if (!beamedGroups[b]) beamedGroups[b] = [];
+                    beamedGroups[b].push(n);
+                }
+            });
+
+            // Set of notes that are beamed
+            const beamedNoteSet = new Set();
+            Object.values(beamedGroups).forEach(group => {
+                if (group.length >= 2) {
+                    group.forEach(n => beamedNoteSet.add(n));
+                }
+            });
+
+            // 1. Draw Notes
+            notes.forEach(note => {
+                const beatOffset = (note.beat - 1.0) / 4.0;
+                const x = startX + beatOffset * usableW;
+                const staffPos = getDiatonicStaffPos(note.midi, isTreble);
+                const y = centerY - staffPos * (lineSpacing * 0.5);
+                const stemUp = staffPos < 0;
+                const isBeamed = beamedNoteSet.has(note);
+
+                // Ledger lines
+                if (staffPos >= 6) {
+                    for (let p = 6; p <= staffPos; p += 2) {
+                        const ly = centerY - p * (lineSpacing * 0.5);
+                        svg.innerHTML += `<line x1="${x - 9}" y1="${ly}" x2="${x + 9}" y2="${ly}" stroke="#000" stroke-width="1.3" />`;
+                    }
+                } else if (staffPos <= -6) {
+                    for (let p = -6; p >= staffPos; p -= 2) {
+                        const ly = centerY - p * (lineSpacing * 0.5);
+                        svg.innerHTML += `<line x1="${x - 9}" y1="${ly}" x2="${x + 9}" y2="${ly}" stroke="#000" stroke-width="1.3" />`;
+                    }
+                }
+
+                // Accidental
+                if (note.name.includes("b")) {
+                    svg.innerHTML += `<text x="${x - 12}" y="${y + 5}" font-size="14" font-weight="bold">♭</text>`;
+                } else if (note.name.includes("#")) {
+                    svg.innerHTML += `<text x="${x - 12}" y="${y + 5}" font-size="14" font-weight="bold">♯</text>`;
+                } else if (note.midi === 71 && note.name === "B4") {
+                    // Natural sign for B4 in m4
+                    svg.innerHTML += `<text x="${x - 12}" y="${y + 5}" font-size="14" font-weight="bold">♮</text>`;
+                }
+
+                // Notehead
+                svg.innerHTML += `<ellipse cx="${x}" cy="${y}" rx="5.2" ry="3.8" transform="rotate(-20 ${x} ${y})" fill="#000" />`;
+
+                // Stem
+                const stemLen = lineSpacing * 3.3;
+                const stemX = stemUp ? (x + 4.8) : (x - 4.8);
+                const stemEndY = stemUp ? (y - stemLen) : (y + stemLen);
+                svg.innerHTML += `<line x1="${stemX}" y1="${y}" x2="${stemX}" y2="${stemEndY}" stroke="#000" stroke-width="1.3" />`;
+
+                // Unbeamed flag
+                if (!isBeamed && note.dur === "8th") {
+                    svg.innerHTML += `<path d="M ${stemX},${stemEndY} Q ${stemX + 6},${stemEndY + 8} ${stemX + 8},${stemEndY + 16}" fill="none" stroke="#000" stroke-width="1.5" />`;
+                }
+
+                // Lyrics text
+                if (note.lyric) {
+                    svg.innerHTML += `<text x="${x}" y="${centerY + 38}" font-size="12" font-family="'Times New Roman', serif" font-style="italic" font-weight="bold" text-anchor="middle" fill="#000">${note.lyric}</text>`;
+                }
+            });
+
+            // 2. Draw Beams for Groups
+            Object.values(beamedGroups).forEach(group => {
+                if (group.length < 2) return;
+                const sorted = group.sort((a,b) => a.beat - b.beat);
+                const first = sorted[0];
+                const last = sorted[sorted.length - 1];
+
+                const x1 = startX + ((first.beat - 1.0) / 4.0) * usableW + (first.stemUp !== false ? 4.8 : -4.8);
+                const x2 = startX + ((last.beat - 1.0) / 4.0) * usableW + (last.stemUp !== false ? 4.8 : -4.8);
+
+                const positions = group.map(n => getDiatonicStaffPos(n.midi, isTreble));
+                const maxStaffPos = Math.max(...positions);
+                const stemLen = lineSpacing * 3.3;
+                const beamY = centerY - (maxStaffPos * (lineSpacing * 0.5)) - stemLen;
+
+                // Horizontal beam bar
+                svg.innerHTML += `<rect x="${x1}" y="${beamY}" width="${x2 - x1}" height="3.2" fill="#000" />`;
+
+                // Triplet "3" label
+                if (group.length === 3 || first.triplet) {
+                    const midX = (x1 + x2) / 2;
+                    svg.innerHTML += `<text x="${midX}" y="${beamY - 4}" font-size="11" font-family="'Times New Roman', serif" font-weight="bold" font-style="italic" text-anchor="middle" fill="#000">3</text>`;
+                }
+            });
+        }
+
+        // Render all 3 systems
+        renderSystemSVG("sys1Svg", [SCORE_DATA[0], SCORE_DATA[1], SCORE_DATA[2]], 1);
+        renderSystemSVG("sys2Svg", [SCORE_DATA[3], SCORE_DATA[4], SCORE_DATA[5]], 4);
+        renderSystemSVG("sys3Svg", [SCORE_DATA[6], SCORE_DATA[7], SCORE_DATA[8]], 7);
+
+
+        // -------------------------------------------------------------
+        // 3. REALISTIC PIANO AUDIO ENGINE (Web Audio API)
+        // -------------------------------------------------------------
+        class AcousticPianoEngine {
+            constructor() {
+                this.ctx = null;
+                this.reverbNode = null;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+
+                // Create algorithmic grand piano reverb
+                this.reverbNode = this.createReverb();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.8;
+                this.masterGain.connect(this.ctx.destination);
+                this.reverbNode.connect(this.masterGain);
+            }
+
+            createReverb() {
+                const sampleRate = this.ctx.sampleRate;
+                const length = sampleRate * 1.8; // 1.8s grand piano reverb tail
+                const impulse = this.ctx.createBuffer(2, length, sampleRate);
+                for (let channel = 0; channel < 2; channel++) {
+                    const data = impulse.getChannelData(channel);
+                    for (let i = 0; i < length; i++) {
+                        const decay = Math.exp(-i / (sampleRate * 0.45));
+                        data[i] = (Math.random() * 2 - 1) * decay;
+                    }
+                }
+                const convolver = this.ctx.createConvolver();
+                convolver.buffer = impulse;
+                return convolver;
+            }
+
+            playNote(midi, duration = 0.6, velocity = 0.8) {
+                if (!this.ctx) this.init();
+                if (this.ctx.state === "suspended") this.ctx.resume();
+
+                const freq = 440 * Math.pow(2, (midi - 69) / 12);
+                const now = this.ctx.currentTime;
+
+                // Harmonics with authentic acoustic piano ratios
+                // Real piano: fundamental, strong 2nd harmonic, warm 3rd, subtle strike transient
+                const harmonics = [
+                    { mult: 1, gain: 0.65 },
+                    { mult: 2, gain: 0.35 },
+                    { mult: 3, gain: 0.15 },
+                    { mult: 4, gain: 0.08 },
+                    { mult: 5, gain: 0.04 }
+                ];
+
+                harmonics.forEach(h => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = h.mult === 1 ? "triangle" : "sine";
+                    osc.frequency.setValueAtTime(freq * h.mult, now);
+
+                    // Piano envelope: Fast hammer attack (5ms), realistic exponential decay
+                    const peakGain = velocity * h.gain;
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.exponentialRampToValueAtTime(peakGain, now + 0.006);
+
+                    // Decay based on pitch: lower notes sustain longer, higher notes decay faster
+                    const decayTime = Math.max(0.4, 2.8 - (midi / 127) * 1.8);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + Math.min(duration * 1.5, decayTime));
+
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    gain.connect(this.reverbNode);
+
+                    osc.start(now);
+                    osc.stop(now + Math.min(duration * 1.5, decayTime) + 0.05);
+                });
+            }
+        }
+
+        const piano = new AcousticPianoEngine();
+
+        // -------------------------------------------------------------
+        // 4. PLAYBACK ENGINE & CURSOR SYNCHRONIZATION
+        // -------------------------------------------------------------
+        let isPlaying = false;
+        let currentMeasureIdx = 0; // 0..8
+        let currentBeat = 1.0;
+        let tempoBPM = 70;
+        let playbackTimer = null;
+        let lastTimestamp = 0;
+        const playedNotesSet = new Set();
+
+        const playBtn = document.getElementById("playBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const bpmSlider = document.getElementById("bpmSlider");
+        const bpmDisplay = document.getElementById("bpmDisplay");
+        const currentMDisplay = document.getElementById("currentMDisplay");
+
+        bpmSlider.addEventListener("input", (e) => {
+            tempoBPM = parseInt(e.target.value);
+            bpmDisplay.innerText = tempoBPM;
+        });
+
+        playBtn.addEventListener("click", () => {
+            piano.init();
+            if (isPlaying) {
+                pausePlayback();
+            } else {
+                startPlayback();
+            }
+        });
+
+        stopBtn.addEventListener("click", () => {
+            stopPlayback();
+        });
+
+        function startPlayback() {
+            isPlaying = true;
+            playBtn.innerText = "⏸";
+            lastTimestamp = performance.now();
+            playedNotesSet.clear();
+
+            // Trigger beat 1 notes immediately
+            triggerNotesInMeasure(currentMeasureIdx, currentBeat - 0.05, currentBeat + 0.05);
+
+            playbackTimer = requestAnimationFrame(playbackLoop);
+        }
+
+        function pausePlayback() {
+            isPlaying = false;
+            playBtn.innerText = "▶";
+            if (playbackTimer) cancelAnimationFrame(playbackTimer);
+        }
+
+        function stopPlayback() {
+            pausePlayback();
+            currentMeasureIdx = 0;
+            currentBeat = 1.0;
+            playedNotesSet.clear();
+            updateCursorPosition();
+            currentMDisplay.innerText = `1 / 9`;
+        }
+
+        function playbackLoop(timestamp) {
+            if (!isPlaying) return;
+
+            const dt = (timestamp - lastTimestamp) / 1000.0;
+            lastTimestamp = timestamp;
+
+            const beatsDelta = (tempoBPM / 60.0) * dt;
+            const prevBeat = currentBeat;
+            currentBeat += beatsDelta;
+
+            if (currentBeat >= 5.0) {
+                // Next measure
+                currentMeasureIdx++;
+                currentBeat = 1.0 + (currentBeat - 5.0);
+                playedNotesSet.clear();
+
+                if (currentMeasureIdx >= SCORE_DATA.length) {
+                    stopPlayback();
+                    return;
+                }
+                currentMDisplay.innerText = `${currentMeasureIdx + 1} / 9`;
+                triggerNotesInMeasure(currentMeasureIdx, 0.95, currentBeat + 0.05);
+            } else {
+                triggerNotesInMeasure(currentMeasureIdx, prevBeat, currentBeat);
+            }
+
+            updateCursorPosition();
+            playbackTimer = requestAnimationFrame(playbackLoop);
+        }
+
+        function triggerNotesInMeasure(mIdx, startB, endB) {
+            const m = SCORE_DATA[mIdx];
+            if (!m) return;
+
+            const allNotes = [...m.treble, ...m.bass];
+            allNotes.forEach((n, idx) => {
+                const noteKey = `${mIdx}-${idx}-${n.midi}-${n.beat}`;
+                if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(noteKey)) {
+                    playedNotesSet.add(noteKey);
+                    const durSec = n.dur === "16th" ? 0.25 : (n.dur === "quarter" ? 0.9 : 0.45);
+                    piano.playNote(n.midi, durSec, n.triplet ? 0.75 : 0.9);
+                }
+            });
+        }
+
+        function updateCursorPosition() {
+            const systemIdx = Math.floor(currentMeasureIdx / 3); // 0, 1, or 2
+            const measureInSys = currentMeasureIdx % 3;          // 0, 1, or 2
+
+            // Hide inactive cursors
+            for (let s = 1; s <= 3; s++) {
+                const c = document.getElementById(`cursor${s}`);
+                if (s - 1 === systemIdx && isPlaying) {
+                    c.style.display = "block";
+                } else {
+                    c.style.display = "none";
+                }
+            }
+
+            if (!isPlaying) return;
+
+            const cursor = document.getElementById(`cursor${systemIdx + 1}`);
+            const leftMargin = 65 + (systemIdx === 0 ? 18 : 0);
+            const W = 1000;
+            const measureWidth = (W - leftMargin) / 3;
+            const mX = leftMargin + measureInSys * measureWidth;
+            const usableW = measureWidth - 36;
+            const startX = mX + 18;
+
+            const beatOffset = (currentBeat - 1.0) / 4.0;
+            const x = startX + beatOffset * usableW;
+
+            // Map SVG coordinate to pixel percentage on the system row
+            const pct = (x / 1000.0) * 100.0;
+            cursor.style.left = `${pct}%`;
+        }
+    </script>
+</body>
+</html>

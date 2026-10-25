@@ -134,42 +134,71 @@ struct MeasureView: View {
         return groups
     }
     
+    private struct BeamGeometry {
+        let xStart: CGFloat
+        let beamWidth: CGFloat
+        let beamY: CGFloat
+        let labelX: CGFloat
+        let labelY: CGFloat
+        let showTriplet: Bool
+    }
+    
+    private func computeBeamGeometry(for group: [Note]) -> BeamGeometry? {
+        guard let firstNote = group.first, let lastNote = group.last else { return nil }
+        let firstOffset = CGFloat(max(0.0, min(1.0, (firstNote.position.beat - 1.0) / 4.0)))
+        let lastOffset = CGFloat(max(0.0, min(1.0, (lastNote.position.beat - 1.0) / 4.0)))
+        
+        let stemUp = firstNote.stemUp
+        let stemXOffset: CGFloat = stemUp ? (lineSpacing * 0.6) : (-lineSpacing * 0.6)
+        let xStart = 24.0 + firstOffset * usableWidth + stemXOffset
+        let xEnd = 24.0 + lastOffset * usableWidth + stemXOffset
+        let beamWidth = max(8.0, xEnd - xStart)
+        
+        let positions = group.map { CGFloat($0.staffPosition) }
+        let maxPos: CGFloat = positions.max() ?? 0.0
+        let minPos: CGFloat = positions.min() ?? 0.0
+        let stemHeight = lineSpacing * 3.2
+        
+        let beamY: CGFloat
+        let labelY: CGFloat
+        if stemUp {
+            beamY = -maxPos * (lineSpacing * 0.5) - stemHeight
+            labelY = beamY - 13.0
+        } else {
+            beamY = -minPos * (lineSpacing * 0.5) + stemHeight
+            labelY = beamY + 4.0
+        }
+        
+        let labelX = (xStart + xEnd) * 0.5 - 4.0
+        let showTriplet = group.count == 3 || firstNote.isTriplet
+        
+        return BeamGeometry(
+            xStart: xStart,
+            beamWidth: beamWidth,
+            beamY: beamY,
+            labelX: labelX,
+            labelY: labelY,
+            showTriplet: showTriplet
+        )
+    }
+    
     @ViewBuilder
     private func renderBeam(for group: [Note]) -> some View {
-        if let firstNote = group.first, let lastNote = group.last {
-            let firstBeatOffset = max(0.0, min(1.0, (firstNote.position.beat - 1.0) / 4.0))
-            let lastBeatOffset = max(0.0, min(1.0, (lastNote.position.beat - 1.0) / 4.0))
-            
-            let stemUp = firstNote.stemUp
-            let stemXOffset = stemUp ? (lineSpacing * 0.6) : (-lineSpacing * 0.6)
-            let xStart = 24.0 + CGFloat(firstBeatOffset) * usableWidth + stemXOffset
-            let xEnd = 24.0 + CGFloat(lastBeatOffset) * usableWidth + stemXOffset
-            let beamWidth = max(8.0, xEnd - xStart)
-            
-            // Find highest / lowest staff position for beam level
-            let positions = group.map(\.staffPosition)
-            let maxPos = positions.max() ?? 0
-            let minPos = positions.min() ?? 0
-            
-            let stemHeight = lineSpacing * 3.2
-            let beamY: CGFloat = stemUp
-                ? (-CGFloat(maxPos) * (lineSpacing * 0.5) - stemHeight)
-                : (-CGFloat(minPos) * (lineSpacing * 0.5) + stemHeight)
-            
+        if let geom = computeBeamGeometry(for: group) {
             ZStack(alignment: .leading) {
                 // Horizontal black beam bar connecting stems
                 Rectangle()
                     .fill(Color.black)
-                    .frame(width: beamWidth, height: 3.5)
-                    .offset(x: xStart, y: beamY)
+                    .frame(width: geom.beamWidth, height: 3.5)
+                    .offset(x: geom.xStart, y: geom.beamY)
                 
                 // Triplet "3" notation above or below the beam
-                if group.count == 3 || firstNote.isTriplet {
+                if geom.showTriplet {
                     Text("3")
                         .font(.system(size: 11, weight: .bold, design: .serif))
                         .italic()
                         .foregroundColor(Color.black)
-                        .offset(x: (xStart + xEnd) * 0.5 - 4.0, y: stemUp ? (beamY - 13.0) : (beamY + 4.0))
+                        .offset(x: geom.labelX, y: geom.labelY)
                 }
             }
         }
