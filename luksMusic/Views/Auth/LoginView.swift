@@ -1,13 +1,15 @@
 // LoginView.swift
 // luksMusic
 //
-// Onboarding and authentication screen allowing login with Google, Apple, or Guest mode.
+// Modern authentication screen allowing login with Google, Firebase Email/Password, Apple, or Guest mode.
 
 import SwiftUI
 
 struct LoginView: View {
     @State private var authService = AuthService.shared
-    @Environment(\.dismiss) private var dismiss
+    @State private var emailInput: String = "lukscli@gmail.com"
+    @State private var passwordInput: String = ""
+    @State private var showEmailForm: Bool = false
     
     var body: some View {
         ZStack {
@@ -19,104 +21,174 @@ struct LoginView: View {
             )
             .ignoresSafeArea()
             
-            VStack(spacing: 32) {
-                Spacer()
-                
-                // App Logo & Title
-                VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(LinearGradient(
-                                colors: [.accentColor, .purple],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ))
-                            .frame(width: 90, height: 90)
-                            .shadow(color: .accentColor.opacity(0.4), radius: 16)
+            ScrollView {
+                VStack(spacing: 28) {
+                    Spacer(minLength: 20)
+                    
+                    // App Logo & Title
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(LinearGradient(
+                                    colors: [.accentColor, .purple],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ))
+                                .frame(width: 84, height: 84)
+                                .shadow(color: .accentColor.opacity(0.4), radius: 16)
+                            
+                            Image(systemName: "pianokeys")
+                                .font(.system(size: 40))
+                                .foregroundColor(.white)
+                        }
                         
-                        Image(systemName: "pianokeys")
-                            .font(.system(size: 44))
+                        Text("luksMusic")
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
-                    }
-                    
-                    Text("luksMusic")
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                    
-                    Text("Smart Piano Studio & Sheet Music Scanner")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
-                
-                // Features Highlights
-                VStack(spacing: 14) {
-                    featureRow(icon: "icloud.fill", color: .blue, title: "Firebase Cloud Sync", subtitle: "Your scores & recordings saved online securely")
-                    featureRow(icon: "camera.viewfinder", color: .purple, title: "Music OCR Scanner", subtitle: "Convert printed piano sheets into digital notation")
-                    featureRow(icon: "waveform", color: .green, title: "Interactive Piano Practice", subtitle: "Guided mode, falling notes & MIDI keyboard input")
-                }
-                .padding(.horizontal, 24)
-                
-                Spacer()
-                
-                // Action Buttons
-                VStack(spacing: 12) {
-                    // Google Sign-In Button
-                    Button {
-                        Task {
-                            await authService.signInWithGoogle()
-                        }
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "globe")
-                                .font(.headline)
-                                .foregroundColor(.red)
-                            Text("Sign in with Google")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
-                        )
-                    }
-                    
-                    // Apple Sign-In Button
-                    Button {
-                        Task {
-                            await authService.signInWithApple()
-                        }
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "apple.logo")
-                                .font(.headline)
-                            Text("Sign in with Apple")
-                                .font(.headline)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.white)
-                        .foregroundColor(.black)
-                        .cornerRadius(12)
-                    }
-                    
-                    // Continue as Guest
-                    Button {
-                        authService.continueAsGuest()
-                    } label: {
-                        Text("Continue as Guest")
+                        
+                        Text("Smart Piano Studio & Sheet Music Scanner")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .padding(.vertical, 8)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
                     }
+                    
+                    // Features Highlights
+                    VStack(spacing: 12) {
+                        featureRow(icon: "icloud.fill", color: .blue, title: "Firebase Cloud Sync", subtitle: "Sincronização em nuvem com o projeto luksMusic")
+                        featureRow(icon: "camera.viewfinder", color: .purple, title: "Music OCR Scanner", subtitle: "Digitalização e conversão de partituras impressas")
+                        featureRow(icon: "waveform", color: .green, title: "Piano Interativo e Prática", subtitle: "Teclado interativo, metrônomo e partitura conectada")
+                    }
+                    .padding(.horizontal, 24)
+                    
+                    // Error Notice if any
+                    if let err = authService.authError {
+                        Text(err)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+                    
+                    // Action Buttons
+                    VStack(spacing: 14) {
+                        // Google Sign-In Button
+                        Button {
+                            Task {
+                                await authService.signInWithGoogle()
+                            }
+                        } label: {
+                            HStack(spacing: 12) {
+                                if authService.isAuthenticating {
+                                    ProgressView()
+                                        .tint(.primary)
+                                } else {
+                                    Image(systemName: "globe")
+                                        .font(.headline)
+                                        .foregroundColor(.red)
+                                    Text("Entrar com Google")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                        }
+                        .disabled(authService.isAuthenticating)
+                        
+                        // Email / Password Toggle Button & Form
+                        VStack(spacing: 10) {
+                            if showEmailForm {
+                                VStack(spacing: 10) {
+                                    TextField("E-mail (Firebase)", text: $emailInput)
+                                        .textContentType(.emailAddress)
+                                        .keyboardType(.emailAddress)
+                                        .autocapitalization(.none)
+                                        .padding(12)
+                                        .background(Color(.tertiarySystemBackground))
+                                        .cornerRadius(8)
+                                    
+                                    SecureField("Senha", text: $passwordInput)
+                                        .textContentType(.password)
+                                        .padding(12)
+                                        .background(Color(.tertiarySystemBackground))
+                                        .cornerRadius(8)
+                                    
+                                    Button {
+                                        Task {
+                                            await authService.signInWithEmail(email: emailInput, password: passwordInput)
+                                        }
+                                    } label: {
+                                        Text("Entrar / Criar Conta no Firebase")
+                                            .font(.subheadline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(Color.blue)
+                                            .cornerRadius(8)
+                                    }
+                                    .disabled(passwordInput.count < 6 || authService.isAuthenticating)
+                                }
+                                .padding(14)
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                            } else {
+                                Button {
+                                    withAnimation {
+                                        showEmailForm = true
+                                    }
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "envelope.fill")
+                                            .font(.subheadline)
+                                        Text("Entrar com E-mail (lukscli@gmail.com)")
+                                            .font(.subheadline)
+                                    }
+                                    .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        
+                        // Apple Sign-In Button
+                        Button {
+                            Task {
+                                await authService.signInWithApple()
+                            }
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "apple.logo")
+                                    .font(.headline)
+                                Text("Sign in with Apple")
+                                    .font(.headline)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color.white)
+                            .foregroundColor(.black)
+                            .cornerRadius(12)
+                        }
+                        .disabled(authService.isAuthenticating)
+                        
+                        // Continue as Guest
+                        Button {
+                            authService.continueAsGuest()
+                        } label: {
+                            Text("Continuar como Convidado (Offline)")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .padding(.vertical, 6)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 32)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
             }
         }
     }

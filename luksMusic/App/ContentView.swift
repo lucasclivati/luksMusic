@@ -229,6 +229,17 @@ struct SettingsView: View {
                             }
                         }
                         
+                        HStack {
+                            Text("Projeto Firebase:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(FirebaseConfig.projectId)
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.blue)
+                        }
+                        
                         Button("Sign Out", role: .destructive) {
                             authService.signOut()
                         }

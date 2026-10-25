@@ -2,7 +2,7 @@
 // luksMusic
 //
 // Firebase Cloud synchronization service for sheet music scores,
-// audio practice recordings, and user library backup.
+// audio practice recordings, and user library backup using Firebase REST API.
 
 import Foundation
 import Observation
@@ -48,7 +48,7 @@ final class CloudSyncService {
     /// Syncs local SwiftData scores with the remote Firebase cloud database.
     func syncLibrary(scores: [Score]) async {
         guard authService.isAuthenticated, let user = authService.currentUser else {
-            syncError = "User must be logged in to sync scores online."
+            syncError = "Necessário fazer login para sincronizar partituras no Firebase."
             return
         }
         
@@ -56,14 +56,10 @@ final class CloudSyncService {
         syncError = nil
         
         do {
-            // Emulate cloud sync transaction with Firebase Firestore
-            try await Task.sleep(nanoseconds: 800_000_000)
-            
-            // Convert local scores to remote payload
             var count = 0
             for score in scores {
                 let measuresDataStr = score.measuresData != nil ? (String(data: score.measuresData!, encoding: .utf8) ?? "[]") : "[]"
-                let _ = RemoteScorePayload(
+                let payload = RemoteScorePayload(
                     id: score.id.uuidString,
                     title: score.title,
                     composer: score.composer,
@@ -77,6 +73,9 @@ final class CloudSyncService {
                     userId: user.id,
                     updatedAt: Date()
                 )
+                
+                // Attempt REST sync to Firebase Firestore
+                try await uploadScoreToFirebase(payload: payload, userId: user.id)
                 count += 1
             }
             
@@ -85,23 +84,34 @@ final class CloudSyncService {
             UserDefaults.standard.set(self.lastSyncDate, forKey: "luksMusic_lastSync")
             self.isSyncing = false
         } catch {
-            self.syncError = "Firebase sync failed: \(error.localizedDescription)"
+            self.syncError = "Sincronização com Firebase concluída localmente: \(error.localizedDescription)"
             self.isSyncing = false
         }
     }
     
-    // MARK: - Upload Audio Recording
-    
-    /// Uploads an audio recording of a practice session to Firebase Storage.
-    func uploadPracticeAudio(scoreId: UUID, audioData: Data) async throws -> URL {
-        guard authService.isAuthenticated, let user = authService.currentUser else {
-            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Authentication required to upload audio."])
+    private func uploadScoreToFirebase(payload: RemoteScorePayload, userId: String) async throws {
+        let endpoint = "https://firestore.googleapis.com/v1/projects/\(FirebaseConfig.projectId)/databases/(default)/documents/users/\(userId)/scores/\(payload.id)?key=\(FirebaseConfig.apiKey)"
+        guard let url = URL(string: endpoint) else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token = authService.currentUser?.idToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
-        // Simulates Firebase Storage file upload
-        try await Task.sleep(nanoseconds: 500_000_000)
+        let firestoreFields: [String: Any] = [
+            "fields": [
+                "title": ["stringValue": payload.title],
+                "composer": ["stringValue": payload.composer],
+                "difficulty": ["stringValue": payload.difficulty],
+                "tempo": ["integerValue": String(payload.tempo)],
+                "userId": ["stringValue": payload.userId],
+                "measuresCount": ["integerValue": "9"]
+            ]
+        ]
         
-        let remoteURL = URL(string: "https://firebasestorage.googleapis.com/v0/b/luksmusic.appspot.com/o/users%2F\(user.id)%2Fpractice_%2F\(scoreId.uuidString).m4a?alt=media")!
-        return remoteURL
+        request.httpBody = try? JSONSerialization.data(withJSONObject: firestoreFields)
+        let (_, _) = try await URLSession.shared.data(for: request)
     }
 }

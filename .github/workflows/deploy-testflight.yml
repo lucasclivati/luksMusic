@@ -77,12 +77,13 @@ jobs:
           cp embedded.mobileprovision build/ipa/Payload/luksMusic.app/embedded.mobileprovision
           
           # Explicitly set CFBundleVersion to 3
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 3" build/ipa/Payload/luksMusic.app/Info.plist || \
-          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string 3" build/ipa/Payload/luksMusic.app/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 4" build/ipa/Payload/luksMusic.app/Info.plist || \
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string 4" build/ipa/Payload/luksMusic.app/Info.plist
           echo "Verified CFBundleVersion: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' build/ipa/Payload/luksMusic.app/Info.plist)"
           
           # Copy Piano SoundFont and App Icons into app root
           cp luksMusic/Piano.sf2 build/ipa/Payload/luksMusic.app/Piano.sf2 || true
+          cp luksMusic/GoogleService-Info.plist build/ipa/Payload/luksMusic.app/GoogleService-Info.plist || true
           cp luksMusic/icon-120.png build/ipa/Payload/luksMusic.app/AppIcon60x60@2x.png || true
           cp luksMusic/icon-152.png build/ipa/Payload/luksMusic.app/AppIcon76x76@2x~ipad.png || true
           cp luksMusic/icon-167.png build/ipa/Payload/luksMusic.app/AppIcon83.5x83.5@2x~ipad.png || true
