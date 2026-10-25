@@ -27,10 +27,17 @@ final class ScoreStorageService {
         let descriptor = FetchDescriptor<Score>()
         let existingScores = (try? modelContext.fetch(descriptor)) ?? []
         
-        // If library already has scores, check if Dark Dream is missing
+        // If library already has scores, ensure Dark Dream is present and up-to-date with 9 measures
         if !existingScores.isEmpty {
-            let hasDarkDream = existingScores.contains { $0.title.contains("Dark Dream") }
-            if !hasDarkDream {
+            if let existingDarkDream = existingScores.first(where: { $0.title.contains("Dark Dream") }) {
+                if existingDarkDream.measures.count < 9 {
+                    modelContext.delete(existingDarkDream)
+                    let newDarkDream = createDarkDream()
+                    newDarkDream.dateCreated = Date().addingTimeInterval(3600)
+                    modelContext.insert(newDarkDream)
+                    try? modelContext.save()
+                }
+            } else {
                 let darkDream = createDarkDream()
                 darkDream.dateCreated = Date().addingTimeInterval(3600)
                 modelContext.insert(darkDream)
@@ -121,136 +128,312 @@ final class ScoreStorageService {
     func createDarkDream() -> Score {
         var measures: [Measure] = []
         
-        // Measure 1: Atmospheric C minor intro arpeggios
+        // Measure 1: "When my eyes a-wake"
         let m1Notes = [
-            // Right Hand (Treble): G4, Eb5, D5, C5, Bb4, G4
+            // Right Hand (Treble): Accompaniment triplets (G4-C5-Eb5) + Melody (G5)
             Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)),
-            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand (Bass): C2 & C3 octave sustained, G2 & Eb3 chord
-            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .half, staff: .bass, position: NotePosition(beat: 3.0))
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): C3 + G3 on beat 1, G3 on 2, C3 on 3, C3 on 4
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 1, notes: m1Notes))
         
-        // Measure 2: Ab major harmony
+        // Measure 2: "Skies start to break"
         let m2Notes = [
-            // Right Hand: Ab4, C5, Eb5, D5, C5, G4
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand: Ab1 & Ab2 bass, Eb2 & C3
-            Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .half, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .half, staff: .bass, position: NotePosition(beat: 3.0))
+            // Right Hand (Treble): Accompaniment triplets + Melody (G5)
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): Bb2 + G3 on beat 1, G3 on 2, C3 on 3, C3 on 4
+            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 2, notes: m2Notes))
         
-        // Measure 3: Fm harmony
+        // Measure 3: "Storms o-ver-take"
         let m3Notes = [
-            // Right Hand: F4, Ab4, C5, D5, Eb5, D5
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand: F1 & F2 bass, C2 & Ab2
-            Note(pitch: Pitch(noteName: .F, octave: 1), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .half, staff: .bass, position: NotePosition(beat: 3.0))
+            // Right Hand (Treble): G4+G5 on 1.0, Ab4+Ab5 on 3.0
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): Ab3 + C4 on beat 1, C4 on 2, F3 on 3, F3 on 4
+            Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 3, notes: m3Notes))
         
-        // Measure 4: G / G7 tension turnaround
+        // Measure 4: "Clocks cease to shake" (B natural!)
         let m4Notes = [
-            // Right Hand: D5, B4, G4, F4, D4
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand: G1 & G2 bass, D2 & B2
-            Note(pitch: Pitch(noteName: .G, octave: 1), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 2), duration: .half, staff: .bass, position: NotePosition(beat: 3.0))
+            // Right Hand (Treble): Ab4+F5 on 1.0, B4 natural on 3.33 & 4.33
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
+            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): B2 natural + G3 on 1.0, F3 on 2, Eb3 on 3, D3 on 4
+            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .natural), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 4, notes: m4Notes))
         
-        // Measure 5: Verse 1 - Curley Gao vocal melody starts ("Dark Dream...")
+        // Measure 5: "Home-less for-sake"
         let m5Notes = [
-            // Right Hand: C4, Eb4, G4, G4, Ab4, G4
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)),
+            // Right Hand (Treble)
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
             Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand: C2, G2, C3, Eb3 (arpeggio rhythm)
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): C2 + G2 + C3 on 1.0, G3 on 2, D2 + C3 on 3, Eb2 + C3 on 4
             Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
             Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
+            Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 5, notes: m5Notes))
         
-        // Measure 6: Verse 1 continued
+        // Measure 6: "Dream I'll cre-ate"
         let m6Notes = [
-            // Right Hand: F4, G4, Ab4, G4, F4, Eb4
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)),
+            // Right Hand (Treble)
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
             Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand: F1, C2, F2, Ab2
-            Note(pitch: Pitch(noteName: .F, octave: 1), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): Bb1 + F2 + Bb2 on 1.0, G3 on 2, G2 + C3 on 3, C3 on 4
+            Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 6, notes: m6Notes))
         
-        // Measure 7: Verse 1 cadence approach
+        // Measure 7: "Burns to re-make"
         let m7Notes = [
-            // Right Hand: D4, F4, Bb4, C5, Bb4, Ab4
-            Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)),
+            // Right Hand (Treble)
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
             Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)),
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)),
-            // Left Hand: Bb1, F2, Bb2, D3
-            Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.67)),
+            
+            // Left Hand (Bass): Eb3 + Ab3 + C4 on 1.0, C4 on 2, F3 + D4 on 3, F3 on 4
+            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
         measures.append(Measure(number: 7, notes: m7Notes))
         
-        // Measure 8: Full resolution to C minor
+        // Measure 8: "Craft dic-tates the" + Melodic High Flourish
         let m8Notes = [
-            // Right Hand: G4, Eb4, C4 (resolving chord)
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .half, staff: .treble, position: NotePosition(beat: 3.0)),
-            // Left Hand: C2 & G2 & C3 sustained
-            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .whole, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .whole, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .whole, staff: .bass, position: NotePosition(beat: 1.0))
+            // Right Hand (Treble)
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.67)),
+            
+            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.67)),
+            
+            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.67)),
+            
+            // Rapid high register flourish on beat 4: D6 -> Eb6 -> D6 -> C6 -> [G5 + G6]
+            Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .E, octave: 6, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.25)),
+            Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)),
+            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.75)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.75)),
+            Note(pitch: Pitch(noteName: .G, octave: 6), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.75)),
+            
+            // Left Hand (Bass): G2 + D3 + G3 on 1.0, Ab3 on 2, G2 + D3 + Bb3 on 3, G2 + D3 + C4 on 4
+            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
         ]
-        measures.append(Measure(number: 8, notes: m8Notes, barlineType: .final))
+        measures.append(Measure(number: 8, notes: m8Notes))
+        
+        // Measure 9: "Fate ... I've made ... Where" (Arpeggios)
+        let m9Notes = [
+            // Right Hand (Treble): Sextuplet arpeggio waves (C6-G5-Eb5-C5-Eb5-G5)
+            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.17)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.33)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.5)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.83)),
+            
+            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.17)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.33)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.83)),
+            
+            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.17)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.33)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.83)),
+            
+            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.17)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.33)),
+            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)),
+            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.67)),
+            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.83)),
+            
+            // Left Hand (Bass): C3 + G3 + D4 on 1.0, C2 + C3 on 2, C3 + Eb3 + G3 on 3, D2 + D3 on 4
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
+            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
+            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
+        ]
+        measures.append(Measure(number: 9, notes: m9Notes, barlineType: .final))
         
         return Score(
             title: "Dark Dream (Lord of Mysteries ED)",
@@ -258,7 +441,7 @@ final class ScoreStorageService {
             difficulty: .intermediate,
             source: .manual,
             isFavorite: true,
-            tempo: 72,
+            tempo: 70,
             keySignatureValue: -3,
             timeSignatureTop: 4,
             timeSignatureBottom: 4,

@@ -19,6 +19,19 @@ enum NoteName: String, Codable, CaseIterable, Comparable {
         }
     }
 
+    /// The 0-based diatonic step index from C (C=0, D=1, E=2, F=3, G=4, A=5, B=6).
+    var diatonicIndex: Int {
+        switch self {
+        case .C: return 0
+        case .D: return 1
+        case .E: return 2
+        case .F: return 3
+        case .G: return 4
+        case .A: return 5
+        case .B: return 6
+        }
+    }
+
     static func < (lhs: NoteName, rhs: NoteName) -> Bool {
         lhs.baseSemitone < rhs.baseSemitone
     }
@@ -375,28 +388,17 @@ struct Note: Identifiable, Codable, Hashable {
     }
 
     /// Calculated staff position relative to the middle line of the staff.
-    /// For Treble clef, middle line is B4 (MIDI 71).
-    /// For Bass clef, middle line is D3 (MIDI 50).
+    /// For Treble clef, middle line is B4 (index 34 = 4*7 + 6).
+    /// For Bass clef, middle line is D3 (index 22 = 3*7 + 1).
+    /// Each integer represents one diatonic step (line to space or space to line).
     var staffPosition: Int {
         guard !isRest else { return 0 }
-        let midi = Int(midiNote)
+        let diatonicAbsolute = pitch.octave * 7 + pitch.noteName.diatonicIndex
         if staff == .treble {
-            // E4 (MIDI 64) is line 1 (bottom). B4 (MIDI 71) is line 3 (center).
-            // Let's compute diatonic step from C4 (MIDI 60 = -2 step below bottom line)
-            return diatonicStep(from: 71, targetMIDI: midi)
+            return diatonicAbsolute - 34
         } else {
-            // G2 (MIDI 43) is line 1. D3 (MIDI 50) is line 3 (center).
-            return diatonicStep(from: 50, targetMIDI: midi)
+            return diatonicAbsolute - 22
         }
-    }
-
-    /// Helper converting MIDI pitch difference to diatonic staff line/space difference.
-    private func diatonicStep(from centerMIDI: Int, targetMIDI: Int) -> Int {
-        let diatonicOffsets = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6] // semitones to diatonic steps
-        let diff = targetMIDI - centerMIDI
-        let octaves = diff >= 0 ? diff / 12 : (diff - 11) / 12
-        let semitoneInOct = ((diff % 12) + 12) % 12
-        return octaves * 7 + diatonicOffsets[semitoneInOct]
     }
 
     /// Whether note stem should point up (true) or down (false) based on staff position.
@@ -404,18 +406,18 @@ struct Note: Identifiable, Codable, Hashable {
         staffPosition < 0
     }
 
-    /// Number of ledger lines needed above staff
+    /// Number of ledger lines needed above staff (staff lines span -4 to +4)
     var ledgerLinesAbove: Int {
-        if staffPosition > 4 {
-            return (staffPosition - 4 + 1) / 2
+        if staffPosition >= 6 {
+            return (staffPosition - 4) / 2
         }
         return 0
     }
 
-    /// Number of ledger lines needed below staff
+    /// Number of ledger lines needed below staff (staff lines span -4 to +4)
     var ledgerLinesBelow: Int {
-        if staffPosition < -4 {
-            return (abs(staffPosition) - 4 + 1) / 2
+        if staffPosition <= -6 {
+            return (abs(staffPosition) - 4) / 2
         }
         return 0
     }

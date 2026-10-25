@@ -48,7 +48,7 @@ struct ScoreView: View {
                                 isCurrent: index == viewModel.currentMeasureIndex,
                                 currentBeat: viewModel.currentBeat,
                                 lineSpacing: 12.0 * viewModel.zoomScale,
-                                measureWidth: 180.0 * viewModel.zoomScale
+                                measureWidth: 280.0 * viewModel.zoomScale
                             )
                             .id(index)
                             .onTapGesture {

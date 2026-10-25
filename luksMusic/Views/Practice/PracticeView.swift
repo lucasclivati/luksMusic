@@ -16,7 +16,18 @@ struct PracticeView: View {
     @State private var showStats: Bool = false
     
     init(score: Score) {
-        _viewModel = State(initialValue: PracticeViewModel(score: score))
+        let vm = PracticeViewModel(score: score)
+        _viewModel = State(initialValue: vm)
+        
+        let midiPitches = score.measures
+            .flatMap { $0.notes }
+            .filter { !$0.isRest }
+            .map { Int($0.midiNote) }
+        let minPitch = midiPitches.min() ?? 48
+        let maxPitch = midiPitches.max() ?? 84
+        let startOctaveC = max(24, min(48, (minPitch / 12) * 12))
+        let endOctaveC = min(108, max(84, Int(ceil(Double(maxPitch + 1) / 12.0)) * 12))
+        _keyboardVM = State(initialValue: PianoKeyboardViewModel(rangeStart: startOctaveC, rangeEnd: endOctaveC))
     }
     
     var body: some View {
@@ -32,7 +43,7 @@ struct PracticeView: View {
                     
                     // 1. Sheet Music on Top (Colored notes by beat)
                     sheetMusicTopSection
-                        .frame(height: 125)
+                        .frame(height: 140)
                         .background(Color(.secondarySystemBackground).opacity(0.4))
                     
                     Divider()
@@ -102,30 +113,30 @@ struct PracticeView: View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .center, spacing: 0) {
-                    // Clef icons on the left
-                    VStack(spacing: 6) {
-                        Text("𝄞")
-                            .font(.system(size: 30))
-                        Text("𝄢")
-                            .font(.system(size: 22))
-                    }
-                    .foregroundColor(.primary)
-                    .padding(.horizontal, 10)
+                    // Left Grand Staff Clefs and Signatures
+                    StaffView(
+                        lineSpacing: 9.0,
+                        keySignatureValue: viewModel.score.keySignatureValue,
+                        timeSignatureTop: viewModel.score.timeSignatureTop,
+                        timeSignatureBottom: viewModel.score.timeSignatureBottom,
+                        showClefsAndSignatures: true
+                    )
+                    .padding(.leading, 8)
                     
-                    // Measures with beat-colored notes
+                    // Measures with proportional note spacing
                     ForEach(viewModel.score.measures) { measure in
                         let isCurrent = measure.number == (viewModel.currentMeasureIndex + 1)
                         MeasureView(
                             measure: measure,
                             isCurrent: isCurrent,
                             currentBeat: viewModel.currentBeat,
-                            lineSpacing: 8.0,
-                            measureWidth: 160.0
+                            lineSpacing: 9.0,
+                            measureWidth: 260.0
                         )
                         .id(measure.number)
                     }
                 }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 4)
                 .padding(.vertical, 4)
             }
             .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
@@ -142,8 +153,8 @@ struct PracticeView: View {
             notes: currentFallingNotes,
             tempo: viewModel.tempoBPM,
             isPlaying: viewModel.isRunning && !viewModel.isPaused,
-            startKey: 48,
-            keyCount: 36,
+            startKey: keyboardVM.rangeStart,
+            keyCount: keyboardVM.rangeEnd - keyboardVM.rangeStart,
             onActiveKeysChanged: { activeKeys, bassKeys, trebleKeys, keyColors in
                 keyboardVM.midiActiveKeys = activeKeys
                 keyboardVM.bassActiveKeys = bassKeys
