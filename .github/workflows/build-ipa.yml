@@ -1,0 +1,69 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build luksMusic IPA
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: |
+          xcodegen generate
+
+      - name: Build Archive
+        run: |
+          xcodebuild archive \
+            -project luksMusic.xcodeproj \
+            -scheme luksMusic \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath build/luksMusic.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+      - name: Package IPA
+        run: |
+          mkdir -p build/Payload
+          cp -R build/luksMusic.xcarchive/Products/Applications/luksMusic.app build/Payload/
+          cd build
+          zip -qr luksMusic.ipa Payload
+          ls -lh luksMusic.ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: luksMusic-ipa
+          path: build/luksMusic.ipa
+          retention-days: 14
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v1.0.0 build/luksMusic.ipa \
+            --title "luksMusic v1.0.0 (iOS IPA)" \
+            --notes "Install via Sideloadly or AltStore on your connected iPhone/iPad." \
+            --clobber || true
