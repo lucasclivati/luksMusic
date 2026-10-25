@@ -38,6 +38,10 @@ final class PracticeViewModel {
     var correctKeyFeedback: Set<Int> = []
     var incorrectKeyFeedback: Set<Int> = []
     
+    // Microphone Pitch Detection Mode
+    var isMicrophoneEnabled: Bool = false
+    var microphoneService = MicrophonePitchService.shared
+    
     // Looping / Section Practice
     var practiceStartMeasure: Int = 1
     var practiceEndMeasure: Int = 1
@@ -55,6 +59,25 @@ final class PracticeViewModel {
         self.tempoBPM = practiceMode == .slowPractice ? max(40, Int(Double(score.tempo) * 0.7)) : score.tempo
         self.practiceEndMeasure = max(1, score.measureCount)
         updateExpectedNotes()
+        setupMicrophoneListener()
+    }
+    
+    private func setupMicrophoneListener() {
+        microphoneService.onNoteDetected = { [weak self] midiNote in
+            guard let self = self, self.isMicrophoneEnabled, self.isRunning, !self.isPaused else { return }
+            self.notePlayed(midiNote: midiNote, fromMicrophone: true)
+        }
+    }
+    
+    func toggleMicrophoneListening() {
+        isMicrophoneEnabled.toggle()
+        if isMicrophoneEnabled {
+            Task {
+                try? await self.microphoneService.startListening()
+            }
+        } else {
+            microphoneService.stopListening()
+        }
     }
     
     // MARK: - Practice Lifecycle
@@ -97,6 +120,9 @@ final class PracticeViewModel {
         practiceTimer?.invalidate()
         practiceTimer = nil
         audioEngine.stopAllNotes()
+        if isMicrophoneEnabled {
+            microphoneService.stopListening()
+        }
         
         // Save session stats if notes were played
         if totalNotesPlayed > 0, let context = modelContext {
@@ -124,9 +150,11 @@ final class PracticeViewModel {
     
     // MARK: - Note Evaluation
     
-    /// Evaluates a note played by the user (tap on screen keyboard or MIDI event).
-    func notePlayed(midiNote: Int) {
-        audioEngine.playNote(midiNote: UInt8(midiNote), velocity: 85)
+    /// Evaluates a note played by the user (tap on screen keyboard, external MIDI, or acoustic piano via microphone).
+    func notePlayed(midiNote: Int, fromMicrophone: Bool = false) {
+        if !fromMicrophone {
+            audioEngine.playNote(midiNote: UInt8(midiNote), velocity: 85)
+        }
         totalNotesPlayed += 1
         
         let isCorrect = activeTargetMidiNotes.contains(midiNote)
@@ -138,7 +166,7 @@ final class PracticeViewModel {
             
             // Visual feedback
             correctKeyFeedback.insert(midiNote)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.correctKeyFeedback.remove(midiNote)
             }
             
@@ -152,7 +180,7 @@ final class PracticeViewModel {
             
             // Red flash feedback
             incorrectKeyFeedback.insert(midiNote)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.incorrectKeyFeedback.remove(midiNote)
             }
         }

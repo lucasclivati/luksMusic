@@ -30,12 +30,21 @@ struct PracticeView: View {
                     
                     Divider()
                     
+                    // 1. Sheet Music on Top (Colored notes by beat)
+                    sheetMusicTopSection
+                        .frame(height: 125)
+                        .background(Color(.secondarySystemBackground).opacity(0.4))
+                    
+                    Divider()
+                    
+                    // 2. Falling Notes cascading down in matching beat colors
                     fallingNotesSection
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                     Divider()
                     
-                    keyboardSection(height: geo.size.height * 0.38)
+                    // 3. Piano Keyboard illuminating in beat colors
+                    keyboardSection(height: geo.size.height * 0.33)
                     
                     practiceToolbar()
                         .padding(.horizontal, 16)
@@ -54,7 +63,16 @@ struct PracticeView: View {
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    modeMenu
+                    HStack(spacing: 12) {
+                        Button {
+                            viewModel.toggleMicrophoneListening()
+                        } label: {
+                            Image(systemName: viewModel.isMicrophoneEnabled ? "mic.fill" : "mic.slash")
+                                .foregroundColor(viewModel.isMicrophoneEnabled ? .green : .primary)
+                        }
+                        
+                        modeMenu
+                    }
                 }
             }
             .sheet(isPresented: $showStats) {
@@ -80,28 +98,59 @@ struct PracticeView: View {
     // MARK: - Sections
     
     @ViewBuilder
-    private var fallingNotesSection: some View {
-        ZStack {
-            FallingNotesView(
-                notes: currentFallingNotes,
-                tempo: viewModel.tempoBPM,
-                isPlaying: viewModel.isRunning && !viewModel.isPaused,
-                startKey: 48,
-                keyCount: 36
-            )
-            
-            VStack {
-                Spacer()
-                Rectangle()
-                    .fill(LinearGradient(
-                        colors: [.accentColor.opacity(0.8), .indigo.opacity(0.8)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    ))
-                    .frame(height: 3)
-                    .shadow(color: .accentColor, radius: 4)
+    private var sheetMusicTopSection: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .center, spacing: 0) {
+                    // Clef icons on the left
+                    VStack(spacing: 6) {
+                        Text("𝄞")
+                            .font(.system(size: 30))
+                        Text("𝄢")
+                            .font(.system(size: 22))
+                    }
+                    .foregroundColor(.primary)
+                    .padding(.horizontal, 10)
+                    
+                    // Measures with beat-colored notes
+                    ForEach(viewModel.score.measures) { measure in
+                        let isCurrent = measure.number == (viewModel.currentMeasureIndex + 1)
+                        MeasureView(
+                            measure: measure,
+                            isCurrent: isCurrent,
+                            currentBeat: viewModel.currentBeat,
+                            lineSpacing: 8.0,
+                            measureWidth: 160.0
+                        )
+                        .id(measure.number)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+            }
+            .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    proxy.scrollTo(newIndex + 1, anchor: .center)
+                }
             }
         }
+    }
+    
+    @ViewBuilder
+    private var fallingNotesSection: some View {
+        FallingNotesView(
+            notes: currentFallingNotes,
+            tempo: viewModel.tempoBPM,
+            isPlaying: viewModel.isRunning && !viewModel.isPaused,
+            startKey: 48,
+            keyCount: 36,
+            onActiveKeysChanged: { activeKeys, bassKeys, trebleKeys, keyColors in
+                keyboardVM.midiActiveKeys = activeKeys
+                keyboardVM.bassActiveKeys = bassKeys
+                keyboardVM.trebleActiveKeys = trebleKeys
+                keyboardVM.keyColorsByNote = keyColors
+            }
+        )
     }
     
     @ViewBuilder
@@ -129,6 +178,15 @@ struct PracticeView: View {
             }
             
             Divider()
+            
+            Button {
+                viewModel.toggleMicrophoneListening()
+            } label: {
+                Label(
+                    viewModel.isMicrophoneEnabled ? "Acoustic Mic Input: Active" : "Enable Acoustic Mic Input",
+                    systemImage: viewModel.isMicrophoneEnabled ? "mic.fill" : "mic"
+                )
+            }
             
             Button {
                 showStats = true
@@ -178,6 +236,23 @@ struct PracticeView: View {
             
             Spacer()
             
+            if viewModel.isMicrophoneEnabled {
+                HStack(spacing: 4) {
+                    Image(systemName: "waveform")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                    Text("Mic: \(viewModel.microphoneService.detectedNoteName)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.green)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.green.opacity(0.15), in: Capsule())
+                
+                Spacer()
+            }
+            
             VStack(alignment: .center, spacing: 2) {
                 Text("Streak")
                     .font(.caption2)
@@ -213,7 +288,7 @@ struct PracticeView: View {
     
     @ViewBuilder
     private func practiceToolbar() -> some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 16) {
             Button {
                 if viewModel.isRunning {
                     if viewModel.isPaused {
@@ -241,6 +316,17 @@ struct PracticeView: View {
                     .foregroundColor(.primary)
                     .frame(width: 36, height: 36)
                     .background(Color(.tertiarySystemFill))
+                    .clipShape(Circle())
+            }
+            
+            Button {
+                viewModel.toggleMicrophoneListening()
+            } label: {
+                Image(systemName: viewModel.isMicrophoneEnabled ? "mic.fill" : "mic.slash")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(viewModel.isMicrophoneEnabled ? .white : .primary)
+                    .frame(width: 36, height: 36)
+                    .background(viewModel.isMicrophoneEnabled ? Color.green : Color(.tertiarySystemFill))
                     .clipShape(Circle())
             }
             

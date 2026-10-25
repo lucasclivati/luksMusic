@@ -44,14 +44,23 @@ enum KeyLabelStyle: String, CaseIterable {
 @MainActor
 @Observable
 final class PianoKeyboardViewModel {
+    /// Colors matching Synthesia screenshot
+    static let neonGreen = Color(red: 0.22, green: 0.95, blue: 0.38)
+    static let electricCyan = Color(red: 0.0, green: 0.88, blue: 1.0)
+
     /// All keys in the current keyboard range.
     var keys: [PianoKey] = []
     /// Set of currently pressed MIDI note numbers (by touch).
     var pressedKeys: Set<Int> = []
-    /// Set of MIDI note numbers currently active from external MIDI input.
+    /// Set of MIDI note numbers currently active from external MIDI or falling notes hit line.
     var midiActiveKeys: Set<Int> = []
     /// Set of MIDI note numbers that are target notes to press next.
     var targetNoteKeys: Set<Int> = []
+    /// Hand mapping for active notes (left hand = bass, right hand = treble).
+    var bassActiveKeys: Set<Int> = []
+    var trebleActiveKeys: Set<Int> = []
+    /// Custom beat colors per note number
+    var keyColorsByNote: [Int: Color] = [:]
     /// Set of correctly played MIDI notes (green glow).
     var correctKeys: Set<Int> = []
     /// Set of incorrectly played MIDI notes (red flash).
@@ -107,7 +116,6 @@ final class PianoKeyboardViewModel {
     func keyPressed(_ key: PianoKey) {
         pressedKeys.insert(key.id)
         lightImpact.impactOccurred()
-        // AudioEngineService.shared.playNote(key.id)
         
         if targetNoteKeys.contains(key.id) {
             correctKeys.insert(key.id)
@@ -128,22 +136,30 @@ final class PianoKeyboardViewModel {
         if !isSustainActive {
             pressedKeys.remove(key.id)
         }
-        // AudioEngineService.shared.stopNote(key.id)
     }
     
-    /// Returns the visual state color for a given key.
+    /// Returns the visual state color for a given key, exactly matching the Synthesia screenshot.
     func keyColor(for key: PianoKey) -> Color? {
         if correctKeys.contains(key.id) {
-            return .green
+            return Self.neonGreen
         }
         if incorrectKeys.contains(key.id) {
             return .red
         }
-        if pressedKeys.contains(key.id) || midiActiveKeys.contains(key.id) {
-            return .indigo
+        
+        let isActive = pressedKeys.contains(key.id) || midiActiveKeys.contains(key.id)
+        if isActive, let customColor = keyColorsByNote[key.id] {
+            return customColor
         }
+        let isLeftHand = bassActiveKeys.contains(key.id) || (key.id < 60 && !trebleActiveKeys.contains(key.id))
+        
+        if isActive {
+            return isLeftHand ? Self.neonGreen : Self.electricCyan
+        }
+        
         if targetNoteKeys.contains(key.id) {
-            return key.isBlack ? .indigo.opacity(0.5) : .indigo.opacity(0.25)
+            let guideColor = isLeftHand ? Self.neonGreen : Self.electricCyan
+            return key.isBlack ? guideColor.opacity(0.55) : guideColor.opacity(0.35)
         }
         return nil
     }
@@ -321,15 +337,15 @@ struct WhiteKeyView: View {
     private var keyFillGradient: LinearGradient {
         if let color = highlightColor {
             return LinearGradient(
-                colors: [color.opacity(0.3), color.opacity(0.15), .white.opacity(0.95)],
+                colors: [color, color.opacity(0.85)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         }
         return LinearGradient(
             colors: [
-                Color(white: 0.97),
-                Color(white: 0.92),
+                Color(white: 0.98),
+                Color(white: 0.93),
                 Color(white: 0.88)
             ],
             startPoint: .top,
@@ -393,16 +409,16 @@ struct BlackKeyView: View {
     private var keyFillGradient: LinearGradient {
         if let color = highlightColor {
             return LinearGradient(
-                colors: [color.opacity(0.7), color.opacity(0.4), Color(white: 0.1)],
+                colors: [color, color.opacity(0.8)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         }
         return LinearGradient(
             colors: [
-                Color(white: 0.2),
+                Color(white: 0.22),
                 Color(white: 0.12),
-                Color(white: 0.08)
+                Color(white: 0.05)
             ],
             startPoint: .top,
             endPoint: .bottom

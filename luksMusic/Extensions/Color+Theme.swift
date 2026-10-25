@@ -37,7 +37,28 @@ extension Color {
     /// Dim color for upcoming notes.
     static let noteUpcoming = Color(red: 0.45, green: 0.45, blue: 0.50)
 
-    // MARK: - Accent
+    // MARK: - Beat Colors
+    
+    /// Vibrant colors assigned to each beat of a measure, shared across Sheet Music and Falling Notes.
+    static func colorForBeat(_ beat: Double, beatsPerMeasure: Int = 4) -> Color {
+        let beatInt = max(1, Int(floor(beat)))
+        let index = ((beatInt - 1) % max(1, beatsPerMeasure))
+        
+        switch index {
+        case 0: // Beat 1: Vibrant Coral Red
+            return Color(red: 1.0, green: 0.32, blue: 0.35)
+        case 1: // Beat 2: Warm Amber / Gold
+            return Color(red: 1.0, green: 0.72, blue: 0.05)
+        case 2: // Beat 3: Vibrant Emerald Green
+            return Color(red: 0.15, green: 0.90, blue: 0.45)
+        case 3: // Beat 4: Vibrant Electric Cyan
+            return Color(red: 0.0, green: 0.85, blue: 1.0)
+        case 4: // Beat 5: Electric Purple
+            return Color(red: 0.75, green: 0.40, blue: 0.95)
+        default: // Beat 6+: Bright Pink
+            return Color(red: 1.0, green: 0.40, blue: 0.75)
+        }
+    }
 
     /// Primary indigo accent used throughout the app.
     static let accentIndigo = Color(red: 0.35, green: 0.34, blue: 0.84)

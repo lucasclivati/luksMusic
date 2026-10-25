@@ -9,6 +9,7 @@ struct NoteView: View {
     let note: Note
     var playbackState: NotePlaybackState = .upcoming
     var lineSpacing: CGFloat = 12.0
+    var useBeatColors: Bool = true
     
     var body: some View {
         ZStack {
@@ -148,11 +149,16 @@ struct NoteView: View {
     
     private var noteColor: Color {
         switch playbackState {
-        case .upcoming: return Color.primary
-        case .current: return Color.accentColor
-        case .correct: return Color.green
-        case .incorrect: return Color.red
-        case .played: return Color.secondary.opacity(0.5)
+        case .upcoming:
+            return useBeatColors ? Color.colorForBeat(note.position.beat) : Color.primary
+        case .current:
+            return useBeatColors ? Color.colorForBeat(note.position.beat) : Color.accentColor
+        case .correct:
+            return Color(red: 0.22, green: 0.95, blue: 0.38)
+        case .incorrect:
+            return Color.red
+        case .played:
+            return Color.secondary.opacity(0.4)
         }
     }
     
