@@ -27,6 +27,8 @@ final class ScoreViewModel {
     // Audio engine connection
     private let audioEngine = AudioEngineService.shared
     private var playbackTimer: Timer?
+    private var lastPlaybackTime: TimeInterval = 0.0
+    private var playedNoteIds: Set<UUID> = []
     
     // MARK: - Initialization
     
@@ -48,12 +50,15 @@ final class ScoreViewModel {
     func play() {
         guard !isPlaying else { return }
         isPlaying = true
+        lastPlaybackTime = CACurrentMediaTime()
+        playedNoteIds.removeAll()
         
-        let bpm = Double(score.tempo) * playbackSpeed
-        let interval = 60.0 / bpm / 4.0 // 16th note granularity
+        // Immediately trigger notes on current starting beat
+        triggerNotes(around: currentBeat)
         
-        playbackTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
-            self?.advancePlayback(step: 0.25)
+        // 50 Hz high-precision continuous clock for smooth cursor & exact note timing
+        playbackTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
+            self?.tickPlayback()
         }
     }
     
@@ -61,6 +66,7 @@ final class ScoreViewModel {
         isPlaying = false
         playbackTimer?.invalidate()
         playbackTimer = nil
+        playedNoteIds.removeAll()
         audioEngine.stopAllNotes()
     }
     
@@ -68,13 +74,15 @@ final class ScoreViewModel {
         pause()
         currentMeasureIndex = isLooping ? (loopStartMeasure - 1) : 0
         currentBeat = 1.0
+        playedNoteIds.removeAll()
     }
     
     func seekToMeasure(_ index: Int) {
         guard index >= 0 && index < score.measureCount else { return }
         currentMeasureIndex = index
         currentBeat = 1.0
-        playCurrentMeasureNotes()
+        playedNoteIds.removeAll()
+        triggerNotes(around: 1.0)
     }
     
     func nextMeasure() {
@@ -89,48 +97,78 @@ final class ScoreViewModel {
         }
     }
     
-    // MARK: - Playback Loop Logic
+    // MARK: - High-Precision Continuous Playback Loop
     
-    private func advancePlayback(step: Double) {
-        currentBeat += step
+    private func tickPlayback() {
+        guard isPlaying else { return }
+        let now = CACurrentMediaTime()
+        let dt = now - lastPlaybackTime
+        lastPlaybackTime = now
         
-        let maxBeats = Double(score.timeSignatureTop)
-        if currentBeat > maxBeats {
-            currentBeat = 1.0
+        let bpm = Double(score.tempo) * playbackSpeed
+        let beatsDelta = dt * (bpm / 60.0)
+        
+        let prevBeat = currentBeat
+        let newBeat = currentBeat + beatsDelta
+        let maxBeats = Double(score.timeSignatureTop) + 1.0
+        
+        if newBeat >= maxBeats {
+            // Reached barline: advance to next measure
+            currentBeat = 1.0 + (newBeat - maxBeats)
+            playedNoteIds.removeAll()
             
             if isLooping && (currentMeasureIndex + 1 >= loopEndMeasure) {
                 currentMeasureIndex = max(0, loopStartMeasure - 1)
             } else if currentMeasureIndex + 1 < score.measureCount {
                 currentMeasureIndex += 1
             } else {
-                // End of score reached
                 stop()
                 return
             }
+            triggerNotes(around: currentBeat)
+        } else {
+            currentBeat = newBeat
+            triggerNotesBetween(startBeat: prevBeat, endBeat: newBeat)
         }
-        
-        playNotesAtCurrentBeat()
     }
     
-    private func playNotesAtCurrentBeat() {
+    private func triggerNotesBetween(startBeat: Double, endBeat: Double) {
         guard currentMeasureIndex < score.measures.count else { return }
         let currentMeasure = score.measures[currentMeasureIndex]
+        let bpm = Double(score.tempo) * playbackSpeed
         
-        // Find notes that start around current beat
-        let activeNotes = currentMeasure.notes.filter { note in
-            !note.isRest && abs(note.position.beat - currentBeat) < 0.15
-        }
-        
-        for note in activeNotes {
-            audioEngine.playNote(midiNote: note.midiNote, velocity: UInt8(note.velocity))
+        for note in currentMeasure.notes where !note.isRest {
+            if note.position.beat > startBeat && note.position.beat <= endBeat {
+                if !playedNoteIds.contains(note.id) {
+                    playedNoteIds.insert(note.id)
+                    let durationSeconds = max(0.12, (note.duration.beats * 60.0) / bpm)
+                    audioEngine.playNote(
+                        midiNote: note.midiNote,
+                        velocity: UInt8(note.velocity),
+                        duration: durationSeconds
+                    )
+                }
+            }
         }
     }
     
-    private func playCurrentMeasureNotes() {
+    private func triggerNotes(around beat: Double) {
         guard currentMeasureIndex < score.measures.count else { return }
-        let notes = score.measures[currentMeasureIndex].notes.filter { !$0.isRest }
-        for note in notes.prefix(2) {
-            audioEngine.playNote(midiNote: note.midiNote, velocity: 70)
+        let currentMeasure = score.measures[currentMeasureIndex]
+        let bpm = Double(score.tempo) * playbackSpeed
+        
+        for note in currentMeasure.notes where !note.isRest {
+            if abs(note.position.beat - beat) <= 0.08 {
+                if !playedNoteIds.contains(note.id) {
+                    playedNoteIds.insert(note.id)
+                    let durationSeconds = max(0.12, (note.duration.beats * 60.0) / bpm)
+                    audioEngine.playNote(
+                        midiNote: note.midiNote,
+                        velocity: UInt8(note.velocity),
+                        duration: durationSeconds
+                    )
+                }
+            }
         }
     }
     

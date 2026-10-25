@@ -377,6 +377,12 @@ struct Note: Identifiable, Codable, Hashable {
     /// Optional fingering suggestion (1 = thumb, 5 = pinky).
     var fingerNumber: Int?
 
+    /// Optional lyric syllable text displayed below the staff
+    var lyric: String?
+
+    /// Whether this note belongs to a beamed triplet
+    var isTriplet: Bool = false
+
     /// The rhythmic position of this note within its measure.
     var position: NotePosition
 
@@ -440,6 +446,8 @@ struct Note: Identifiable, Codable, Hashable {
         articulation: Articulation? = nil,
         dynamic: Dynamic? = nil,
         fingerNumber: Int? = nil,
+        lyric: String? = nil,
+        isTriplet: Bool = false,
         position: NotePosition = NotePosition(beat: 1.0)
     ) {
         self.id = id
@@ -453,6 +461,8 @@ struct Note: Identifiable, Codable, Hashable {
         self.articulation = articulation
         self.dynamic = dynamic
         self.fingerNumber = fingerNumber.map { min(5, max(1, $0)) }
+        self.lyric = lyric
+        self.isTriplet = isTriplet
         self.position = position
     }
 

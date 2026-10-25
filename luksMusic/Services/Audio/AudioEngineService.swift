@@ -150,6 +150,7 @@ final class AudioEngineService {
             try engine.start()
             isEngineRunning = true
             logger.info("Audio engine started successfully.")
+            loadSoundFont(name: "Piano")
         } catch {
             let audioError = AudioEngineError.engineStartFailed(underlying: error)
             lastError = audioError
@@ -190,12 +191,13 @@ final class AudioEngineService {
     
     // MARK: - Note Playback
     
-    /// Starts playing a MIDI note.
+    /// Starts playing a MIDI note with optional duration.
     ///
     /// - Parameters:
     ///   - midiNote: The MIDI note number (0–127). Middle C is 60.
     ///   - velocity: The note velocity (0–127). Default is 80.
-    func playNote(midiNote: UInt8, velocity: UInt8 = 80) {
+    ///   - duration: Optional duration in seconds after which the note is automatically stopped.
+    func playNote(midiNote: UInt8, velocity: UInt8 = 80, duration: Double? = nil) {
         guard isEngineRunning else {
             logger.warning("Cannot play note: engine is not running.")
             return
@@ -204,6 +206,12 @@ final class AudioEngineService {
         sampler.startNote(midiNote, withVelocity: velocity, onChannel: 0)
         activeNoteCount += 1
         isPlaying = true
+        
+        if let duration = duration, duration > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + duration) { [weak self] in
+                self?.stopNote(midiNote: midiNote)
+            }
+        }
     }
     
     /// Stops a currently playing MIDI note.

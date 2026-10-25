@@ -43,7 +43,7 @@ struct StaffView: View {
         VStack(spacing: lineSpacing) {
             ForEach(0..<5) { _ in
                 Rectangle()
-                    .fill(Color.secondary.opacity(0.45))
+                    .fill(Color.black.opacity(0.85))
                     .frame(height: 1.2)
             }
         }
@@ -62,11 +62,12 @@ struct StaffView: View {
                 // Clef symbol
                 Text(staff == .treble ? "𝄞" : "𝄢")
                     .font(.system(size: staff == .treble ? lineSpacing * 3.8 : lineSpacing * 2.8))
-                    .foregroundColor(.primary)
+                    .foregroundColor(.black)
                     .offset(y: staff == .treble ? -lineSpacing * 0.25 : -lineSpacing * 0.1)
                 
                 // Key signature accidentals placed on authentic staff lines/spaces
                 renderKeySignatureAccidentals(staff: staff)
+                    .foregroundColor(.black)
                 
                 // Time signature
                 VStack(spacing: -1) {
@@ -75,7 +76,7 @@ struct StaffView: View {
                     Text("\(timeSignatureBottom)")
                         .font(.system(size: lineSpacing * 1.5, weight: .bold, design: .serif))
                 }
-                .foregroundColor(.primary)
+                .foregroundColor(.black)
             }
         }
         .frame(height: lineSpacing * 4)
@@ -142,7 +143,7 @@ struct StaffView: View {
                     control2: CGPoint(x: 6, y: h * 0.85)
                 )
             }
-            .stroke(Color.primary.opacity(0.85), lineWidth: 2)
+            .stroke(Color.black, lineWidth: 2)
         }
     }
 }

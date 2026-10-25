@@ -59,14 +59,16 @@ struct ScoreView: View {
                         Spacer(minLength: 40)
                     }
                     .padding(.vertical, 24)
+                    .background(Color.white)
                 }
+                .background(Color.white)
                 .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
                     withAnimation(.easeInOut(duration: 0.2)) {
                         scrollProxy.scrollTo(newIndex, anchor: .center)
                     }
                 }
             }
-            .background(Color(.systemBackground))
+            .background(Color.white)
             
             Divider()
             
@@ -157,21 +159,31 @@ struct ScoreView: View {
     @ViewBuilder
     private func scoreHeader() -> some View {
         VStack(spacing: 4) {
-            Text(viewModel.score.title)
-                .font(.title2)
-                .fontWeight(.bold)
+            Text(viewModel.score.title.uppercased())
+                .font(.system(size: 20, weight: .bold, design: .serif))
                 .multilineTextAlignment(.center)
+                .foregroundColor(.primary)
             
             Text(viewModel.score.composer)
-                .font(.subheadline)
+                .font(.system(size: 13, weight: .medium, design: .serif))
                 .foregroundColor(.secondary)
             
-            HStack(spacing: 16) {
-                Label("\(viewModel.score.tempo) BPM", systemImage: "metronome")
-                Label("\(viewModel.score.timeSignatureTop)/\(viewModel.score.timeSignatureBottom)", systemImage: "music.note")
-                Label(viewModel.score.keySignatureName, systemImage: "tuningfork")
+            HStack(spacing: 12) {
+                HStack(spacing: 3) {
+                    Text("♩ =")
+                        .font(.system(size: 13, weight: .bold, design: .serif))
+                    Text("\(viewModel.score.tempo)")
+                        .font(.system(size: 13, weight: .semibold, design: .serif))
+                }
+                Text("•")
+                    .foregroundColor(.secondary)
+                Text("\(viewModel.score.timeSignatureTop)/\(viewModel.score.timeSignatureBottom)")
+                    .font(.system(size: 13, weight: .bold, design: .serif))
+                Text("•")
+                    .foregroundColor(.secondary)
+                Text(viewModel.score.keySignatureName)
+                    .font(.system(size: 13, weight: .medium, design: .serif))
             }
-            .font(.caption)
             .foregroundColor(.secondary)
             .padding(.top, 2)
         }

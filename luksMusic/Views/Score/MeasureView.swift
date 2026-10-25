@@ -1,7 +1,8 @@
 // MeasureView.swift
 // luksMusic
 //
-// SwiftUI view rendering a complete musical measure with notes for both staves and barlines.
+// SwiftUI view rendering a complete musical measure with authentic MuseScore engraving:
+// connected horizontal beams for triplets/eighths, triplet brackets ("3"), lyrics, and smooth cursor.
 
 import SwiftUI
 
@@ -12,12 +13,16 @@ struct MeasureView: View {
     var lineSpacing: CGFloat = 12.0
     var measureWidth: CGFloat = 280.0
     
+    private var usableWidth: CGFloat {
+        measureWidth - 48.0
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {
             // Measure number badge
             Text("\(measure.number)")
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundColor(isCurrent ? .accentColor : .secondary.opacity(0.8))
+                .font(.system(size: 11, weight: .bold, design: .serif))
+                .foregroundColor(isCurrent ? .accentColor : Color.black.opacity(0.7))
                 .padding(.horizontal, 6)
                 .padding(.vertical, 1)
                 .background(
@@ -27,16 +32,10 @@ struct MeasureView: View {
                 .padding(.leading, 6)
             
             ZStack(alignment: .leading) {
-                // Background highlight if measure is active during playback
-                if isCurrent {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.accentColor.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.accentColor.opacity(0.35), lineWidth: 1.5)
-                        )
-                        .frame(width: measureWidth, height: lineSpacing * 12.5)
-                }
+                // Background paper white
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(width: measureWidth, height: lineSpacing * 14.0)
                 
                 // Continuous 5-line staff backdrop for both staves
                 VStack(spacing: lineSpacing * 3.5) {
@@ -45,21 +44,33 @@ struct MeasureView: View {
                 }
                 .frame(width: measureWidth)
                 
-                // Treble staff notes (centered on Treble Line 3)
-                notesLayer(notes: measure.trebleNotes)
+                // Treble staff notes and beams (centered on Treble Line 3)
+                staffNotesWithBeams(notes: measure.trebleNotes)
                     .offset(y: -lineSpacing * 3.75)
                 
-                // Bass staff notes (centered on Bass Line 3)
-                notesLayer(notes: measure.bassNotes)
+                // Bass staff notes and beams (centered on Bass Line 3)
+                staffNotesWithBeams(notes: measure.bassNotes)
                     .offset(y: lineSpacing * 3.75)
                 
                 // Right barline connecting top of treble staff to bottom of bass staff
                 endBarline()
-                    .frame(width: 6, height: lineSpacing * 11.5)
+                    .frame(width: 4, height: lineSpacing * 11.5)
                     .offset(x: measureWidth - 4)
+                
+                // Smooth Playback Cursor (like MuseScore blue cursor bar)
+                if isCurrent {
+                    let beatOffset = max(0.0, min(1.0, (currentBeat - 1.0) / 4.0))
+                    let cursorX = 24.0 + CGFloat(beatOffset) * usableWidth
+                    Rectangle()
+                        .fill(Color.blue.opacity(0.35))
+                        .frame(width: 3.5, height: lineSpacing * 12.0)
+                        .offset(x: cursorX)
+                }
             }
+            .frame(width: measureWidth, height: lineSpacing * 14.0)
         }
         .frame(width: measureWidth)
+        .background(Color.white)
     }
     
     // MARK: - 5 Lines Staff Backdrop
@@ -69,60 +80,107 @@ struct MeasureView: View {
         VStack(spacing: lineSpacing) {
             ForEach(0..<5) { _ in
                 Rectangle()
-                    .fill(Color.secondary.opacity(0.45))
+                    .fill(Color.black.opacity(0.85))
                     .frame(height: 1.2)
             }
         }
         .frame(height: lineSpacing * 4)
     }
     
-    // MARK: - Notes Layer
+    // MARK: - Notes and Beams
     
     @ViewBuilder
-    private func notesLayer(notes: [Note]) -> some View {
+    private func staffNotesWithBeams(notes: [Note]) -> some View {
+        // Group notes that should be beamed together by beat
+        let beamedGroups = findBeamedGroups(in: notes)
+        let beamedNoteIds = Set(beamedGroups.flatMap { $0.map(\.id) })
+        
         ZStack(alignment: .leading) {
+            // 1. Individual Notes
             ForEach(notes) { note in
-                // Proportional offset across 4 beats (beat 1.0 -> 0.0, beat 5.0 -> 1.0)
                 let beatOffset = max(0.0, min(1.0, (note.position.beat - 1.0) / 4.0))
-                let usableWidth = measureWidth - 48.0
                 let xPos = 24.0 + CGFloat(beatOffset) * usableWidth
-                let isNoteActive = isCurrent && abs(note.position.beat - currentBeat) < 0.28
+                let isNoteActive = isCurrent && abs(note.position.beat - currentBeat) < 0.22
+                let isBeamed = beamedNoteIds.contains(note.id)
                 
                 NoteView(
                     note: note,
                     playbackState: isNoteActive ? .current : .upcoming,
-                    lineSpacing: lineSpacing
+                    lineSpacing: lineSpacing,
+                    useBeatColors: false,
+                    isBeamed: isBeamed
                 )
                 .offset(x: xPos)
             }
+            
+            // 2. Beams and Triplet "3" Labels
+            ForEach(Array(beamedGroups.enumerated()), id: \.offset) { _, group in
+                renderBeam(for: group)
+            }
         }
         .frame(width: measureWidth, height: lineSpacing * 4)
+    }
+    
+    private func findBeamedGroups(in notes: [Note]) -> [[Note]] {
+        let soundNotes = notes.filter { !$0.isRest && ($0.duration == .eighth || $0.duration == .sixteenth) }
+        let byBeat = Dictionary(grouping: soundNotes) { Int(floor($0.position.beat)) }
+        var groups: [[Note]] = []
+        for beatKey in byBeat.keys.sorted() {
+            if let beatGroup = byBeat[beatKey], beatGroup.count >= 2 {
+                let sorted = beatGroup.sorted { $0.position.beat < $1.position.beat }
+                groups.append(sorted)
+            }
+        }
+        return groups
+    }
+    
+    @ViewBuilder
+    private func renderBeam(for group: [Note]) -> some View {
+        if let firstNote = group.first, let lastNote = group.last {
+            let firstBeatOffset = max(0.0, min(1.0, (firstNote.position.beat - 1.0) / 4.0))
+            let lastBeatOffset = max(0.0, min(1.0, (lastNote.position.beat - 1.0) / 4.0))
+            
+            let stemUp = firstNote.stemUp
+            let stemXOffset = stemUp ? (lineSpacing * 0.6) : (-lineSpacing * 0.6)
+            let xStart = 24.0 + CGFloat(firstBeatOffset) * usableWidth + stemXOffset
+            let xEnd = 24.0 + CGFloat(lastBeatOffset) * usableWidth + stemXOffset
+            let beamWidth = max(8.0, xEnd - xStart)
+            
+            // Find highest / lowest staff position for beam level
+            let positions = group.map(\.staffPosition)
+            let maxPos = positions.max() ?? 0
+            let minPos = positions.min() ?? 0
+            
+            let stemHeight = lineSpacing * 3.2
+            let beamY: CGFloat = stemUp
+                ? (-CGFloat(maxPos) * (lineSpacing * 0.5) - stemHeight)
+                : (-CGFloat(minPos) * (lineSpacing * 0.5) + stemHeight)
+            
+            ZStack(alignment: .leading) {
+                // Horizontal black beam bar connecting stems
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(width: beamWidth, height: 3.5)
+                    .offset(x: xStart, y: beamY)
+                
+                // Triplet "3" notation above or below the beam
+                if group.count == 3 || firstNote.isTriplet {
+                    Text("3")
+                        .font(.system(size: 11, weight: .bold, design: .serif))
+                        .italic()
+                        .foregroundColor(Color.black)
+                        .offset(x: (xStart + xEnd) * 0.5 - 4.0, y: stemUp ? (beamY - 13.0) : (beamY + 4.0))
+                }
+            }
+        }
     }
     
     // MARK: - Barline
     
     @ViewBuilder
     private func endBarline() -> some View {
-        HStack(spacing: 2.5) {
-            if measure.barlineType == .final {
-                Rectangle()
-                    .fill(Color.primary.opacity(0.85))
-                    .frame(width: 1.5)
-                Rectangle()
-                    .fill(Color.primary.opacity(0.85))
-                    .frame(width: 3.5)
-            } else if measure.barlineType == .double {
-                Rectangle()
-                    .fill(Color.primary.opacity(0.85))
-                    .frame(width: 1.5)
-                Rectangle()
-                    .fill(Color.primary.opacity(0.85))
-                    .frame(width: 1.5)
-            } else {
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.6))
-                    .frame(width: 1.5)
-            }
-        }
+        Rectangle()
+            .fill(Color.black.opacity(0.85))
+            .frame(width: 1.5)
     }
 }

@@ -41,10 +41,10 @@ struct PracticeView: View {
                     
                     Divider()
                     
-                    // 1. Sheet Music on Top (Colored notes by beat)
+                    // 1. Sheet Music on Top (Authentic white paper score)
                     sheetMusicTopSection
                         .frame(height: 140)
-                        .background(Color(.secondarySystemBackground).opacity(0.4))
+                        .background(Color.white)
                     
                     Divider()
                     

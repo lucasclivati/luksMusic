@@ -9,7 +9,8 @@ struct NoteView: View {
     let note: Note
     var playbackState: NotePlaybackState = .upcoming
     var lineSpacing: CGFloat = 12.0
-    var useBeatColors: Bool = true
+    var useBeatColors: Bool = false
+    var isBeamed: Bool = false
     
     var body: some View {
         ZStack {
@@ -103,24 +104,34 @@ struct NoteView: View {
                     .frame(width: 1.6, height: stemHeight)
                     .offset(x: stemX, y: stemY)
                 
-                // Vector Flag for single 8th/16th notes
-                if note.duration == .eighth || note.duration == .dottedEighth {
-                    NoteFlagShape(stemUp: stemUp, isSixteenth: false)
-                        .fill(noteColor)
-                        .frame(width: lineSpacing * 0.9, height: lineSpacing * 1.8)
-                        .offset(
-                            x: stemUp ? (stemX + lineSpacing * 0.45) : (stemX + lineSpacing * 0.45),
-                            y: stemUp ? (verticalOffset - stemHeight + lineSpacing * 0.9) : (verticalOffset + stemHeight - lineSpacing * 0.9)
-                        )
-                } else if note.duration == .sixteenth || note.duration == .dottedSixteenth {
-                    NoteFlagShape(stemUp: stemUp, isSixteenth: true)
-                        .fill(noteColor)
-                        .frame(width: lineSpacing * 0.9, height: lineSpacing * 2.4)
-                        .offset(
-                            x: stemUp ? (stemX + lineSpacing * 0.45) : (stemX + lineSpacing * 0.45),
-                            y: stemUp ? (verticalOffset - stemHeight + lineSpacing * 1.2) : (verticalOffset + stemHeight - lineSpacing * 1.2)
-                        )
+                // Vector Flag for single un-beamed 8th/16th notes
+                if !isBeamed {
+                    if note.duration == .eighth || note.duration == .dottedEighth {
+                        NoteFlagShape(stemUp: stemUp, isSixteenth: false)
+                            .fill(noteColor)
+                            .frame(width: lineSpacing * 0.9, height: lineSpacing * 1.8)
+                            .offset(
+                                x: stemUp ? (stemX + lineSpacing * 0.45) : (stemX + lineSpacing * 0.45),
+                                y: stemUp ? (verticalOffset - stemHeight + lineSpacing * 0.9) : (verticalOffset + stemHeight - lineSpacing * 0.9)
+                            )
+                    } else if note.duration == .sixteenth || note.duration == .dottedSixteenth {
+                        NoteFlagShape(stemUp: stemUp, isSixteenth: true)
+                            .fill(noteColor)
+                            .frame(width: lineSpacing * 0.9, height: lineSpacing * 2.4)
+                            .offset(
+                                x: stemUp ? (stemX + lineSpacing * 0.45) : (stemX + lineSpacing * 0.45),
+                                y: stemUp ? (verticalOffset - stemHeight + lineSpacing * 1.2) : (verticalOffset + stemHeight - lineSpacing * 1.2)
+                            )
+                    }
                 }
+            }
+            
+            // Lyrics syllable text below staff
+            if let lyric = note.lyric {
+                Text(lyric)
+                    .font(.system(size: max(10, lineSpacing * 1.05), weight: .semibold, design: .serif))
+                    .foregroundColor(Color.black.opacity(0.85))
+                    .offset(y: lineSpacing * 4.6)
             }
             
             // Rhythmic Dot
@@ -152,7 +163,7 @@ struct NoteView: View {
             ForEach(1...linesAbove, id: \.self) { i in
                 let lineStep = 4 + (i * 2)
                 Rectangle()
-                    .fill(Color.secondary.opacity(0.55))
+                    .fill(Color.black.opacity(0.75))
                     .frame(width: lineSpacing * 2.2, height: 1.4)
                     .offset(y: -CGFloat(lineStep) * (lineSpacing * 0.5))
             }
@@ -162,7 +173,7 @@ struct NoteView: View {
             ForEach(1...linesBelow, id: \.self) { i in
                 let lineStep = 4 + (i * 2)
                 Rectangle()
-                    .fill(Color.secondary.opacity(0.55))
+                    .fill(Color.black.opacity(0.75))
                     .frame(width: lineSpacing * 2.2, height: 1.4)
                     .offset(y: CGFloat(lineStep) * (lineSpacing * 0.5))
             }
@@ -188,15 +199,15 @@ struct NoteView: View {
     private var noteColor: Color {
         switch playbackState {
         case .upcoming:
-            return useBeatColors ? Color.colorForBeat(note.position.beat) : .primary
+            return useBeatColors ? Color.colorForBeat(note.position.beat) : Color.black
         case .current:
-            return useBeatColors ? Color.colorForBeat(note.position.beat) : .accentColor
+            return Color(red: 0.1, green: 0.45, blue: 0.95)
         case .correct:
-            return Color(red: 0.22, green: 0.95, blue: 0.38)
+            return Color(red: 0.22, green: 0.85, blue: 0.38)
         case .incorrect:
             return Color.red
         case .played:
-            return Color.secondary.opacity(0.4)
+            return useBeatColors ? Color.secondary.opacity(0.4) : Color.black.opacity(0.45)
         }
     }
 }
