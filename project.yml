@@ -39,6 +39,18 @@ targets:
     info:
       path: luksMusic/Info.plist
       properties:
+        CFBundleIconName: "AppIcon"
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         NSCameraUsageDescription: "luksMusic needs access to the camera to scan and digitize printed sheet music using OCR."
         NSMicrophoneUsageDescription: "luksMusic needs access to the microphone to listen to your instrument for practice feedback and tuning."
         NSPhotoLibraryUsageDescription: "luksMusic needs access to your photo library to import images of sheet music for OCR scanning."

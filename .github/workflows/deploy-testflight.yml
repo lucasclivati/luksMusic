@@ -8,15 +8,27 @@ on:
 
 jobs:
   testflight:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16.2
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+      - name: Select Xcode 26
+        run: |
+          if [ -d "/Applications/Xcode_26.3.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.3.app
+          elif [ -d "/Applications/Xcode_26.2.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.2.app
+          elif [ -d "/Applications/Xcode_26.1.1.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.1.1.app
+          elif [ -d "/Applications/Xcode_26.0.1.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.0.1.app
+          elif [ -d "/Applications/Xcode_26.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app
+          fi
+          xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -63,6 +75,12 @@ jobs:
           mkdir -p build/ipa/Payload
           cp -r build/luksMusic.xcarchive/Products/Applications/luksMusic.app build/ipa/Payload/
           cp embedded.mobileprovision build/ipa/Payload/luksMusic.app/embedded.mobileprovision
+          
+          # Copy App Icon files directly into app root for explicit legacy bundle validation
+          cp luksMusic/icon-120.png build/ipa/Payload/luksMusic.app/AppIcon60x60@2x.png || true
+          cp luksMusic/icon-152.png build/ipa/Payload/luksMusic.app/AppIcon76x76@2x~ipad.png || true
+          cp luksMusic/icon-167.png build/ipa/Payload/luksMusic.app/AppIcon83.5x83.5@2x~ipad.png || true
+          cp luksMusic/icon-1024.png build/ipa/Payload/luksMusic.app/AppIcon1024x1024.png || true
           
           # Extract entitlements directly from provisioning profile
           security cms -D -i embedded.mobileprovision > build/profile.plist
