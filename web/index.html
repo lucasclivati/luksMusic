@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>luksMusic - Dark Dream (MuseScore Player Pro)</title>
+    <title>luksMusic - Dark Dream (MuseScore Exact Score 1-31)</title>
+    <link rel="stylesheet" href="bravura.css">
     <!-- Tone.js for Sampled Concert Grand Piano -->
     <script src="Tone.js"></script>
     <style>
@@ -18,7 +19,6 @@
             --text-muted: #94a3b8;
             --paper-bg: #ffffff;
             --ink-color: #000000;
-            --cursor-color: rgba(37, 99, 235, 0.38);
         }
 
         * {
@@ -38,24 +38,23 @@
             overflow: hidden;
         }
 
-        /* ============================================================
-           1. TOP NAVIGATION / HEADER
-           ============================================================ */
+        /* 1. TOP HEADER */
         header {
             background: var(--panel-bg);
             border-bottom: 1px solid var(--panel-border);
-            padding: 10px 24px;
+            padding: 8px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             z-index: 20;
-            height: 60px;
+            height: 54px;
+            flex-shrink: 0;
         }
 
         .brand-section {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
         }
 
         .brand-badge {
@@ -63,38 +62,36 @@
             color: white;
             font-weight: 800;
             font-size: 13px;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 6px;
-            letter-spacing: 0.5px;
         }
 
         .song-info h1 {
             margin: 0;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--text-main);
         }
 
         .song-info p {
-            margin: 2px 0 0;
+            margin: 1px 0 0;
             font-size: 11px;
             color: var(--text-muted);
         }
 
-        /* Top Center Controls */
         .playback-main-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         button.btn-ctrl {
             background: #334155;
             color: #f1f5f9;
             border: 1px solid #475569;
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 13px;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
             display: inline-flex;
@@ -106,7 +103,6 @@
         button.btn-ctrl:hover {
             background: #475569;
             color: #ffffff;
-            border-color: #64748b;
         }
 
         button.btn-ctrl.active {
@@ -120,15 +116,15 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 16px;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            transition: transform 0.15s, background-color 0.15s;
+            transition: transform 0.15s;
         }
 
         button.btn-play-hero:hover {
@@ -136,7 +132,6 @@
             background: #2563eb;
         }
 
-        /* Metronome visual flash dot */
         .metronome-dot {
             width: 8px;
             height: 8px;
@@ -154,7 +149,6 @@
             box-shadow: 0 0 8px #eab308;
         }
 
-        /* Top Right Options */
         .header-tools {
             display: flex;
             align-items: center;
@@ -186,7 +180,6 @@
             color: #38bdf8;
         }
 
-        /* Audio status badge */
         .audio-status {
             font-size: 11px;
             padding: 3px 8px;
@@ -198,200 +191,54 @@
             gap: 5px;
         }
 
-        /* ============================================================
-           2. MAIN WORKSPACE: SCORE & PANELS
-           ============================================================ */
-        .main-workspace {
-            display: flex;
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Hands Mixer Floating Drawer */
-        .mixer-drawer {
-            position: absolute;
-            top: 14px;
-            left: 20px;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            padding: 14px 18px;
-            width: 270px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            z-index: 15;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .mixer-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            font-weight: 700;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 8px;
-        }
-
-        .hand-strip {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            background: #0f172a;
-            padding: 8px 12px;
-            border-radius: 6px;
-            border-left: 4px solid var(--accent-cyan);
-        }
-
-        .hand-strip.bass-strip {
-            border-left-color: var(--accent-green);
-        }
-
-        .hand-label-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .hand-btns {
-            display: flex;
-            gap: 6px;
-        }
-
-        .btn-mute, .btn-solo {
-            background: #334155;
-            border: none;
-            color: #94a3b8;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .btn-mute.active {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-solo.active {
-            background: #eab308;
-            color: black;
-        }
-
-        .hand-volume {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .hand-volume input[type="range"] {
-            flex: 1;
-            height: 4px;
-            accent-color: var(--accent-blue);
-        }
-
-        /* Loop Bar Settings */
-        .loop-settings {
-            display: none;
-            position: absolute;
-            top: 14px;
-            right: 20px;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 12px;
-            color: #e2e8f0;
-            z-index: 15;
-            align-items: center;
-            gap: 10px;
-        }
-        .loop-settings.visible {
-            display: flex;
-        }
-
-        .loop-settings select {
-            background: #0f172a;
-            color: #f1f5f9;
-            border: 1px solid #475569;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 12px;
-        }
-
-        /* Score Paper Canvas Container */
+        /* 2. MAIN WORKSPACE: SCORE SCROLL AREA (100% UNOBSTRUCTED) */
         .score-scroll-area {
             flex: 1;
             overflow-y: auto;
             overflow-x: auto;
             background: #334155;
-            padding: 30px 20px 160px;
+            padding: 24px 20px 40px;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: center;
+            gap: 36px;
         }
 
         .sheet-paper {
             background: var(--paper-bg);
             box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-            padding: 36px 44px 50px;
-            border-radius: 4px;
-            min-width: 980px;
-            max-width: 1080px;
+            padding: 28px 44px 40px;
+            border-radius: 3px;
+            min-width: 960px;
+            max-width: 1040px;
             width: 1000px;
             display: flex;
             flex-direction: column;
-            gap: 32px;
-        }
-
-        .score-title-banner {
-            text-align: center;
-            border-bottom: 1.5px solid #000;
-            padding-bottom: 12px;
+            gap: 24px;
             position: relative;
         }
 
-        .score-title-banner h2 {
-            margin: 0;
-            font-family: "Times New Roman", Times, Georgia, serif;
-            font-size: 26px;
-            font-weight: bold;
-            color: #000;
-            letter-spacing: 1.5px;
-        }
-
-        .score-title-banner .score-meta {
-            font-family: "Times New Roman", Times, serif;
-            font-size: 13px;
-            font-style: italic;
-            color: #222;
-            margin-top: 4px;
-        }
-
-        .score-title-banner .tempo-badge {
+        .page-badge {
             position: absolute;
-            left: 0;
-            bottom: 4px;
-            font-family: "Times New Roman", Times, serif;
-            font-size: 15px;
+            top: 14px;
+            right: 24px;
+            font-family: serif;
+            font-size: 14px;
             font-weight: bold;
-            color: #000;
+            color: #475569;
         }
 
-        /* System Rows and Smooth Cursor */
+        /* System Rows */
         .system-row {
             display: flex;
             align-items: center;
             position: relative;
             cursor: pointer;
         }
+
+        
+        .bravura { font-family: 'Bravura', serif; }
+        .music-text { font-family: 'Edwin', 'Liberation Serif', 'DejaVu Serif', 'Times New Roman', serif; }
 
         svg.system-svg {
             width: 100%;
@@ -401,9 +248,9 @@
 
         .playback-cursor {
             position: absolute;
-            top: 20px;
+            top: 24px;
             width: 3px;
-            height: 170px;
+            height: 175px;
             background: #2563eb;
             opacity: 0.55;
             box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
@@ -413,9 +260,7 @@
             z-index: 10;
         }
 
-        /* ============================================================
-           3. BOTTOM SECTION: SCRUBBER & VIRTUAL 61-KEY PIANO
-           ============================================================ */
+        /* 3. BOTTOM DOCK: SCRUBBER + HANDS MIXER & PIANO KEYBOARD TOGETHER */
         .bottom-dock {
             background: #111827;
             border-top: 1px solid var(--panel-border);
@@ -423,24 +268,24 @@
             flex-direction: column;
             z-index: 25;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            flex-shrink: 0;
         }
 
-        /* Timeline Scrubber */
         .timeline-bar {
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 8px 24px;
+            padding: 6px 24px;
             background: #1e293b;
             border-bottom: 1px solid #334155;
         }
 
         .time-display {
             font-family: monospace;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #38bdf8;
-            min-width: 90px;
+            min-width: 85px;
         }
 
         .measure-badge-btn {
@@ -449,7 +294,7 @@
             color: #cbd5e1;
             padding: 2px 10px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
         }
 
@@ -457,7 +302,7 @@
             flex: 1;
             -webkit-appearance: none;
             appearance: none;
-            height: 6px;
+            height: 5px;
             border-radius: 3px;
             background: #334155;
             outline: none;
@@ -467,59 +312,81 @@
         .scrubber-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: var(--accent-blue);
             cursor: pointer;
             box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
-            transition: transform 0.1s;
         }
 
-        .scrubber-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
+        /* Bottom Controls Row: Mixer Integrated Beside Piano */
+        .dock-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 8px 16px 10px;
+            background: linear-gradient(180deg, #182234 0%, #0d131f 100%);
         }
 
-        /* Virtual Piano Keyboard Container */
-        .piano-dock-wrap {
-            padding: 8px 16px 12px;
+        /* Embedded Compact Mixer Panel (Never covers sheet!) */
+        .bottom-mixer-panel {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            background: linear-gradient(180deg, #182234 0%, #0d131f 100%);
-            border-top: 2px solid #243046;
+            gap: 6px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: 250px;
+            flex-shrink: 0;
         }
 
-        .piano-dock-header {
+        .mixer-title-row {
             display: flex;
             justify-content: space-between;
-            width: 100%;
-            max-width: 1100px;
-            margin-bottom: 6px;
             font-size: 11px;
-            color: #94a3b8;
-            font-weight: 600;
+            font-weight: 700;
+            color: #cbd5e1;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 4px;
         }
 
-        .piano-legend {
-            display: flex;
-            gap: 16px;
-        }
-
-        .legend-item {
+        .hand-control-strip {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            font-size: 11px;
         }
 
-        .legend-swatch {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
+        .hand-control-strip span.hand-name {
+            width: 75px;
+            font-weight: 600;
+            white-space: nowrap;
         }
-        .swatch-rh { background: var(--accent-cyan); box-shadow: 0 0 6px var(--accent-cyan); }
-        .swatch-lh { background: var(--accent-green); box-shadow: 0 0 6px var(--accent-green); }
 
+        .btn-mute, .btn-solo {
+            background: #334155;
+            border: none;
+            color: #94a3b8;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .btn-mute.active { background: #dc2626; color: white; }
+        .btn-solo.active { background: #eab308; color: black; }
+
+        .hand-control-strip input[type="range"] {
+            flex: 1;
+            height: 3px;
+            accent-color: var(--accent-blue);
+        }
+
+        /* 61-Key Virtual Piano Frame */
         .keyboard-frame {
             position: relative;
             display: flex;
@@ -527,16 +394,16 @@
             padding: 4px 6px;
             border-radius: 6px;
             box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 14px rgba(0,0,0,0.6);
-            height: 100px;
+            height: 88px;
             overflow: visible;
         }
 
         .white-key {
-            width: 25px;
-            height: 92px;
+            width: 22px;
+            height: 80px;
             background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
             border: 1px solid #94a3b8;
-            border-radius: 0 0 4px 4px;
+            border-radius: 0 0 3px 3px;
             position: relative;
             cursor: pointer;
             z-index: 1;
@@ -544,30 +411,30 @@
             transition: background 0.05s ease;
         }
 
-        .white-key:active, .white-key.active-rh {
+        .white-key.active-rh {
             background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%) !important;
-            box-shadow: 0 0 12px #38bdf8 !important;
+            box-shadow: 0 0 10px #38bdf8 !important;
         }
 
         .white-key.active-lh {
             background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%) !important;
-            box-shadow: 0 0 12px #4ade80 !important;
+            box-shadow: 0 0 10px #4ade80 !important;
         }
 
         .white-key-label {
             position: absolute;
-            bottom: 4px;
+            bottom: 3px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 700;
             color: #64748b;
             pointer-events: none;
         }
 
         .black-key {
-            width: 15px;
-            height: 58px;
+            width: 13px;
+            height: 50px;
             background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
             border: 1px solid #000000;
             border-radius: 0 0 3px 3px;
@@ -578,37 +445,36 @@
             transition: background 0.05s ease;
         }
 
-        .black-key:active, .black-key.active-rh {
+        .black-key.active-rh {
             background: #0284c7 !important;
-            box-shadow: 0 0 10px #38bdf8 !important;
+            box-shadow: 0 0 8px #38bdf8 !important;
         }
 
         .black-key.active-lh {
             background: #15803d !important;
-            box-shadow: 0 0 10px #4ade80 !important;
+            box-shadow: 0 0 8px #4ade80 !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. TOP HEADER -->
+    <!-- 1. HEADER -->
     <header>
         <div class="brand-section">
             <span class="brand-badge">luksMusic</span>
             <div class="song-info">
-                <h1>Dark Dream (Lord of the Mysteries ED)</h1>
-                <p>Curley Gao • Arr. 11Minnie11 • C Minor / Eb Major • 70 BPM</p>
+                <h1>DARK DREAM (LOTM ED)</h1>
+                <p>Curley Gao • Arr. 11Minnie11 • C Minor / Eb Major • 70 BPM • 31 Compassos</p>
             </div>
         </div>
 
         <div class="playback-main-controls">
-            <button id="rewindBtn" class="btn-ctrl" title="Voltar ao Início (⏮)">⏮</button>
-            <button id="playBtn" class="btn-play-hero" title="Tocar / Pausar (Espaço)">▶</button>
-            <button id="loopBtn" class="btn-ctrl" title="Repetir Seção A-B (L)">🔁 Loop</button>
-            <button id="metronomeBtn" class="btn-ctrl" title="Metrônomo (M)">
+            <button id="rewindBtn" class="btn-ctrl" title="Voltar ao Início">⏮</button>
+            <button id="playBtn" class="btn-play-hero" title="Tocar / Pausar">▶</button>
+            <button id="loopBtn" class="btn-ctrl" title="Repetir Seção A-B">🔁 Loop</button>
+            <button id="metronomeBtn" class="btn-ctrl" title="Metrônomo">
                 <span id="metroDot" class="metronome-dot"></span> Metrônomo
             </button>
-            <button id="mixerToggleBtn" class="btn-ctrl active" title="Mixer de Mãos">🎛️ Mixer Mãos</button>
         </div>
 
         <div class="header-tools">
@@ -620,308 +486,190 @@
             </div>
 
             <div id="audioStatusBadge" class="audio-status">
-                <span>●</span> Sampled Grand Piano
+                <span>●</span> Steinway Grand
             </div>
         </div>
     </header>
 
-    <!-- 2. MAIN WORKSPACE -->
-    <div class="main-workspace">
+    <!-- 2. MAIN WORKSPACE: 4 CONTINUOUS AUTHENTIC SHEETS (100% UNOBSTRUCTED) -->
+    <div class="score-scroll-area" id="scoreScrollArea">
 
-        <!-- Hands Mixer Floating Panel -->
-        <div id="mixerDrawer" class="mixer-drawer">
-            <div class="mixer-header">
-                <span>🎛️ Mixer de Mãos</span>
-                <span style="font-size: 11px; color: #94a3b8;">MuseScore Style</span>
+        <!-- PAGE 1 (Measures 1 to 9) -->
+        <div class="sheet-paper" id="page1Paper">
+            <div class="page-badge">1</div>
+            <!-- Sys 0: M1, M2 -->
+            <div class="system-row" id="sysRow0" data-system="0">
+                <div class="playback-cursor" id="cursor0"></div>
+                <svg id="sys0Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
             </div>
-
-            <!-- Right Hand (Treble) -->
-            <div class="hand-strip">
-                <div class="hand-label-row">
-                    <span style="color: var(--accent-cyan);">𝄞 Mão Direita (Melodia)</span>
-                    <div class="hand-btns">
-                        <button id="rhMuteBtn" class="btn-mute" title="Mudo">M</button>
-                        <button id="rhSoloBtn" class="btn-solo" title="Solo">S</button>
-                    </div>
-                </div>
-                <div class="hand-volume">
-                    <span style="font-size: 10px; color: #94a3b8;">Vol</span>
-                    <input type="range" id="rhVolSlider" min="0" max="100" value="90">
-                </div>
+            <!-- Sys 1: M3, M4, M5 -->
+            <div class="system-row" id="sysRow1" data-system="1">
+                <div class="playback-cursor" id="cursor1"></div>
+                <svg id="sys1Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
             </div>
-
-            <!-- Left Hand (Bass) -->
-            <div class="hand-strip bass-strip">
-                <div class="hand-label-row">
-                    <span style="color: var(--accent-green);">🄢 Mão Esquerda (Harmonia)</span>
-                    <div class="hand-btns">
-                        <button id="lhMuteBtn" class="btn-mute" title="Mudo">M</button>
-                        <button id="lhSoloBtn" class="btn-solo" title="Solo">S</button>
-                    </div>
-                </div>
-                <div class="hand-volume">
-                    <span style="font-size: 10px; color: #94a3b8;">Vol</span>
-                    <input type="range" id="lhVolSlider" min="0" max="100" value="85">
-                </div>
+            <!-- Sys 2: M6, M7, M8 -->
+            <div class="system-row" id="sysRow2" data-system="2">
+                <div class="playback-cursor" id="cursor2"></div>
+                <svg id="sys2Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 3: M9 -->
+            <div class="system-row" id="sysRow3" data-system="3">
+                <div class="playback-cursor" id="cursor3"></div>
+                <svg id="sys3Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
             </div>
         </div>
 
-        <!-- Loop Settings Floating Panel -->
-        <div id="loopSettings" class="loop-settings">
-            <span>Repetir de:</span>
-            <select id="loopStartSelect">
-                <option value="0">Compasso 1</option>
-                <option value="1">Compasso 2</option>
-                <option value="2">Compasso 3</option>
-                <option value="3">Compasso 4</option>
-            </select>
-            <span>até:</span>
-            <select id="loopEndSelect">
-                <option value="3">Compasso 4</option>
-                <option value="5">Compasso 6</option>
-                <option value="8" selected>Compasso 9</option>
-            </select>
-        </div>
-
-        <!-- Sheet Music Paper -->
-        <div class="score-scroll-area" id="scoreScrollArea">
-            <div class="sheet-paper">
-                <div class="score-title-banner">
-                    <span class="tempo-badge">♩ = 70</span>
-                    <h2>DARK DREAM (LOTM ED)</h2>
-                    <div class="score-meta">Curley Gao • Arr. 11Minnie11 • Piano Solo</div>
-                </div>
-
-                <!-- System 1: Measures 1, 2, 3 -->
-                <div class="system-row" id="sysRow1" data-system="0">
-                    <div class="playback-cursor" id="cursor1"></div>
-                    <svg id="sys1Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-                </div>
-
-                <!-- System 2: Measures 4, 5, 6 -->
-                <div class="system-row" id="sysRow2" data-system="1">
-                    <div class="playback-cursor" id="cursor2"></div>
-                    <svg id="sys2Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-                </div>
-
-                <!-- System 3: Measures 7, 8, 9 -->
-                <div class="system-row" id="sysRow3" data-system="2">
-                    <div class="playback-cursor" id="cursor3"></div>
-                    <svg id="sys3Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-                </div>
+        <!-- PAGE 2 (Measures 10 to 17) -->
+        <div class="sheet-paper" id="page2Paper">
+            <div class="page-badge">2</div>
+            <!-- Sys 4: M10 -->
+            <div class="system-row" id="sysRow4" data-system="4">
+                <div class="playback-cursor" id="cursor4"></div>
+                <svg id="sys4Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 5: M11 -->
+            <div class="system-row" id="sysRow5" data-system="5">
+                <div class="playback-cursor" id="cursor5"></div>
+                <svg id="sys5Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 6: M12, M13 -->
+            <div class="system-row" id="sysRow6" data-system="6">
+                <div class="playback-cursor" id="cursor6"></div>
+                <svg id="sys6Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 7: M14, M15 -->
+            <div class="system-row" id="sysRow7" data-system="7">
+                <div class="playback-cursor" id="cursor7"></div>
+                <svg id="sys7Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 8: M16, M17 -->
+            <div class="system-row" id="sysRow8" data-system="8">
+                <div class="playback-cursor" id="cursor8"></div>
+                <svg id="sys8Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
             </div>
         </div>
+
+        <!-- PAGE 3 (Measures 18 to 23) -->
+        <div class="sheet-paper" id="page3Paper">
+            <div class="page-badge">3</div>
+            <!-- Sys 9: M18 -->
+            <div class="system-row" id="sysRow9" data-system="9">
+                <div class="playback-cursor" id="cursor9"></div>
+                <svg id="sys9Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 10: M19, M20 -->
+            <div class="system-row" id="sysRow10" data-system="10">
+                <div class="playback-cursor" id="cursor10"></div>
+                <svg id="sys10Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 11: M21 -->
+            <div class="system-row" id="sysRow11" data-system="11">
+                <div class="playback-cursor" id="cursor11"></div>
+                <svg id="sys11Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 12: M22, M23 -->
+            <div class="system-row" id="sysRow12" data-system="12">
+                <div class="playback-cursor" id="cursor12"></div>
+                <svg id="sys12Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+        </div>
+
+        <!-- PAGE 4 (Measures 24 to 31) -->
+        <div class="sheet-paper" id="page4Paper">
+            <div class="page-badge">4</div>
+            <!-- Sys 13: M24, M25 -->
+            <div class="system-row" id="sysRow13" data-system="13">
+                <div class="playback-cursor" id="cursor13"></div>
+                <svg id="sys13Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 14: M26, M27 -->
+            <div class="system-row" id="sysRow14" data-system="14">
+                <div class="playback-cursor" id="cursor14"></div>
+                <svg id="sys14Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 15: M28, M29 -->
+            <div class="system-row" id="sysRow15" data-system="15">
+                <div class="playback-cursor" id="cursor15"></div>
+                <svg id="sys15Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+            <!-- Sys 16: M30, M31 -->
+            <div class="system-row" id="sysRow16" data-system="16">
+                <div class="playback-cursor" id="cursor16"></div>
+                <svg id="sys16Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
+            </div>
+        </div>
+
     </div>
 
-    <!-- 3. BOTTOM SCRUBBER & PIANO KEYBOARD -->
+    <!-- 3. BOTTOM DOCK: SCRUBBER + EMBEDDED MIXER + VIRTUAL PIANO -->
     <div class="bottom-dock">
         <!-- Scrubber Progress Bar -->
         <div class="timeline-bar">
-            <span id="timeElapsedDisplay" class="time-display">00:00 / 00:30</span>
-            <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="36" step="0.05" value="0">
-            <span id="measurePill" class="measure-badge-btn">Compasso 1 / 9</span>
+            <span id="timeElapsedDisplay" class="time-display">00:00 / 01:46</span>
+            <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="124" step="0.05" value="0">
+            <span id="measurePill" class="measure-badge-btn">Compasso 1 / 31</span>
         </div>
 
-        <!-- 61-Key Interactive Virtual Piano Keyboard (C2 to C7) -->
-        <div class="piano-dock-wrap">
-            <div class="piano-dock-header">
-                <span>🎹 Visualizador de Teclado (61 Teclas C2 - C7)</span>
-                <div class="piano-legend">
-                    <div class="legend-item"><span class="legend-swatch swatch-rh"></span> Mão Direita (Melodia)</div>
-                    <div class="legend-item"><span class="legend-swatch swatch-lh"></span> Mão Esquerda (Harmonia)</div>
+        <div class="dock-controls-row">
+            <!-- Non-Obstructive Hands Mixer (Docked beside piano) -->
+            <div class="bottom-mixer-panel">
+                <div class="mixer-title-row">
+                    <span>🎛️ Mixer de Mãos</span>
+                    <span style="color: #64748b;">Volume / Mudo</span>
+                </div>
+                <!-- Right Hand -->
+                <div class="hand-control-strip">
+                    <span class="hand-name" style="color: var(--accent-cyan);">𝄞 M. Direita</span>
+                    <button id="rhMuteBtn" class="btn-mute">M</button>
+                    <button id="rhSoloBtn" class="btn-solo">S</button>
+                    <input type="range" id="rhVolSlider" min="0" max="100" value="90">
+                </div>
+                <!-- Left Hand -->
+                <div class="hand-control-strip">
+                    <span class="hand-name" style="color: var(--accent-green);">🄢 M. Esquerda</span>
+                    <button id="lhMuteBtn" class="btn-mute">M</button>
+                    <button id="lhSoloBtn" class="btn-solo">S</button>
+                    <input type="range" id="lhVolSlider" min="0" max="100" value="85">
                 </div>
             </div>
-            <div class="keyboard-frame" id="pianoKeyboardFrame">
-                <!-- Keys dynamically rendered in JS -->
-            </div>
+
+            <!-- 61-Key Interactive Virtual Piano Keyboard (C2 - C7) -->
+            <div class="keyboard-frame" id="pianoKeyboardFrame"></div>
         </div>
     </div>
 
     <!-- ============================================================
-         4. JAVASCRIPT LOGIC
+         4. JAVASCRIPT LOGIC: EXACT SCORE DATA & SVG ENGRAVER
          ============================================================ -->
     <script>
-        // -------------------------------------------------------------
-        // 1. DATA MODEL: All 9 Measures of Dark Dream
-        // -------------------------------------------------------------
-        const SCORE_DATA = [
-            // Measure 1
-            {
-                number: 1,
-                treble: [
-                    { midi: 67, name: "G4", beat: 1.0, dur: "8th", triplet: true },
-                    { midi: 79, name: "G5", beat: 1.0, dur: "quarter", lyric: "When" },
-                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
-                    { midi: 67, name: "G4", beat: 2.0, dur: "8th", triplet: true },
-                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
-                    { midi: 79, name: "G5", beat: 3.0, dur: "8th", triplet: true, lyric: "the" },
-                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 3.667, dur: "8th", triplet: true },
-                    { midi: 79, name: "G5", beat: 4.0, dur: "8th", triplet: true, lyric: "clock" },
-                    { midi: 72, name: "C5", beat: 4.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 4.667, dur: "8th", triplet: true }
-                ],
-                bass: [
-                    { midi: 36, name: "C2", beat: 1.0, dur: "quarter" },
-                    { midi: 48, name: "C3", beat: 2.0, dur: "quarter" },
-                    { midi: 55, name: "G3", beat: 3.0, dur: "quarter" },
-                    { midi: 60, name: "C4", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 2
-            {
-                number: 2,
-                treble: [
-                    { midi: 77, name: "F5", beat: 1.0, dur: "8th", triplet: true, lyric: "stops" },
-                    { midi: 70, name: "Bb4", beat: 1.333, dur: "8th", triplet: true },
-                    { midi: 73, name: "Db5", beat: 1.667, dur: "8th", triplet: true },
-                    { midi: 77, name: "F5", beat: 2.0, dur: "8th", triplet: true, lyric: "tick-" },
-                    { midi: 70, name: "Bb4", beat: 2.333, dur: "8th", triplet: true },
-                    { midi: 73, name: "Db5", beat: 2.667, dur: "8th", triplet: true },
-                    { midi: 77, name: "F5", beat: 3.0, dur: "quarter", lyric: "ing," },
-                    { midi: 75, name: "Eb5", beat: 4.0, dur: "quarter" }
-                ],
-                bass: [
-                    { midi: 46, name: "Bb2", beat: 1.0, dur: "quarter" },
-                    { midi: 53, name: "F3", beat: 2.0, dur: "quarter" },
-                    { midi: 58, name: "Bb3", beat: 3.0, dur: "quarter" },
-                    { midi: 53, name: "F3", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 3
-            {
-                number: 3,
-                treble: [
-                    { midi: 75, name: "Eb5", beat: 1.0, dur: "8th", triplet: true, lyric: "and" },
-                    { midi: 68, name: "Ab4", beat: 1.333, dur: "8th", triplet: true },
-                    { midi: 72, name: "C5", beat: 1.667, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 2.0, dur: "8th", triplet: true, lyric: "sha-" },
-                    { midi: 68, name: "Ab4", beat: 2.333, dur: "8th", triplet: true },
-                    { midi: 72, name: "C5", beat: 2.667, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 3.0, dur: "8th", triplet: true, lyric: "dows" },
-                    { midi: 68, name: "Ab4", beat: 3.333, dur: "8th", triplet: true },
-                    { midi: 72, name: "C5", beat: 3.667, dur: "8th", triplet: true },
-                    { midi: 73, name: "Db5", beat: 4.0, dur: "quarter", lyric: "start" }
-                ],
-                bass: [
-                    { midi: 44, name: "Ab2", beat: 1.0, dur: "quarter" },
-                    { midi: 51, name: "Eb3", beat: 2.0, dur: "quarter" },
-                    { midi: 56, name: "Ab3", beat: 3.0, dur: "quarter" },
-                    { midi: 51, name: "Eb3", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 4
-            {
-                number: 4,
-                treble: [
-                    { midi: 72, name: "C5", beat: 1.0, dur: "8th", triplet: true, lyric: "to" },
-                    { midi: 65, name: "F4", beat: 1.333, dur: "8th", triplet: true },
-                    { midi: 68, name: "Ab4", beat: 1.667, dur: "8th", triplet: true },
-                    { midi: 72, name: "C5", beat: 2.0, dur: "8th", triplet: true, lyric: "creep," },
-                    { midi: 65, name: "F4", beat: 2.333, dur: "8th", triplet: true },
-                    { midi: 68, name: "Ab4", beat: 2.667, dur: "8th", triplet: true },
-                    { midi: 71, name: "B4", beat: 3.0, dur: "quarter" },
-                    { midi: 72, name: "C5", beat: 4.0, dur: "quarter" }
-                ],
-                bass: [
-                    { midi: 41, name: "F2", beat: 1.0, dur: "quarter" },
-                    { midi: 48, name: "C3", beat: 2.0, dur: "quarter" },
-                    { midi: 53, name: "F3", beat: 3.0, dur: "quarter" },
-                    { midi: 47, name: "B2", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 5
-            {
-                number: 5,
-                treble: [
-                    { midi: 79, name: "G5", beat: 1.0, dur: "8th", triplet: true, lyric: "A" },
-                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
-                    { midi: 79, name: "G5", beat: 2.0, dur: "8th", triplet: true, lyric: "si-" },
-                    { midi: 72, name: "C5", beat: 2.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 2.667, dur: "8th", triplet: true },
-                    { midi: 79, name: "G5", beat: 3.0, dur: "8th", triplet: true, lyric: "lent" },
-                    { midi: 72, name: "C5", beat: 3.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 3.667, dur: "8th", triplet: true },
-                    { midi: 80, name: "Ab5", beat: 4.0, dur: "quarter", lyric: "whis-" }
-                ],
-                bass: [
-                    { midi: 36, name: "C2", beat: 1.0, dur: "quarter" },
-                    { midi: 48, name: "C3", beat: 2.0, dur: "quarter" },
-                    { midi: 55, name: "G3", beat: 3.0, dur: "quarter" },
-                    { midi: 60, name: "C4", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 6
-            {
-                number: 6,
-                treble: [
-                    { midi: 79, name: "G5", beat: 1.0, dur: "8th", triplet: true, lyric: "per" },
-                    { midi: 72, name: "C5", beat: 1.333, dur: "8th", triplet: true },
-                    { midi: 75, name: "Eb5", beat: 1.667, dur: "8th", triplet: true },
-                    { midi: 77, name: "F5", beat: 2.0, dur: "quarter", lyric: "calls" },
-                    { midi: 75, name: "Eb5", beat: 3.0, dur: "quarter", lyric: "you" },
-                    { midi: 74, name: "D5", beat: 4.0, dur: "quarter" }
-                ],
-                bass: [
-                    { midi: 43, name: "G2", beat: 1.0, dur: "quarter" },
-                    { midi: 50, name: "D3", beat: 2.0, dur: "quarter" },
-                    { midi: 55, name: "G3", beat: 3.0, dur: "quarter" },
-                    { midi: 50, name: "D3", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 7
-            {
-                number: 7,
-                treble: [
-                    { midi: 72, name: "C5", beat: 1.0, dur: "quarter", lyric: "in-" },
-                    { midi: 75, name: "Eb5", beat: 2.0, dur: "quarter", lyric: "to" },
-                    { midi: 79, name: "G5", beat: 3.0, dur: "quarter", lyric: "the" },
-                    { midi: 82, name: "Bb5", beat: 4.0, dur: "quarter", lyric: "end-" }
-                ],
-                bass: [
-                    { midi: 44, name: "Ab2", beat: 1.0, dur: "quarter" },
-                    { midi: 51, name: "Eb3", beat: 2.0, dur: "quarter" },
-                    { midi: 56, name: "Ab3", beat: 3.0, dur: "quarter" },
-                    { midi: 51, name: "Eb3", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 8
-            {
-                number: 8,
-                treble: [
-                    { midi: 80, name: "Ab5", beat: 1.0, dur: "quarter", lyric: "less" },
-                    { midi: 79, name: "G5", beat: 2.0, dur: "quarter", lyric: "deep," },
-                    { midi: 75, name: "Eb5", beat: 3.0, dur: "quarter" },
-                    { midi: 74, name: "D5", beat: 4.0, dur: "quarter" }
-                ],
-                bass: [
-                    { midi: 46, name: "Bb2", beat: 1.0, dur: "quarter" },
-                    { midi: 53, name: "F3", beat: 2.0, dur: "quarter" },
-                    { midi: 58, name: "Bb3", beat: 3.0, dur: "quarter" },
-                    { midi: 53, name: "F3", beat: 4.0, dur: "quarter" }
-                ]
-            },
-            // Measure 9
-            {
-                number: 9,
-                treble: [
-                    { midi: 72, name: "C5", beat: 1.0, dur: "whole", lyric: "Dark dream." },
-                    { midi: 75, name: "Eb5", beat: 1.0, dur: "whole" },
-                    { midi: 79, name: "G5", beat: 1.0, dur: "whole" }
-                ],
-                bass: [
-                    { midi: 36, name: "C2", beat: 1.0, dur: "whole" },
-                    { midi: 48, name: "C3", beat: 1.0, dur: "whole" },
-                    { midi: 55, name: "G3", beat: 1.0, dur: "whole" }
-                ]
-            }
+        const SCORE_DATA = [{"number": 1, "dynamic": "mp", "treble": [{"chord": [67, 79], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "When"}, {"chord": [72], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "my"}, {"chord": [72], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "eyes"}, {"chord": [72], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "a-wake"}, {"chord": [72], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [75, 79], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [48, 55], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [48], "beat": 3.0, "dur": "quarter"}, {"chord": [48], "beat": 4.0, "dur": "quarter"}]}, {"number": 2, "treble": [{"chord": [65, 77], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Skies"}, {"chord": [70], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [65], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "start"}, {"chord": [70], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [65], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "to"}, {"chord": [70], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "break"}, {"chord": [70], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [74, 77], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [46, 55], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [46], "beat": 3.0, "dur": "quarter"}, {"chord": [46], "beat": 4.0, "dur": "quarter"}]}, {"number": 3, "treble": [{"chord": [63, 75], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Storms"}, {"chord": [68], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [63], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "o -"}, {"chord": [68], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "ver -"}, {"chord": [68], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "take"}, {"chord": [68], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [56, 60], "beat": 1.0, "dur": "quarter"}, {"chord": [60], "beat": 2.0, "dur": "quarter"}, {"chord": [53], "beat": 3.0, "dur": "quarter"}, {"chord": [53], "beat": 4.0, "dur": "quarter"}]}, {"number": 4, "treble": [{"chord": [62, 74], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Clocks"}, {"chord": [67], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [71], "accidental": "\u266e", "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [62], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "cease"}, {"chord": [67], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [71], "accidental": "\u266e", "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [62], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "to"}, {"chord": [71], "accidental": "\u266e", "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "shake"}, {"chord": [74], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [79], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [47, 55], "beat": 1.0, "dur": "quarter", "accidental": "\u266e"}, {"chord": [53], "beat": 2.0, "dur": "quarter"}, {"chord": [51], "beat": 3.0, "dur": "quarter"}, {"chord": [50], "beat": 4.0, "dur": "quarter"}]}, {"number": 5, "treble": [{"chord": [67, 79], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Home-less"}, {"chord": [72], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 2.0, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "for -"}, {"chord": [72], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "sake"}, {"chord": [72], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [75, 79], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [38, 48], "beat": 3.0, "dur": "quarter"}, {"chord": [39, 48], "beat": 4.0, "dur": "quarter"}]}, {"number": 6, "treble": [{"chord": [65, 77], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Dream"}, {"chord": [70], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [73], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "I'll"}, {"chord": [70], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [73], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "cre -"}, {"chord": [70], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [73], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "ate"}, {"chord": [70], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [73, 77], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "quarter"}, {"chord": [53], "beat": 2.0, "dur": "quarter"}, {"chord": [46, 53], "beat": 3.0, "dur": "quarter"}, {"chord": [53], "beat": 4.0, "dur": "quarter"}]}, {"number": 7, "treble": [{"chord": [63, 75], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Burns"}, {"chord": [68], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "to"}, {"chord": [68], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "re -"}, {"chord": [68], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "make"}, {"chord": [68], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [72, 75], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [48, 51, 56], "beat": 1.0, "dur": "quarter"}, {"chord": [56], "beat": 2.0, "dur": "quarter"}, {"chord": [48, 60], "beat": 3.0, "dur": "quarter"}, {"chord": [51], "beat": 4.0, "dur": "quarter"}]}, {"number": 8, "crescendo": true, "treble": [{"chord": [67, 79], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Craft"}, {"chord": [71], "accidental": "\u266e", "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "dic -"}, {"chord": [71], "accidental": "\u266e", "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "tates"}, {"chord": [74], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [79], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [84, 91], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "the"}, {"chord": [86, 95], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [83, 91], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [43, 50, 55], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [43, 50, 55], "rolled": true, "beat": 3.0, "dur": "quarter"}, {"chord": [43, 50, 55, 60], "rolled": true, "beat": 4.0, "dur": "quarter"}]}, {"number": 9, "dynamic": "mf", "treble": [{"chord": [84], "beat": 1.0, "dur": "16th", "lyric": "Fate"}, {"chord": [79], "beat": 1.167, "dur": "16th"}, {"chord": [75], "beat": 1.333, "dur": "16th"}, {"chord": [72], "beat": 1.5, "dur": "16th"}, {"chord": [75], "beat": 1.667, "dur": "16th"}, {"chord": [79], "beat": 1.833, "dur": "16th"}, {"chord": [84], "beat": 2.0, "dur": "16th", "lyric": "I've"}, {"chord": [79], "beat": 2.167, "dur": "16th"}, {"chord": [75], "beat": 2.333, "dur": "16th"}, {"chord": [72], "beat": 2.5, "dur": "16th"}, {"chord": [75], "beat": 2.667, "dur": "16th"}, {"chord": [79], "beat": 2.833, "dur": "16th"}, {"chord": [84], "beat": 3.0, "dur": "16th", "lyric": "made"}, {"chord": [79], "beat": 3.167, "dur": "16th"}, {"chord": [75], "beat": 3.333, "dur": "16th"}, {"chord": [72], "beat": 3.5, "dur": "16th"}, {"chord": [75], "beat": 3.667, "dur": "16th"}, {"chord": [79], "beat": 3.833, "dur": "16th"}, {"chord": [84], "beat": 4.0, "dur": "16th", "lyric": "Where"}, {"chord": [79], "beat": 4.167, "dur": "16th"}, {"chord": [75], "beat": 4.333, "dur": "16th"}, {"chord": [72], "beat": 4.5, "dur": "16th"}, {"chord": [75], "beat": 4.667, "dur": "16th"}, {"chord": [79], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [36, 43, 48, 51], "rolled": true, "beat": 1.0, "dur": "quarter"}, {"chord": [36, 48], "beat": 2.0, "dur": "8th"}, {"chord": [55], "beat": 2.5, "dur": "8th"}, {"chord": [48, 55, 60], "beat": 3.0, "dur": "8th"}, {"chord": [36], "beat": 3.5, "dur": "8th"}, {"chord": [36], "beat": 4.0, "dur": "8th"}, {"chord": [48, 55, 60], "beat": 4.5, "dur": "8th"}]}, {"number": 10, "treble": [{"chord": [84], "beat": 1.0, "dur": "16th", "lyric": "e"}, {"chord": [79], "beat": 1.167, "dur": "16th"}, {"chord": [75], "beat": 1.333, "dur": "16th"}, {"chord": [72], "beat": 1.5, "dur": "16th"}, {"chord": [75], "beat": 1.667, "dur": "16th"}, {"chord": [79], "beat": 1.833, "dur": "16th"}, {"chord": [84], "beat": 2.0, "dur": "16th", "lyric": "-"}, {"chord": [79], "beat": 2.167, "dur": "16th"}, {"chord": [75], "beat": 2.333, "dur": "16th"}, {"chord": [72], "beat": 2.5, "dur": "16th"}, {"chord": [75], "beat": 2.667, "dur": "16th"}, {"chord": [79], "beat": 2.833, "dur": "16th"}, {"chord": [84], "beat": 3.0, "dur": "16th", "lyric": "rave"}, {"chord": [79], "beat": 3.167, "dur": "16th"}, {"chord": [75], "beat": 3.333, "dur": "16th"}, {"chord": [72], "beat": 3.5, "dur": "16th"}, {"chord": [75], "beat": 3.667, "dur": "16th"}, {"chord": [79], "beat": 3.833, "dur": "16th"}, {"chord": [84], "beat": 4.0, "dur": "16th", "lyric": "Where"}, {"chord": [79], "beat": 4.167, "dur": "16th"}, {"chord": [75], "beat": 4.333, "dur": "16th"}, {"chord": [72], "beat": 4.5, "dur": "16th"}, {"chord": [75], "beat": 4.667, "dur": "16th"}, {"chord": [79], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [32, 39, 44, 48], "rolled": true, "beat": 1.0, "dur": "quarter"}, {"chord": [32, 44], "beat": 2.0, "dur": "8th"}, {"chord": [51], "beat": 2.5, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 3.0, "dur": "8th"}, {"chord": [32, 44], "beat": 3.5, "dur": "8th"}, {"chord": [32, 44], "beat": 4.0, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 11, "treble": [{"chord": [86], "beat": 1.0, "dur": "16th", "lyric": "stars"}, {"chord": [82], "beat": 1.167, "dur": "16th"}, {"chord": [77], "beat": 1.333, "dur": "16th"}, {"chord": [74], "beat": 1.5, "dur": "16th"}, {"chord": [77], "beat": 1.667, "dur": "16th"}, {"chord": [82], "beat": 1.833, "dur": "16th"}, {"chord": [86], "beat": 2.0, "dur": "16th", "lyric": "can't"}, {"chord": [82], "beat": 2.167, "dur": "16th"}, {"chord": [77], "beat": 2.333, "dur": "16th"}, {"chord": [74], "beat": 2.5, "dur": "16th"}, {"chord": [77], "beat": 2.667, "dur": "16th"}, {"chord": [82], "beat": 2.833, "dur": "16th"}, {"chord": [86], "beat": 3.0, "dur": "16th", "lyric": "save"}, {"chord": [82], "beat": 3.167, "dur": "16th"}, {"chord": [77], "beat": 3.333, "dur": "16th"}, {"chord": [74], "beat": 3.5, "dur": "16th"}, {"chord": [77], "beat": 3.667, "dur": "16th"}, {"chord": [82], "beat": 3.833, "dur": "16th"}, {"chord": [86], "beat": 4.0, "dur": "16th", "lyric": "can"}, {"chord": [82], "beat": 4.167, "dur": "16th"}, {"chord": [77], "beat": 4.333, "dur": "16th"}, {"chord": [74], "beat": 4.5, "dur": "16th"}, {"chord": [77], "beat": 4.667, "dur": "16th"}, {"chord": [82], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [34, 41, 46, 50], "rolled": true, "beat": 1.0, "dur": "quarter"}, {"chord": [34, 46], "beat": 2.0, "dur": "8th"}, {"chord": [53], "beat": 2.5, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 3.0, "dur": "8th"}, {"chord": [34, 46], "beat": 3.5, "dur": "8th"}, {"chord": [34, 46], "beat": 4.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 4.5, "dur": "8th"}]}, {"number": 12, "treble": [{"chord": [84], "beat": 1.0, "dur": "16th", "lyric": "we"}, {"chord": [79], "beat": 1.167, "dur": "16th"}, {"chord": [75], "beat": 1.333, "dur": "16th"}, {"chord": [72], "beat": 1.5, "dur": "16th"}, {"chord": [75], "beat": 1.667, "dur": "16th"}, {"chord": [79], "beat": 1.833, "dur": "16th"}, {"chord": [84], "beat": 2.0, "dur": "16th", "lyric": "bend"}, {"chord": [79], "beat": 2.167, "dur": "16th"}, {"chord": [75], "beat": 2.333, "dur": "16th"}, {"chord": [72], "beat": 2.5, "dur": "16th"}, {"chord": [75], "beat": 2.667, "dur": "16th"}, {"chord": [79], "beat": 2.833, "dur": "16th"}, {"chord": [87], "beat": 3.0, "dur": "16th", "lyric": "the"}, {"chord": [84], "beat": 3.167, "dur": "16th"}, {"chord": [79], "beat": 3.333, "dur": "16th"}, {"chord": [75], "beat": 3.5, "dur": "16th"}, {"chord": [79], "beat": 3.667, "dur": "16th"}, {"chord": [84], "beat": 3.833, "dur": "16th"}, {"chord": [91], "beat": 4.0, "dur": "16th", "lyric": "wave"}, {"chord": [87], "beat": 4.167, "dur": "16th"}, {"chord": [84], "beat": 4.333, "dur": "16th"}, {"chord": [79], "beat": 4.5, "dur": "16th"}, {"chord": [84], "beat": 4.667, "dur": "16th"}, {"chord": [87], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [36, 43, 48, 51], "beat": 1.0, "dur": "quarter"}, {"chord": [48, 55], "beat": 2.0, "dur": "quarter"}, {"chord": [36, 43, 48, 51], "beat": 3.0, "dur": "quarter"}, {"chord": [48, 55], "beat": 4.0, "dur": "quarter"}]}, {"number": 13, "treble": [{"chord": [67], "beat": 1.5, "dur": "8th", "lyric": "Void"}, {"chord": [70], "beat": 2.0, "dur": "8th", "lyric": "ex-"}, {"chord": [72], "beat": 2.5, "dur": "8th", "lyric": "pands"}, {"chord": [67, 75], "beat": 3.0, "dur": "8th", "lyric": "the"}, {"chord": [79], "beat": 3.5, "dur": "8th", "lyric": "world"}, {"chord": [67, 75], "beat": 4.0, "dur": "8th", "lyric": "I"}, {"chord": [67, 77], "beat": 4.5, "dur": "8th", "lyric": "see"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "dotted8th"}, {"chord": [51, 55, 60], "beat": 1.75, "dur": "16th"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "8th"}, {"chord": [51, 55, 60], "beat": 2.5, "dur": "8th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 14, "treble": [{"chord": [67], "beat": 1.5, "dur": "8th", "lyric": "Crim-"}, {"chord": [70], "beat": 2.0, "dur": "8th", "lyric": "son"}, {"chord": [72], "beat": 2.5, "dur": "8th", "lyric": "floods"}, {"chord": [67, 75], "beat": 3.0, "dur": "8th", "lyric": "the"}, {"chord": [79], "beat": 3.5, "dur": "8th", "lyric": "moon's"}, {"chord": [67, 75], "beat": 4.0, "dur": "8th", "lyric": "de -"}, {"chord": [67, 77], "beat": 4.5, "dur": "8th", "lyric": "cree"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "8th"}, {"chord": [31, 43], "beat": 4.5, "dur": "8th"}]}, {"number": 15, "treble": [{"chord": [67], "beat": 1.5, "dur": "8th", "lyric": "Light"}, {"chord": [70], "beat": 2.0, "dur": "8th", "lyric": "rip -"}, {"chord": [72], "beat": 2.5, "dur": "8th", "lyric": "ples"}, {"chord": [67, 75], "beat": 3.0, "dur": "8th", "lyric": "through"}, {"chord": [79], "beat": 3.5, "dur": "8th", "lyric": "time's"}, {"chord": [67, 75], "beat": 4.0, "dur": "8th", "lyric": "de -"}, {"chord": [67, 77], "beat": 4.5, "dur": "8th", "lyric": "bris"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "dotted8th"}, {"chord": [51, 55, 60], "beat": 1.75, "dur": "16th"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "8th"}, {"chord": [51, 55, 60], "beat": 2.5, "dur": "8th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 16, "treble": [{"chord": [67, 70, 75], "beat": 1.0, "dur": "quarter", "lyric": "Bleeds"}, {"chord": [65, 70, 74], "beat": 2.0, "dur": "quarter", "lyric": "my"}, {"chord": [67, 70, 75], "beat": 3.0, "dur": "quarter", "lyric": "sto -"}, {"chord": [67, 71, 74], "accidental": "\u266e", "beat": 4.0, "dur": "quarter", "lyric": "ry"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "8th"}, {"chord": [47, 50, 55], "beat": 4.5, "dur": "8th"}]}, {"number": 17, "treble": [{"chord": [63, 67, 72], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [63, 67, 72], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [63, 67, 72], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "hands"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "write"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "my"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "sto -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "ry"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 18, "treble": [{"chord": [62, 65, 70], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [62, 65, 70], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [62, 65, 70], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [62, 65, 70], "beat": 2.0, "dur": "8th", "lyric": "chains"}, {"chord": [62, 65, 70], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [62, 67, 71], "beat": 3.0, "dur": "8th", "lyric": "lock"}, {"chord": [62, 67, 71], "beat": 3.5, "dur": "8th", "lyric": "my"}, {"chord": [62, 67, 71], "beat": 4.0, "dur": "8th", "lyric": "glo -"}, {"chord": [62, 67, 71], "beat": 4.5, "dur": "8th", "lyric": "ry"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "quarter"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "dotted8th"}, {"chord": [46], "beat": 2.75, "dur": "16th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "16th"}, {"chord": [43], "beat": 4.25, "dur": "16th"}, {"chord": [43], "beat": 4.5, "dur": "16th"}, {"chord": [31], "beat": 4.75, "dur": "16th"}]}, {"number": 19, "treble": [{"chord": [63, 67, 72], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [63, 67, 72], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [63, 67, 72], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "lines"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "I"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "can't"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "out -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "pray"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [44], "beat": 4.5, "dur": "16th"}, {"chord": [32], "beat": 4.75, "dur": "16th"}]}, {"number": 20, "treble": [{"chord": [65, 70, 74], "beat": 1.0, "dur": "quarter", "lyric": "Who"}, {"chord": [67, 70, 75], "beat": 2.0, "dur": "quarter", "lyric": "can"}, {"chord": [67, 71, 74], "beat": 3.0, "dur": "quarter", "lyric": "see"}, {"chord": [67, 71, 74], "beat": 4.0, "dur": "quarter", "lyric": "me"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "8th"}, {"chord": [47, 50, 55], "beat": 4.5, "dur": "8th"}]}, {"number": 21, "treble": [{"chord": [63, 67, 72], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [63, 67, 72], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [63, 67, 72], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "flames"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "come"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "in"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "fu -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "ry"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [44], "beat": 4.5, "dur": "16th"}, {"chord": [32], "beat": 4.75, "dur": "16th"}]}, {"number": 22, "treble": [{"chord": [62, 65, 70], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [62, 65, 70], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [62, 65, 70], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [62, 65, 70], "beat": 2.0, "dur": "8th", "lyric": "keys"}, {"chord": [62, 65, 70], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [62, 67, 71], "beat": 3.0, "dur": "8th", "lyric": "carve"}, {"chord": [62, 67, 71], "beat": 3.5, "dur": "8th", "lyric": "truth"}, {"chord": [62, 67, 71], "beat": 4.0, "dur": "8th", "lyric": "from"}, {"chord": [62, 67, 71], "beat": 4.5, "dur": "8th", "lyric": "me"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "quarter"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "dotted8th"}, {"chord": [46], "beat": 2.75, "dur": "16th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "16th"}, {"chord": [43], "beat": 4.25, "dur": "16th"}, {"chord": [43], "beat": 4.5, "dur": "16th"}, {"chord": [31], "beat": 4.75, "dur": "16th"}]}, {"number": 23, "treble": [{"chord": [63, 67, 72], "beat": 1.5, "dur": "8th", "lyric": "In -"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "- to"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "the"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "dark"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "to"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "dream"}, {"chord": [63, 68, 84], "beat": 4.5, "dur": "8th", "lyric": "and"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [44], "beat": 4.5, "dur": "16th"}, {"chord": [32], "beat": 4.75, "dur": "16th"}]}, {"number": 24, "dynamic": "f", "treble": [{"chord": [65, 71, 74], "beat": 1.0, "dur": "quarter", "lyric": "scream"}, {"chord": [71, 74], "beat": 2.0, "dur": "8th"}, {"chord": [72, 75], "beat": 2.5, "dur": "8th", "lyric": "my"}, {"chord": [67, 72, 75], "beat": 3.0, "dur": "quarter", "lyric": "name"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Won -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "der"}], "bass": [{"chord": [31, 38, 43], "beat": 1.0, "dur": "quarter"}, {"chord": [43], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [47], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 2.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 2.167, "dur": "16th", "triplet": true}, {"chord": [59], "beat": 2.333, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 3.0, "dur": "quarter"}, {"chord": [60], "beat": 4.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 4.167, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 4.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 4.5, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 4.667, "dur": "16th", "triplet": true}, {"chord": [36], "beat": 4.833, "dur": "16th", "triplet": true}]}, {"number": 25, "treble": [{"chord": [72, 75, 80], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [72, 75, 80], "beat": 2.0, "dur": "dottedQuarter", "lyric": "dis -"}, {"chord": [72, 75, 79], "beat": 3.0, "dur": "quarter", "lyric": "may"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Mad -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "ness"}], "bass": [{"chord": [32, 39, 44], "beat": 1.0, "dur": "quarter"}, {"chord": [32, 39, 44], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 26, "treble": [{"chord": [74, 77, 82], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [74, 77, 82], "beat": 2.0, "dur": "dottedQuarter", "lyric": "de -"}, {"chord": [74, 77, 82], "beat": 3.0, "dur": "quarter", "lyric": "cay"}, {"chord": [65, 74], "beat": 4.0, "dur": "8th"}, {"chord": [70, 77], "beat": 4.5, "dur": "8th", "lyric": "With"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [34], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [41], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [46], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [58], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [50, 53, 58], "beat": 4.5, "dur": "8th"}]}, {"number": 27, "treble": [{"chord": [63, 67, 72], "beat": 1.0, "dur": "8th", "lyric": "fra-"}, {"chord": [63, 67, 72], "beat": 1.5, "dur": "8th", "lyric": "-gile"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "light"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "I"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "vow"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "to"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "guard"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "a"}], "bass": [{"chord": [36], "beat": 1.0, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 1.167, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 1.333, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [60], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [32, 39, 44], "beat": 4.0, "dur": "quarter"}]}, {"number": 28, "treble": [{"chord": [65, 71, 74], "beat": 1.0, "dur": "quarter", "lyric": "world"}, {"chord": [71, 74], "beat": 2.0, "dur": "8th"}, {"chord": [72, 75], "beat": 2.5, "dur": "8th", "lyric": "I"}, {"chord": [67, 72, 75], "beat": 3.0, "dur": "quarter", "lyric": "stay"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Stir -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "ring"}], "bass": [{"chord": [31, 38, 43], "beat": 1.0, "dur": "quarter"}, {"chord": [43], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [47], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 2.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 2.167, "dur": "16th", "triplet": true}, {"chord": [59], "beat": 2.333, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 3.0, "dur": "quarter"}, {"chord": [60], "beat": 4.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 4.167, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 4.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 4.5, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 4.667, "dur": "16th", "triplet": true}, {"chord": [36], "beat": 4.833, "dur": "16th", "triplet": true}]}, {"number": 29, "treble": [{"chord": [72, 75, 80], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [72, 75, 80], "beat": 2.0, "dur": "dottedQuarter", "lyric": "de -"}, {"chord": [72, 75, 79], "beat": 3.0, "dur": "quarter", "lyric": "lay"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Re -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "birth"}], "bass": [{"chord": [32, 39, 44], "beat": 1.0, "dur": "quarter"}, {"chord": [32, 39, 44], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 30, "treble": [{"chord": [74, 77, 82], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [74, 77, 82], "beat": 2.0, "dur": "dottedQuarter", "lyric": "be"}, {"chord": [74, 77, 82], "beat": 3.0, "dur": "quarter", "lyric": "same"}, {"chord": [65, 74], "beat": 4.0, "dur": "8th"}, {"chord": [70, 77], "beat": 4.5, "dur": "8th", "lyric": "With"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [34], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [41], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [46], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [58], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [50, 53, 58], "beat": 4.5, "dur": "8th"}]}, {"number": 31, "treble": [{"chord": [63, 67, 72], "beat": 1.0, "dur": "8th", "lyric": "whis-"}, {"chord": [63, 67, 72], "beat": 1.5, "dur": "8th", "lyric": "-pers"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "in"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "gray"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "guide"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "my"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "sha -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "- dow"}], "bass": [{"chord": [36], "beat": 1.0, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 1.167, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 1.333, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [60], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [32, 39, 44], "beat": 4.0, "dur": "quarter"}]}];
+
+        const SYSTEM_DEFINITIONS = [
+            // Page 1
+            { page: 1, sysIdx: 0, measures: [1, 2], isFirstInSong: true },
+            { page: 1, sysIdx: 1, measures: [3, 4, 5] },
+            { page: 1, sysIdx: 2, measures: [6, 7, 8] },
+            { page: 1, sysIdx: 3, measures: [9] },
+            // Page 2
+            { page: 2, sysIdx: 4, measures: [10], isFirstInPage: true },
+            { page: 2, sysIdx: 5, measures: [11] },
+            { page: 2, sysIdx: 6, measures: [12, 13] },
+            { page: 2, sysIdx: 7, measures: [14, 15] },
+            { page: 2, sysIdx: 8, measures: [16, 17] },
+            // Page 3
+            { page: 3, sysIdx: 9, measures: [18], isFirstInPage: true },
+            { page: 3, sysIdx: 10, measures: [19, 20] },
+            { page: 3, sysIdx: 11, measures: [21] },
+            { page: 3, sysIdx: 12, measures: [22, 23] },
+            // Page 4
+            { page: 4, sysIdx: 13, measures: [24, 25], isFirstInPage: true },
+            { page: 4, sysIdx: 14, measures: [26, 27] },
+            { page: 4, sysIdx: 15, measures: [28, 29] },
+            { page: 4, sysIdx: 16, measures: [30, 31] }
         ];
 
         // -------------------------------------------------------------
-        // 2. HIGH-FIDELITY AUDIO ENGINE (Tone.js Sampler + Fallback Synth)
+        // 2. AUDIO ENGINE (Tone.js Sampler + Fallback Synth)
         // -------------------------------------------------------------
         class AudioPlayer {
             constructor() {
@@ -948,43 +696,19 @@
                         this.lhGain = new Tone.Gain(this.lhVol).toDestination();
 
                         const sampleUrls = {
-                            "A0": "A0.mp3",
-                            "C1": "C1.mp3",
-                            "D#1": "Ds1.mp3",
-                            "F#1": "Fs1.mp3",
-                            "A1": "A1.mp3",
-                            "C2": "C2.mp3",
-                            "D#2": "Ds2.mp3",
-                            "F#2": "Fs2.mp3",
-                            "A2": "A2.mp3",
-                            "C3": "C3.mp3",
-                            "D#3": "Ds3.mp3",
-                            "F#3": "Fs3.mp3",
-                            "A3": "A3.mp3",
-                            "C4": "C4.mp3",
-                            "D#4": "Ds4.mp3",
-                            "F#4": "Fs4.mp3",
-                            "A4": "A4.mp3",
-                            "C5": "C5.mp3",
-                            "D#5": "Ds5.mp3",
-                            "F#5": "Fs5.mp3",
-                            "A5": "A5.mp3",
-                            "C6": "C6.mp3",
-                            "D#6": "Ds6.mp3",
-                            "F#6": "Fs6.mp3",
-                            "A6": "A6.mp3",
-                            "C7": "C7.mp3",
-                            "D#7": "Ds7.mp3",
-                            "F#7": "Fs7.mp3",
-                            "A7": "A7.mp3",
-                            "C8": "C8.mp3"
+                            "A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3", "A1": "A1.mp3",
+                            "C2": "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3", "A2": "A2.mp3",
+                            "C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3", "A3": "A3.mp3",
+                            "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",
+                            "C5": "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
+                            "C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3", "A6": "A6.mp3",
+                            "C7": "C7.mp3", "D#7": "Ds7.mp3", "F#7": "Fs7.mp3", "A7": "A7.mp3", "C8": "C8.mp3"
                         };
 
                         this.sampler = new Tone.Sampler({
                             urls: sampleUrls,
                             baseUrl: "audio/salamander/",
                             onload: () => {
-                                console.log("Tone.js: Salamander Grand Piano Samples Loaded!");
                                 const badge = document.getElementById("audioStatusBadge");
                                 badge.innerHTML = `<span>●</span> Steinway Grand (Loaded)`;
                                 badge.style.background = "#14532d";
@@ -996,7 +720,6 @@
                         this.sampler.connect(this.lhGain);
                         this.isToneReady = true;
                     } catch (e) {
-                        console.warn("Tone.js init fallback to WebAudio synth:", e);
                         this.initSynthFallback();
                     }
                 } else {
@@ -1012,8 +735,7 @@
                 this.masterGain.connect(this.synthCtx.destination);
             }
 
-            playNote(midi, duration = 0.6, velocity = 0.8, isRightHand = true) {
-                // Check mute/solo logic
+            playChord(midiArray, duration = 0.6, velocity = 0.8, isRightHand = true) {
                 let shouldPlay = true;
                 if (isRightHand) {
                     if (this.rhMute) shouldPlay = false;
@@ -1025,17 +747,17 @@
 
                 if (!shouldPlay) return;
 
-                const noteName = this.midiToNoteName(midi);
                 const handVol = isRightHand ? this.rhVol : this.lhVol;
                 const effectiveVel = velocity * handVol;
 
-                if (this.sampler && this.sampler.loaded) {
-                    const nodeDest = isRightHand ? this.rhGain : this.lhGain;
-                    // Tone.js trigger
-                    this.sampler.triggerAttackRelease(noteName, duration, undefined, effectiveVel);
-                } else {
-                    this.playSynthNote(midi, duration, effectiveVel);
-                }
+                midiArray.forEach((midi) => {
+                    const noteName = this.midiToNoteName(midi);
+                    if (this.sampler && this.sampler.loaded) {
+                        this.sampler.triggerAttackRelease(noteName, duration, undefined, effectiveVel);
+                    } else {
+                        this.playSynthNote(midi, duration, effectiveVel);
+                    }
+                });
             }
 
             playSynthNote(midi, duration, velocity) {
@@ -1079,7 +801,6 @@
                 const osc = this.synthCtx.createOscillator();
                 const gain = this.synthCtx.createGain();
 
-                // High woodblock for downbeat, low for others
                 osc.frequency.setValueAtTime(isDownbeat ? 1200 : 800, now);
                 osc.type = "sine";
 
@@ -1100,27 +821,22 @@
         // 3. VIRTUAL PIANO KEYBOARD (61 Keys C2 to C7)
         // -------------------------------------------------------------
         const pianoFrame = document.getElementById("pianoKeyboardFrame");
-        const keyElementsMap = new Map(); // midi -> div element
+        const keyElementsMap = new Map();
 
         function buildVirtualPiano() {
-            // C2 (midi 36) to C7 (midi 84) = 49 keys, let's do 36 to 84 (49 keys)
             const START_MIDI = 36; // C2
             const END_MIDI = 84;   // C7
             const isBlackKey = [false, true, false, true, false, false, true, false, true, false, true, false];
-            const noteNames = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
             let whiteKeyIndex = 0;
-
             for (let m = START_MIDI; m <= END_MIDI; m++) {
                 const nMod = m % 12;
-                const isBlack = isBlackKey[nMod];
-
-                if (!isBlack) {
+                if (!isBlackKey[nMod]) {
                     const wKey = document.createElement("div");
                     wKey.className = "white-key";
                     wKey.dataset.midi = m;
 
-                    if (nMod === 0) { // C notes label octave
+                    if (nMod === 0) {
                         const lbl = document.createElement("span");
                         lbl.className = "white-key-label";
                         lbl.innerText = `C${Math.floor(m / 12) - 1}`;
@@ -1129,8 +845,8 @@
 
                     wKey.addEventListener("mousedown", () => {
                         audio.init();
-                        audio.playNote(m, 0.7, 0.9, true);
-                        flashKey(m, true, 400);
+                        audio.playChord([m], 0.7, 0.9, true);
+                        flashKeys([m], true, 400);
                     });
 
                     pianoFrame.appendChild(wKey);
@@ -1139,28 +855,23 @@
                 }
             }
 
-            // Place black keys absolutely over the white keys
             whiteKeyIndex = 0;
             for (let m = START_MIDI; m <= END_MIDI; m++) {
                 const nMod = m % 12;
-                const isBlack = isBlackKey[nMod];
-
-                if (!isBlack) {
+                if (!isBlackKey[nMod]) {
                     whiteKeyIndex++;
                 } else {
                     const bKey = document.createElement("div");
                     bKey.className = "black-key";
                     bKey.dataset.midi = m;
-                    // Position black key between whiteKeyIndex - 1 and whiteKeyIndex
-                    // Each white key is 25px wide + 1px border. Offset is (whiteKeyIndex * 26) - 9
-                    const leftPos = (whiteKeyIndex * 26) - 9 + 6; // +6 padding
+                    const leftPos = (whiteKeyIndex * 23) - 8 + 6;
                     bKey.style.left = `${leftPos}px`;
 
                     bKey.addEventListener("mousedown", (e) => {
                         e.stopPropagation();
                         audio.init();
-                        audio.playNote(m, 0.7, 0.9, true);
-                        flashKey(m, true, 400);
+                        audio.playChord([m], 0.7, 0.9, true);
+                        flashKeys([m], true, 400);
                     });
 
                     pianoFrame.appendChild(bKey);
@@ -1171,181 +882,346 @@
 
         buildVirtualPiano();
 
-        function flashKey(midi, isRightHand, durationMs = 300) {
-            const el = keyElementsMap.get(midi);
-            if (!el) return;
-
-            const activeClass = isRightHand ? "active-rh" : "active-lh";
-            el.classList.add(activeClass);
-            setTimeout(() => {
-                el.classList.remove(activeClass);
-            }, durationMs);
+        function flashKeys(midiArray, isRightHand, durationMs = 300) {
+            midiArray.forEach(m => {
+                const el = keyElementsMap.get(m);
+                if (!el) return;
+                const activeClass = isRightHand ? "active-rh" : "active-lh";
+                el.classList.add(activeClass);
+                setTimeout(() => { el.classList.remove(activeClass); }, durationMs);
+            });
         }
 
         // -------------------------------------------------------------
-        // 4. SHEET MUSIC SVG RENDERER
+        // 4. EXACT SVG SHEET MUSIC ENGRAVER (100% MuseScore Matching)
         // -------------------------------------------------------------
         function midiToStaffY(midi, clef) {
-            // Exact diatonic scale mapping for Treble (G clef) and Bass (F clef)
-            const diatonicStep = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
-            const octave = Math.floor(midi / 12);
+            const diatonicStep = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
+            const octave = Math.floor(midi / 12) - 1;
             const pitchClass = midi % 12;
             const absoluteStep = octave * 7 + diatonicStep[pitchClass];
 
             if (clef === "treble") {
-                const e4Step = 4 * 7 + diatonicStep[4]; // E4 is bottom line (y = 80)
+                // E4 is bottom line (y = 95)
+                // diatonic step of E4 is 4 * 7 + diatonicStep[4] = 28 + 2 = 30
+                const e4Step = 4 * 7 + diatonicStep[4];
                 const stepDiff = absoluteStep - e4Step;
-                return 80 - stepDiff * 5.0;
+                return 95 - stepDiff * 5.1;
             } else {
-                const g2Step = 2 * 7 + diatonicStep[7]; // G2 is bottom line (y = 180)
+                // G2 is bottom line (y = 243)
+                // diatonic step of G2 is 2 * 7 + diatonicStep[7] = 14 + 4 = 18
+                const g2Step = 2 * 7 + diatonicStep[7];
                 const stepDiff = absoluteStep - g2Step;
-                return 180 - stepDiff * 5.0;
+                return 243 - stepDiff * 5.1;
             }
         }
 
-        function renderSystemSVG(svgId, measureList, isFirstSystem) {
+        function renderSystemSVG(svgId, measureList, isFirstSystem, startMeasureNumber) {
             const svg = document.getElementById(svgId);
+            if (!svg) return;
             let html = "";
 
             const W = 1000;
-            const leftMargin = isFirstSystem ? 84 : 66;
-            const usableWidth = W - leftMargin - 15;
+            const leftMargin = isFirstSystem ? 148 : 78;
+            const usableWidth = W - leftMargin - 16;
             const measureWidth = usableWidth / measureList.length;
 
-            // Grand Staff Bracket / Brace
-            html += `<line x1="20" y1="40" x2="20" y2="180" stroke="#000" stroke-width="4.5" stroke-linecap="round"/>`;
-            html += `<line x1="20" y1="40" x2="${W}" y2="40" stroke="#000" stroke-width="1.2"/>`;
-            html += `<line x1="20" y1="180" x2="${W}" y2="180" stroke="#000" stroke-width="1.2"/>`;
+            const trebleLines = [54, 64, 75, 85, 95];
+            const bassLines = [202, 212, 222, 232, 243];
 
-            // Draw Treble & Bass 5-Staff lines
+            // 1. Grand Staff Left Brace and Barline
+            html += `<line x1="36" y1="${trebleLines[0]}" x2="36" y2="${bassLines[4]}" stroke="#000" stroke-width="1.2"/>`;
+            html += `<path d="M 28 54 C 23 54, 18 66, 18 84 L 18 135 C 18 144, 13 148, 8 149 C 13 150, 18 154, 18 163 L 18 214 C 18 232, 23 243, 28 243 C 24 241, 21 230, 21 214 L 21 163 C 21 152, 16 149, 12 149 C 16 148, 21 145, 21 135 L 21 84 C 21 68, 24 57, 28 54 Z" fill="#000"/>`;
+
+            // Horizontal Staff Lines
             for (let i = 0; i < 5; i++) {
-                const yT = 40 + i * 10;
-                const yB = 140 + i * 10;
-                html += `<line x1="20" y1="${yT}" x2="${W}" y2="${yT}" stroke="#111" stroke-width="0.9"/>`;
-                html += `<line x1="20" y1="${yB}" x2="${W}" y2="${yB}" stroke="#111" stroke-width="0.9"/>`;
+                html += `<line x1="36" y1="${trebleLines[i]}" x2="${W}" y2="${trebleLines[i]}" stroke="#111" stroke-width="1"/>`;
+                html += `<line x1="36" y1="${bassLines[i]}" x2="${W}" y2="${bassLines[i]}" stroke="#111" stroke-width="1"/>`;
             }
 
-            // Clefs & Key Signature
-            html += `<text x="24" y="73" font-family="'Times New Roman', serif" font-size="44" font-weight="normal" fill="#000">𝄞</text>`;
-            html += `<text x="24" y="165" font-family="'Times New Roman', serif" font-size="36" font-weight="normal" fill="#000">𝄢</text>`;
-
-            // 3 flats (Bb, Eb, Ab)
-            html += `<text x="50" y="58" font-family="serif" font-size="20" font-weight="bold" fill="#000">♭</text>`;
-            html += `<text x="58" y="48" font-family="serif" font-size="20" font-weight="bold" fill="#000">♭</text>`;
-            html += `<text x="66" y="63" font-family="serif" font-size="20" font-weight="bold" fill="#000">♭</text>`;
-
-            html += `<text x="50" y="158" font-family="serif" font-size="20" font-weight="bold" fill="#000">♭</text>`;
-            html += `<text x="58" y="148" font-family="serif" font-size="20" font-weight="bold" fill="#000">♭</text>`;
-            html += `<text x="66" y="163" font-family="serif" font-size="20" font-weight="bold" fill="#000">♭</text>`;
+            // Clefs in SMuFL Bravura
+            html += `<text class="bravura" x="38" y="85" font-size="40" fill="#000">&#xE050;</text>`;
+            html += `<text class="bravura" x="38" y="212" font-size="40" fill="#000">&#xE062;</text>`;
 
             if (isFirstSystem) {
+                // Key Signature (3 flats in Treble and Bass)
+                html += `<text class="bravura" x="80" y="75" font-size="40" fill="#000">&#xE260;</text>`;
+                html += `<text class="bravura" x="93" y="60" font-size="40" fill="#000">&#xE260;</text>`;
+                html += `<text class="bravura" x="106" y="80" font-size="40" fill="#000">&#xE260;</text>`;
+
+                html += `<text class="bravura" x="80" y="232" font-size="40" fill="#000">&#xE260;</text>`;
+                html += `<text class="bravura" x="93" y="217" font-size="40" fill="#000">&#xE260;</text>`;
+                html += `<text class="bravura" x="106" y="237" font-size="40" fill="#000">&#xE260;</text>`;
+
                 // 4/4 Time Signature
-                html += `<text x="76" y="58" font-family="'Times New Roman', serif" font-size="19" font-weight="bold" fill="#000">4</text>`;
-                html += `<text x="76" y="78" font-family="'Times New Roman', serif" font-size="19" font-weight="bold" fill="#000">4</text>`;
-                html += `<text x="76" y="158" font-family="'Times New Roman', serif" font-size="19" font-weight="bold" fill="#000">4</text>`;
-                html += `<text x="76" y="178" font-family="'Times New Roman', serif" font-size="19" font-weight="bold" fill="#000">4</text>`;
+                html += `<text class="bravura" x="122" y="75" font-size="40" fill="#000">&#xE084;</text>`;
+                html += `<text class="bravura" x="122" y="95" font-size="40" fill="#000">&#xE084;</text>`;
+                html += `<text class="bravura" x="122" y="222" font-size="40" fill="#000">&#xE084;</text>`;
+                html += `<text class="bravura" x="122" y="243" font-size="40" fill="#000">&#xE084;</text>`;
+
+                // Tempo Mark: quarter = 70
+                html += `<text class="bravura" x="120" y="38" font-size="28" fill="#000">&#xE1D5;</text>`;
+                html += `<text class="music-text" x="138" y="36" font-size="21" font-weight="bold" fill="#000">= 70</text>`;
+            } else {
+                // Measure Number Badge at system start
+                html += `<text class="music-text" x="20" y="36" font-size="14" font-style="italic" fill="#333">${startMeasureNumber}</text>`;
             }
 
-            // Render Each Measure
+            // Render Measures in this system
             measureList.forEach((m, mIdx) => {
                 const mX = leftMargin + mIdx * measureWidth;
                 const mRight = mX + measureWidth;
 
-                // Measure Barline
-                html += `<line x1="${mRight}" y1="40" x2="${mRight}" y2="80" stroke="#111" stroke-width="1.2"/>`;
-                html += `<line x1="${mRight}" y1="140" x2="${mRight}" y2="180" stroke="#111" stroke-width="1.2"/>`;
+                // Vertical barlines
+                html += `<line x1="${mRight}" y1="${trebleLines[0]}" x2="${mRight}" y2="${trebleLines[4]}" stroke="#111" stroke-width="1.2"/>`;
+                html += `<line x1="${mRight}" y1="${bassLines[0]}" x2="${mRight}" y2="${bassLines[4]}" stroke="#111" stroke-width="1.2"/>`;
 
-                // Measure Number
-                html += `<text x="${mX + 4}" y="32" font-family="sans-serif" font-size="10" font-weight="bold" fill="#475569">${m.number}</text>`;
-
-                const usableMWidth = measureWidth - 36;
-                const noteStartX = mX + 18;
-
-                // Helper to get X position from beat
-                const getBeatX = (b) => noteStartX + ((b - 1.0) / 4.0) * usableMWidth;
-
-                // Treble Notes
-                const trebleBeams = [];
-                m.treble.forEach(n => {
-                    const x = getBeatX(n.beat);
-                    const y = midiToStaffY(n.midi, "treble");
-
-                    // Ledger lines
-                    if (y <= 30) html += `<line x1="${x-8}" y1="30" x2="${x+8}" y2="30" stroke="#000" stroke-width="1.2"/>`;
-                    if (y >= 90) html += `<line x1="${x-8}" y1="90" x2="${x+8}" y2="90" stroke="#000" stroke-width="1.2"/>`;
-
-                    // Notehead
-                    html += `<ellipse cx="${x}" cy="${y}" rx="4.8" ry="3.8" transform="rotate(-20 ${x} ${y})" fill="#000"/>`;
-
-                    // Stem
-                    const stemUp = y > 60;
-                    const stemX = stemUp ? x + 4.2 : x - 4.2;
-                    const stemYEnd = stemUp ? y - 26 : y + 26;
-                    html += `<line x1="${stemX}" y1="${y}" x2="${stemX}" y2="${stemYEnd}" stroke="#000" stroke-width="1.3"/>`;
-
-                    if (n.triplet) {
-                        trebleBeams.push({ x: stemX, y: stemYEnd, beat: n.beat });
-                    }
-
-                    // Lyrics
-                    if (n.lyric) {
-                        html += `<text x="${x}" y="104" font-family="'Times New Roman', serif" font-size="11.5" font-style="italic" text-anchor="middle" fill="#000">${n.lyric}</text>`;
-                    }
-                });
-
-                // Connect triplet beams in groups of 3
-                for (let i = 0; i < trebleBeams.length; i += 3) {
-                    if (i + 2 < trebleBeams.length) {
-                        const b1 = trebleBeams[i];
-                        const b3 = trebleBeams[i+2];
-                        const beamY = Math.min(b1.y, b3.y) - 4;
-                        html += `<line x1="${b1.x}" y1="${beamY}" x2="${b3.x}" y2="${beamY}" stroke="#000" stroke-width="2.8"/>`;
-                        const midX = (b1.x + b3.x) / 2;
-                        html += `<text x="${midX}" y="${beamY - 4}" font-family="sans-serif" font-size="9" font-style="italic" font-weight="bold" text-anchor="middle" fill="#000">3</text>`;
-                    }
+                // Dynamics (SMuFL Bravura: mp &#xE52C;, mf &#xE52B;, p &#xE52D;, f &#xE522;)
+                if (m.dynamic) {
+                    const dynMap = { "mp": "&#xE52C;", "mf": "&#xE52B;", "p": "&#xE52D;", "f": "&#xE522;", "pp": "&#xE52E;" };
+                    const dynChar = dynMap[m.dynamic] || m.dynamic;
+                    html += `<text class="bravura" x="${mX + 12}" y="125" font-size="32" fill="#000">${dynChar}</text>`;
+                }
+                if (m.crescendo) {
+                    html += `<polygon points="${mX + 16},116 ${mRight - 16},108 ${mRight - 16},124" fill="none" stroke="#000" stroke-width="1.1"/>`;
                 }
 
-                // Bass Notes
-                m.bass.forEach(n => {
+                // Pedal Line Bracket
+                const pedY = 280;
+                html += `<line x1="${mX + 8}" y1="${pedY - 14}" x2="${mX + 8}" y2="${pedY}" stroke="#222" stroke-width="1.2"/>`;
+                html += `<line x1="${mX + 8}" y1="${pedY}" x2="${mRight - 8}" y2="${pedY}" stroke="#222" stroke-width="1.2"/>`;
+                html += `<line x1="${mRight - 8}" y1="${pedY}" x2="${mRight - 8}" y2="${pedY - 10}" stroke="#222" stroke-width="1.2"/>`;
+
+                const usableMWidth = measureWidth - 28;
+                const noteStartX = mX + 14;
+                const getBeatX = (b) => noteStartX + ((b - 1.0) / 4.0) * usableMWidth;
+
+                // TREBLE ENGRAVING
+                const isAccompanimentTriplet = (m.number <= 8);
+
+                if (isAccompanimentTriplet) {
+                    // Group triplets by beat
+                    const tripGroups = {};
+                    m.treble.forEach(n => {
+                        const bInt = Math.floor(n.beat);
+                        if (!tripGroups[bInt]) tripGroups[bInt] = [];
+                        tripGroups[bInt].push(n);
+                    });
+
+                    Object.keys(tripGroups).forEach(bKey => {
+                        const grp = tripGroups[bKey];
+                        const bInt = parseInt(bKey);
+
+                        if (bInt === 4 && m.number <= 2) {
+                            // Beat 4 Sextuplet Flourish (M1, M2)
+                            const x1 = getBeatX(4.0);
+                            const x2 = getBeatX(4.33);
+                            const x3 = getBeatX(4.60);
+                            const x4 = getBeatX(4.82);
+
+                            const melTopY = (m.number === 1) ? 48 : 54; // G5 or F5
+                            const midNoteY = (m.number === 1) ? 60 : 65; // Eb5 or D5
+                            const c5Y = (m.number === 1) ? 70 : 65;     // C5 or D5
+
+                            html += `<text class="bravura" x="${x1 - 5.5}" y="${melTopY}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x1 - 5.5}" y="85" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x2 - 5.5}" y="${c5Y}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x3 - 5.5}" y="${melTopY}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x3 - 5.5}" y="${midNoteY}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x4 - 5.5}" y="${melTopY}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x4 - 5.5}" y="${midNoteY}" font-size="40" fill="#000">&#xE0A4;</text>`;
+
+                            const by1 = 113, by4 = 102;
+                            const getBY = (x) => by1 + (by4 - by1) * ((x - x1) / (x4 - x1));
+
+                            html += `<line x1="${x1 - 5.2}" y1="${melTopY}" x2="${x1 - 5.2}" y2="${by1}" stroke="#000" stroke-width="1.3"/>`;
+                            html += `<line x1="${x2 - 5.2}" y1="${c5Y}" x2="${x2 - 5.2}" y2="${getBY(x2)}" stroke="#000" stroke-width="1.3"/>`;
+                            html += `<line x1="${x3 - 5.2}" y1="${melTopY}" x2="${x3 - 5.2}" y2="${getBY(x3)}" stroke="#000" stroke-width="1.3"/>`;
+                            html += `<line x1="${x4 - 5.2}" y1="${melTopY}" x2="${x4 - 5.2}" y2="${by4}" stroke="#000" stroke-width="1.3"/>`;
+
+                            // Main beam
+                            html += `<line x1="${x1 - 5.2}" y1="${by1}" x2="${x4 - 5.2}" y2="${by4}" stroke="#000" stroke-width="4.5"/>`;
+                            // Secondary beam between stem 2 and stem 3
+                            html += `<line x1="${x2 - 5.2}" y1="${getBY(x2) - 6.5}" x2="${x3 - 5.2}" y2="${getBY(x3) - 6.5}" stroke="#000" stroke-width="3.5"/>`;
+                            // Slur arc
+                            html += `<path d="M ${x2 - 2} ${c5Y - 6} Q ${(x2 + x3)/2} ${c5Y - 14}, ${x3 - 2} ${c5Y - 6}" fill="none" stroke="#000" stroke-width="1.3"/>`;
+                            // Triplet "3"
+                            html += `<text class="music-text" x="${(x1 + x4)/2}" y="128" font-size="14" font-style="italic" font-weight="bold" text-anchor="middle" fill="#000">3</text>`;
+                        } else if (grp.length >= 3) {
+                            const n1 = grp[0];
+                            const n2 = grp[1];
+                            const n3 = grp[2];
+
+                            const x1 = getBeatX(n1.beat);
+                            const x2 = getBeatX(n2.beat);
+                            const x3 = getBeatX(n3.beat);
+
+                            const y1 = midiToStaffY(n1.chord[0], "treble");
+                            const y2 = midiToStaffY(n2.chord[0], "treble");
+                            const y3 = midiToStaffY(n3.chord[0], "treble");
+
+                            // Noteheads
+                            html += `<text class="bravura" x="${x1 - 5.5}" y="${y1}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x2 - 5.5}" y="${y2}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            html += `<text class="bravura" x="${x3 - 5.5}" y="${y3}" font-size="40" fill="#000">&#xE0A4;</text>`;
+
+                            // Top melody note on Beat 1 (e.g. G5 or F5)
+                            let topY1 = y1;
+                            if (n1.chord.length > 1) {
+                                topY1 = midiToStaffY(n1.chord[1], "treble");
+                                html += `<text class="bravura" x="${x1 - 5.5}" y="${topY1}" font-size="40" fill="#000">&#xE0A4;</text>`;
+                            }
+
+                            // Accidentals
+                            if (n1.accidental === "b") html += `<text class="bravura" x="${x1 - 16}" y="${y1}" font-size="34" fill="#000">&#xE260;</text>`;
+                            if (n2.accidental === "b") html += `<text class="bravura" x="${x2 - 16}" y="${y2}" font-size="34" fill="#000">&#xE260;</text>`;
+                            if (n3.accidental === "b") html += `<text class="bravura" x="${x3 - 16}" y="${y3}" font-size="34" fill="#000">&#xE260;</text>`;
+
+                            // Downstems
+                            const b_y1 = 110;
+                            const b_y2 = 100;
+                            const by_mid = b_y1 + (b_y2 - b_y1) * ((x2 - x1) / (x3 - x1));
+
+                            html += `<line x1="${x1 - 5.2}" y1="${topY1}" x2="${x1 - 5.2}" y2="${b_y1}" stroke="#000" stroke-width="1.3"/>`;
+                            html += `<line x1="${x2 - 5.2}" y1="${y2}" x2="${x2 - 5.2}" y2="${by_mid}" stroke="#000" stroke-width="1.3"/>`;
+                            html += `<line x1="${x3 - 5.2}" y1="${y3}" x2="${x3 - 5.2}" y2="${b_y2}" stroke="#000" stroke-width="1.3"/>`;
+
+                            // Beam
+                            html += `<line x1="${x1 - 5.2}" y1="${b_y1}" x2="${x3 - 5.2}" y2="${b_y2}" stroke="#000" stroke-width="4.5"/>`;
+
+                            // Triplet "3"
+                            html += `<text class="music-text" x="${(x1 + x3)/2}" y="126" font-size="14" font-style="italic" font-weight="bold" text-anchor="middle" fill="#000">3</text>`;
+                        }
+
+                        // Lyrics
+                        if (grp[0].lyric) {
+                            html += `<text class="music-text" x="${getBeatX(grp[0].beat)}" y="154" font-size="17" fill="#000">${grp[0].lyric}</text>`;
+                        }
+                    });
+                } else {
+                    // Standard / Chords / Chorus / Sextuplet engraving (M9 to M31)
+                    m.treble.forEach(n => {
+                        const x = getBeatX(n.beat);
+
+                        // Rolled chord wavy line
+                        if (n.rolled) {
+                            html += `<text class="bravura" x="${x - 16}" y="95" font-size="38" fill="#000">&#xE634;</text>`;
+                        }
+
+                        n.chord.forEach(midi => {
+                            const y = midiToStaffY(midi, "treble");
+
+                            // Ledger lines
+                            if (y < 50) {
+                                for (let lY = 44; lY >= y - 3; lY -= 10) {
+                                    html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
+                                }
+                            }
+                            if (y > 100) {
+                                for (let lY = 105; lY <= y + 3; lY += 10) {
+                                    html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
+                                }
+                            }
+
+                            if (n.accidental === "b") {
+                                html += `<text class="bravura" x="${x - 16}" y="${y}" font-size="34" fill="#000">&#xE260;</text>`;
+                            }
+
+                            // Notehead
+                            const headChar = (n.dur === "half" || n.dur === "whole") ? "&#xE0A3;" : "&#xE0A4;";
+                            html += `<text class="bravura" x="${x - 5.5}" y="${y}" font-size="40" fill="#000">${headChar}</text>`;
+                        });
+
+                        // Stems
+                        if (n.dur !== "whole") {
+                            const lowestY = Math.max(...n.chord.map(m => midiToStaffY(m, "treble")));
+                            const highestY = Math.min(...n.chord.map(m => midiToStaffY(m, "treble")));
+                            const stemUp = (lowestY >= 75);
+                            const stemX = stemUp ? x + 5.2 : x - 5.2;
+                            const stemYEnd = stemUp ? highestY - 30 : lowestY + 30;
+                            html += `<line x1="${stemX}" y1="${stemUp ? lowestY : highestY}" x2="${stemX}" y2="${stemYEnd}" stroke="#000" stroke-width="1.3"/>`;
+                        }
+
+                        if (n.lyric) {
+                            html += `<text class="music-text" x="${x}" y="154" font-size="16" fill="#000">${n.lyric}</text>`;
+                        }
+                    });
+                }
+
+                // BASS ENGRAVING
+                m.bass.forEach((n, bIdx) => {
                     const x = getBeatX(n.beat);
-                    const y = midiToStaffY(n.midi, "bass");
 
-                    if (y <= 130) html += `<line x1="${x-8}" y1="130" x2="${x+8}" y2="130" stroke="#000" stroke-width="1.2"/>`;
-                    if (y >= 190) html += `<line x1="${x-8}" y1="190" x2="${x+8}" y2="190" stroke="#000" stroke-width="1.2"/>`;
+                    if (n.rolled) {
+                        html += `<text class="bravura" x="${x - 16}" y="235" font-size="38" fill="#000">&#xE634;</text>`;
+                    }
 
-                    html += `<ellipse cx="${x}" cy="${y}" rx="4.8" ry="3.8" transform="rotate(-20 ${x} ${y})" fill="#000"/>`;
+                    n.chord.forEach(midi => {
+                        const y = midiToStaffY(midi, "bass");
 
-                    const stemUp = y > 160;
-                    const stemX = stemUp ? x + 4.2 : x - 4.2;
-                    const stemYEnd = stemUp ? y - 26 : y + 26;
-                    html += `<line x1="${stemX}" y1="${y}" x2="${stemX}" y2="${stemYEnd}" stroke="#000" stroke-width="1.3"/>`;
+                        // Ledger lines
+                        if (y > 250) {
+                            for (let lY = 253; lY <= y + 3; lY += 10) {
+                                html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
+                            }
+                        }
+                        if (y < 195) {
+                            for (let lY = 192; lY >= y - 3; lY -= 10) {
+                                html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
+                            }
+                        }
+
+                        if (n.accidental === "b") {
+                            html += `<text class="bravura" x="${x - 16}" y="${y}" font-size="34" fill="#000">&#xE260;</text>`;
+                        }
+
+                        const headChar = (n.dur === "half" || n.dur === "whole") ? "&#xE0A3;" : "&#xE0A4;";
+                        html += `<text class="bravura" x="${x - 5.5}" y="${y}" font-size="40" fill="#000">${headChar}</text>`;
+                    });
+
+                    if (n.dur !== "whole") {
+                        const lowestY = Math.max(...n.chord.map(m => midiToStaffY(m, "bass")));
+                        const highestY = Math.min(...n.chord.map(m => midiToStaffY(m, "bass")));
+
+                        let stemUp = false;
+                        if (isAccompanimentTriplet) {
+                            stemUp = (bIdx >= 2); // Beat 1 & 2 DOWN, Beat 3 & 4 UP
+                        } else {
+                            stemUp = (lowestY >= 222);
+                        }
+
+                        const stemX = stemUp ? x + 5.2 : x - 5.2;
+                        const stemYEnd = stemUp ? highestY - 32 : lowestY + 32;
+                        html += `<line x1="${stemX}" y1="${stemUp ? lowestY : highestY}" x2="${stemX}" y2="${stemYEnd}" stroke="#000" stroke-width="1.3"/>`;
+                    }
                 });
             });
 
             svg.innerHTML = html;
         }
 
-        renderSystemSVG("sys1Svg", SCORE_DATA.slice(0, 3), true);
-        renderSystemSVG("sys2Svg", SCORE_DATA.slice(3, 6), false);
-        renderSystemSVG("sys3Svg", SCORE_DATA.slice(6, 9), false);
+        // Render all 17 systems across all 4 pages
+        SYSTEM_DEFINITIONS.forEach(def => {
+            const mList = def.measures.map(mNum => SCORE_DATA[mNum - 1]);
+            renderSystemSVG(`sys${def.sysIdx}Svg`, mList, def.isFirstInSong, def.measures[0]);
+        });
 
         // -------------------------------------------------------------
-        // 5. MASTER PLAYBACK ENGINE & SYNCHRONIZATION
+        // 5. MASTER PLAYBACK ENGINE & SYNCHRONIZATION (31 Measures)
         // -------------------------------------------------------------
         let isPlaying = false;
         let isLooping = false;
         let isMetronomeOn = false;
-        let loopStartM = 0; // index 0..8
-        let loopEndM = 8;   // index 0..8
         let speedMultiplier = 1.0;
         let baseBPM = 70;
 
-        let currentMeasureIdx = 0; // 0..8
+        let currentMeasureIdx = 0; // 0..30
         let currentBeat = 1.0;     // 1.0 .. 5.0
         let lastTimestamp = 0;
         let animationFrameId = null;
         const playedNotesSet = new Set();
         let lastMetroBeatInt = 0;
+        let lastActiveSysIdx = -1;
 
         // UI Element References
         const playBtn = document.getElementById("playBtn");
@@ -1353,11 +1229,6 @@
         const loopBtn = document.getElementById("loopBtn");
         const metronomeBtn = document.getElementById("metronomeBtn");
         const metroDot = document.getElementById("metroDot");
-        const mixerToggleBtn = document.getElementById("mixerToggleBtn");
-        const mixerDrawer = document.getElementById("mixerDrawer");
-        const loopSettings = document.getElementById("loopSettings");
-        const loopStartSelect = document.getElementById("loopStartSelect");
-        const loopEndSelect = document.getElementById("loopEndSelect");
         const timelineSlider = document.getElementById("timelineSlider");
         const timeElapsedDisplay = document.getElementById("timeElapsedDisplay");
         const measurePill = document.getElementById("measurePill");
@@ -1380,12 +1251,6 @@
         });
 
         // Hands Mixer Handlers
-        mixerToggleBtn.addEventListener("click", () => {
-            const isVisible = mixerDrawer.style.display !== "none";
-            mixerDrawer.style.display = isVisible ? "none" : "flex";
-            mixerToggleBtn.classList.toggle("active", !isVisible);
-        });
-
         rhMuteBtn.addEventListener("click", () => {
             audio.rhMute = !audio.rhMute;
             rhMuteBtn.classList.toggle("active", audio.rhMute);
@@ -1412,21 +1277,12 @@
             if (audio.lhGain) audio.lhGain.gain.value = audio.lhVol;
         });
 
-        // Loop Handlers
+        // Loop & Metronome
         loopBtn.addEventListener("click", () => {
             isLooping = !isLooping;
             loopBtn.classList.toggle("active", isLooping);
-            loopSettings.classList.toggle("visible", isLooping);
         });
 
-        loopStartSelect.addEventListener("change", (e) => {
-            loopStartM = parseInt(e.target.value);
-        });
-        loopEndSelect.addEventListener("change", (e) => {
-            loopEndM = parseInt(e.target.value);
-        });
-
-        // Metronome Handler
         metronomeBtn.addEventListener("click", () => {
             isMetronomeOn = !isMetronomeOn;
             metronomeBtn.classList.toggle("active", isMetronomeOn);
@@ -1446,7 +1302,6 @@
             seekToBeat(0);
         });
 
-        // Timeline Scrubber Drag
         timelineSlider.addEventListener("input", (e) => {
             const totalBeats = parseFloat(e.target.value);
             seekToBeat(totalBeats);
@@ -1456,12 +1311,15 @@
         document.querySelectorAll(".system-row").forEach(row => {
             row.addEventListener("click", (e) => {
                 const sysIdx = parseInt(row.dataset.system);
+                const def = SYSTEM_DEFINITIONS.find(d => d.sysIdx === sysIdx);
+                if (!def) return;
+
                 const rect = row.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
                 const pct = clickX / rect.width;
-                const mInSys = Math.min(2, Math.max(0, Math.floor(pct * 3)));
-                const targetM = sysIdx * 3 + mInSys;
-                seekToBeat(targetM * 4);
+                const mInSys = Math.min(def.measures.length - 1, Math.max(0, Math.floor(pct * def.measures.length)));
+                const targetMNum = def.measures[mInSys];
+                seekToBeat((targetMNum - 1) * 4);
             });
         });
 
@@ -1484,9 +1342,7 @@
             lastMetroBeatInt = Math.floor(currentBeat);
             playedNotesSet.clear();
 
-            // Fire notes on current beat position
             triggerNotesInMeasure(currentMeasureIdx, currentBeat - 0.05, currentBeat + 0.05);
-
             animationFrameId = requestAnimationFrame(playbackLoop);
         }
 
@@ -1497,7 +1353,7 @@
         }
 
         function seekToBeat(totalBeats) {
-            const mIdx = Math.min(8, Math.floor(totalBeats / 4));
+            const mIdx = Math.min(30, Math.floor(totalBeats / 4));
             const beatInM = 1.0 + (totalBeats % 4);
 
             currentMeasureIdx = mIdx;
@@ -1534,16 +1390,15 @@
                 }
             }
 
-            // Check if measure boundary crossed
+            // Boundary
             if (currentBeat >= 5.0) {
                 currentMeasureIdx++;
                 currentBeat = 1.0 + (currentBeat - 5.0);
                 playedNotesSet.clear();
                 lastMetroBeatInt = 1;
 
-                // Loop Check
-                if (isLooping && currentMeasureIdx > loopEndM) {
-                    currentMeasureIdx = loopStartM;
+                if (isLooping && currentMeasureIdx > 30) {
+                    currentMeasureIdx = 0;
                     currentBeat = 1.0;
                 } else if (currentMeasureIdx >= SCORE_DATA.length) {
                     pausePlayback();
@@ -1568,23 +1423,23 @@
 
             // Treble (Right Hand)
             m.treble.forEach((n, idx) => {
-                const key = `t-${mIdx}-${idx}-${n.midi}-${n.beat}`;
+                const key = `t-${mIdx}-${idx}-${n.beat}`;
                 if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
                     playedNotesSet.add(key);
-                    const dur = n.dur === "16th" ? 0.2 : (n.dur === "whole" ? 2.5 : 0.55);
-                    audio.playNote(n.midi, dur, n.triplet ? 0.75 : 0.9, true);
-                    flashKey(n.midi, true, Math.min(dur * 1000, 500));
+                    const dur = n.dur === "16th" ? 0.22 : (n.dur === "dottedQuarter" ? 1.0 : 0.55);
+                    audio.playChord(n.chord, dur, n.triplet ? 0.8 : 0.95, true);
+                    flashKeys(n.chord, true, Math.min(dur * 1000, 500));
                 }
             });
 
             // Bass (Left Hand)
             m.bass.forEach((n, idx) => {
-                const key = `b-${mIdx}-${idx}-${n.midi}-${n.beat}`;
+                const key = `b-${mIdx}-${idx}-${n.beat}`;
                 if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
                     playedNotesSet.add(key);
-                    const dur = n.dur === "whole" ? 2.5 : 0.7;
-                    audio.playNote(n.midi, dur, 0.8, false);
-                    flashKey(n.midi, false, Math.min(dur * 1000, 600));
+                    const dur = n.dur === "16th" ? 0.25 : 0.75;
+                    audio.playChord(n.chord, dur, 0.85, false);
+                    flashKeys(n.chord, false, Math.min(dur * 1000, 600));
                 }
             });
         }
@@ -1593,7 +1448,7 @@
             const totalBeats = currentMeasureIdx * 4 + (currentBeat - 1.0);
             timelineSlider.value = totalBeats;
 
-            const totalDurationSec = (36 / (baseBPM * speedMultiplier)) * 60;
+            const totalDurationSec = (124 / (baseBPM * speedMultiplier)) * 60;
             const elapsedSec = (totalBeats / (baseBPM * speedMultiplier)) * 60;
 
             const fmt = (s) => {
@@ -1603,34 +1458,53 @@
             };
 
             timeElapsedDisplay.innerText = `${fmt(elapsedSec)} / ${fmt(totalDurationSec)}`;
-            measurePill.innerText = `Compasso ${currentMeasureIdx + 1} / 9`;
+            measurePill.innerText = `Compasso ${currentMeasureIdx + 1} / 31`;
         }
 
         function updateCursorPosition() {
-            const systemIdx = Math.floor(currentMeasureIdx / 3);
-            const measureInSys = currentMeasureIdx % 3;
+            const mNum = currentMeasureIdx + 1;
+            const def = SYSTEM_DEFINITIONS.find(d => d.measures.includes(mNum));
+            if (!def) return;
 
-            for (let s = 1; s <= 3; s++) {
+            const sysIdx = def.sysIdx;
+            const mInSys = def.measures.indexOf(mNum);
+            const countInSys = def.measures.length;
+            const leftMargin = def.isFirstInSong ? 86 : 64;
+
+            // Hide inactive cursors
+            for (let s = 0; s <= 16; s++) {
                 const c = document.getElementById(`cursor${s}`);
-                if (s - 1 === systemIdx && isPlaying) {
+                if (!c) continue;
+                if (s === sysIdx && isPlaying) {
                     c.style.display = "block";
                 } else {
                     c.style.display = "none";
                 }
             }
 
+            // Auto-scroll when system changes
+            if (isPlaying && sysIdx !== lastActiveSysIdx) {
+                lastActiveSysIdx = sysIdx;
+                const rowEl = document.getElementById(`sysRow${sysIdx}`);
+                if (rowEl) {
+                    rowEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            }
+
             if (!isPlaying) return;
 
-            const cursor = document.getElementById(`cursor${systemIdx + 1}`);
-            const leftMargin = (systemIdx === 0 ? 84 : 66);
+            const cursor = document.getElementById(`cursor${sysIdx}`);
+            if (!cursor) return;
+
             const W = 1000;
-            const measureWidth = (W - leftMargin - 15) / 3;
-            const mX = leftMargin + measureInSys * measureWidth;
-            const usableW = measureWidth - 36;
+            const usableWidth = W - leftMargin - 16;
+            const measureWidth = usableWidth / countInSys;
+            const mX = leftMargin + mInSys * measureWidth;
+            const usableMWidth = measureWidth - 36;
             const startX = mX + 18;
 
             const beatOffset = (currentBeat - 1.0) / 4.0;
-            const x = startX + beatOffset * usableW;
+            const x = startX + beatOffset * usableMWidth;
 
             const pct = (x / 1000.0) * 100.0;
             cursor.style.left = `${pct}%`;

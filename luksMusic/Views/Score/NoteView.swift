@@ -68,7 +68,7 @@ struct NoteView: View {
     private func renderNote() -> some View {
         let isFilled = note.duration != .whole && note.duration != .half && note.duration != .dottedHalf
         let hasStem = note.duration != .whole
-        let stemUp = note.stemUp
+        let stemUp = (note.staff == .treble && note.isTriplet) ? false : note.stemUp
         
         ZStack {
             // Ledger lines if outside 5-line staff

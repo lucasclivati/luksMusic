@@ -148,7 +148,7 @@ struct MeasureView: View {
         let firstOffset = CGFloat(max(0.0, min(1.0, (firstNote.position.beat - 1.0) / 4.0)))
         let lastOffset = CGFloat(max(0.0, min(1.0, (lastNote.position.beat - 1.0) / 4.0)))
         
-        let stemUp = firstNote.stemUp
+        let stemUp = (firstNote.staff == .treble && firstNote.isTriplet) ? false : firstNote.stemUp
         let stemXOffset: CGFloat = stemUp ? (lineSpacing * 0.6) : (-lineSpacing * 0.6)
         let xStart = 24.0 + firstOffset * usableWidth + stemXOffset
         let xEnd = 24.0 + lastOffset * usableWidth + stemXOffset

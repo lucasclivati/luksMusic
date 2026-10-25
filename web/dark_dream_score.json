@@ -1,0 +1,5043 @@
+[
+  {
+    "number": 1,
+    "dynamic": "mp",
+    "treble": [
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "When"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "my"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "eyes"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "a-wake"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75,
+          79
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          48,
+          55
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 2,
+    "treble": [
+      {
+        "chord": [
+          65,
+          77
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Skies"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          65
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "start"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          65
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "to"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          65,
+          77
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "break"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74,
+          77
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          46,
+          55
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          46
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          46
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 3,
+    "treble": [
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Storms"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          63
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "o -"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "ver -"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "take"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          56,
+          60
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          60
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 4,
+    "treble": [
+      {
+        "chord": [
+          62,
+          74
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Clocks"
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          71
+        ],
+        "accidental": "\u266e",
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          62
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "cease"
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          71
+        ],
+        "accidental": "\u266e",
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          62
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "to"
+      },
+      {
+        "chord": [
+          71
+        ],
+        "accidental": "\u266e",
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "shake"
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          47,
+          55
+        ],
+        "beat": 1.0,
+        "dur": "quarter",
+        "accidental": "\u266e"
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          50
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 5,
+    "treble": [
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Home-less"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "for -"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "sake"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          75,
+          79
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          38,
+          48
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          39,
+          48
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 6,
+    "treble": [
+      {
+        "chord": [
+          65,
+          77
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Dream"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          73
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          65,
+          77
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "I'll"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          73
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          65,
+          77
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "cre -"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          73
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          65,
+          77
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "ate"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          73,
+          77
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          46,
+          53
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 7,
+    "treble": [
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Burns"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "to"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "re -"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          63,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "make"
+      },
+      {
+        "chord": [
+          68
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          56
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          48,
+          60
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 8,
+    "crescendo": true,
+    "treble": [
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "Craft"
+      },
+      {
+        "chord": [
+          71
+        ],
+        "accidental": "\u266e",
+        "beat": 1.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 1.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67,
+          79
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "dic -"
+      },
+      {
+        "chord": [
+          71
+        ],
+        "accidental": "\u266e",
+        "beat": 2.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 2.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          67
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "tates"
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 3.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.667,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          84,
+          91
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "triplet": true,
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          86,
+          95
+        ],
+        "beat": 4.333,
+        "dur": "8th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          83,
+          91
+        ],
+        "beat": 4.667,
+        "dur": "8th",
+        "triplet": true
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          43,
+          50,
+          55
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          43,
+          50,
+          55
+        ],
+        "rolled": true,
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          43,
+          50,
+          55,
+          60
+        ],
+        "rolled": true,
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 9,
+    "dynamic": "mf",
+    "treble": [
+      {
+        "chord": [
+          84
+        ],
+        "beat": 1.0,
+        "dur": "16th",
+        "lyric": "Fate"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 1.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 1.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 2.0,
+        "dur": "16th",
+        "lyric": "I've"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 2.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 2.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "lyric": "made"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 3.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 4.0,
+        "dur": "16th",
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 4.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 4.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 4.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 4.833,
+        "dur": "16th"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48,
+          51
+        ],
+        "rolled": true,
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          36,
+          48
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          48,
+          55,
+          60
+        ],
+        "beat": 3.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          36
+        ],
+        "beat": 3.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          36
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          48,
+          55,
+          60
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 10,
+    "treble": [
+      {
+        "chord": [
+          84
+        ],
+        "beat": 1.0,
+        "dur": "16th",
+        "lyric": "e"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 1.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 1.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 2.0,
+        "dur": "16th",
+        "lyric": "-"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 2.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 2.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "lyric": "rave"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 3.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 4.0,
+        "dur": "16th",
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 4.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 4.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 4.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 4.833,
+        "dur": "16th"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          32,
+          39,
+          44,
+          48
+        ],
+        "rolled": true,
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32,
+          44
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          32,
+          44
+        ],
+        "beat": 3.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          32,
+          44
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 11,
+    "treble": [
+      {
+        "chord": [
+          86
+        ],
+        "beat": 1.0,
+        "dur": "16th",
+        "lyric": "stars"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 1.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 1.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 1.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 1.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 1.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          86
+        ],
+        "beat": 2.0,
+        "dur": "16th",
+        "lyric": "can't"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 2.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 2.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 2.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 2.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 2.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          86
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "lyric": "save"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 3.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 3.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 3.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 3.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 3.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          86
+        ],
+        "beat": 4.0,
+        "dur": "16th",
+        "lyric": "can"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 4.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 4.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          74
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          77
+        ],
+        "beat": 4.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          82
+        ],
+        "beat": 4.833,
+        "dur": "16th"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46,
+          50
+        ],
+        "rolled": true,
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          34,
+          46
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 3.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          34,
+          46
+        ],
+        "beat": 3.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          34,
+          46
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 12,
+    "treble": [
+      {
+        "chord": [
+          84
+        ],
+        "beat": 1.0,
+        "dur": "16th",
+        "lyric": "we"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 1.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 1.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 1.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 1.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 2.0,
+        "dur": "16th",
+        "lyric": "bend"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 2.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 2.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 2.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          87
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 3.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          75
+        ],
+        "beat": 3.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 3.833,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          91
+        ],
+        "beat": 4.0,
+        "dur": "16th",
+        "lyric": "wave"
+      },
+      {
+        "chord": [
+          87
+        ],
+        "beat": 4.167,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 4.333,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          84
+        ],
+        "beat": 4.667,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          87
+        ],
+        "beat": 4.833,
+        "dur": "16th"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48,
+          51
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          48,
+          55
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          36,
+          43,
+          48,
+          51
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          48,
+          55
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 13,
+    "treble": [
+      {
+        "chord": [
+          67
+        ],
+        "beat": 1.5,
+        "dur": "8th",
+        "lyric": "Void"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "ex-"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "pands"
+      },
+      {
+        "chord": [
+          67,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "world"
+      },
+      {
+        "chord": [
+          67,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "I"
+      },
+      {
+        "chord": [
+          67,
+          77
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "see"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 14,
+    "treble": [
+      {
+        "chord": [
+          67
+        ],
+        "beat": 1.5,
+        "dur": "8th",
+        "lyric": "Crim-"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "son"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "floods"
+      },
+      {
+        "chord": [
+          67,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "moon's"
+      },
+      {
+        "chord": [
+          67,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "de -"
+      },
+      {
+        "chord": [
+          67,
+          77
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "cree"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          31,
+          43
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 15,
+    "treble": [
+      {
+        "chord": [
+          67
+        ],
+        "beat": 1.5,
+        "dur": "8th",
+        "lyric": "Light"
+      },
+      {
+        "chord": [
+          70
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "rip -"
+      },
+      {
+        "chord": [
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "ples"
+      },
+      {
+        "chord": [
+          67,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "through"
+      },
+      {
+        "chord": [
+          79
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "time's"
+      },
+      {
+        "chord": [
+          67,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "de -"
+      },
+      {
+        "chord": [
+          67,
+          77
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "bris"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 16,
+    "treble": [
+      {
+        "chord": [
+          67,
+          70,
+          75
+        ],
+        "beat": 1.0,
+        "dur": "quarter",
+        "lyric": "Bleeds"
+      },
+      {
+        "chord": [
+          65,
+          70,
+          74
+        ],
+        "beat": 2.0,
+        "dur": "quarter",
+        "lyric": "my"
+      },
+      {
+        "chord": [
+          67,
+          70,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "sto -"
+      },
+      {
+        "chord": [
+          67,
+          71,
+          74
+        ],
+        "accidental": "\u266e",
+        "beat": 4.0,
+        "dur": "quarter",
+        "lyric": "ry"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 17,
+    "treble": [
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.555,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "are"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.777,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "hands"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "that"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "write"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "my"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "sto -"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "ry"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 2.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.0,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.25,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 18,
+    "treble": [
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 1.555,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "are"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 1.777,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "chains"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "that"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "lock"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "my"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "glo -"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "ry"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          46
+        ],
+        "beat": 2.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.0,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 4.25,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          31
+        ],
+        "beat": 4.75,
+        "dur": "16th"
+      }
+    ]
+  },
+  {
+    "number": 19,
+    "treble": [
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.555,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "are"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.777,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "lines"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "that"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "I"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "can't"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "out -"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "pray"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 2.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.0,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.25,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 4.75,
+        "dur": "16th"
+      }
+    ]
+  },
+  {
+    "number": 20,
+    "treble": [
+      {
+        "chord": [
+          65,
+          70,
+          74
+        ],
+        "beat": 1.0,
+        "dur": "quarter",
+        "lyric": "Who"
+      },
+      {
+        "chord": [
+          67,
+          70,
+          75
+        ],
+        "beat": 2.0,
+        "dur": "quarter",
+        "lyric": "can"
+      },
+      {
+        "chord": [
+          67,
+          71,
+          74
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "see"
+      },
+      {
+        "chord": [
+          67,
+          71,
+          74
+        ],
+        "beat": 4.0,
+        "dur": "quarter",
+        "lyric": "me"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 21,
+    "treble": [
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.555,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "are"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.777,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "flames"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "that"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "come"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "in"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "fu -"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "ry"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 2.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.0,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.25,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 4.75,
+        "dur": "16th"
+      }
+    ]
+  },
+  {
+    "number": 22,
+    "treble": [
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "Where"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 1.555,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "are"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 1.777,
+        "dur": "16th",
+        "triplet": true,
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "keys"
+      },
+      {
+        "chord": [
+          62,
+          65,
+          70
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "that"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "carve"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "truth"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "from"
+      },
+      {
+        "chord": [
+          62,
+          67,
+          71
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "me"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          46
+        ],
+        "beat": 2.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          47,
+          50,
+          55
+        ],
+        "beat": 4.0,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 4.25,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          31
+        ],
+        "beat": 4.75,
+        "dur": "16th"
+      }
+    ]
+  },
+  {
+    "number": 23,
+    "treble": [
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.5,
+        "dur": "8th",
+        "lyric": "In -"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "- to"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "the"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "dark"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "to"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "dream"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          84
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "and"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          51,
+          55,
+          60
+        ],
+        "beat": 2.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 2.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 3.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 3.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.0,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.25,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 4.5,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 4.75,
+        "dur": "16th"
+      }
+    ]
+  },
+  {
+    "number": 24,
+    "dynamic": "f",
+    "treble": [
+      {
+        "chord": [
+          65,
+          71,
+          74
+        ],
+        "beat": 1.0,
+        "dur": "quarter",
+        "lyric": "scream"
+      },
+      {
+        "chord": [
+          71,
+          74
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "my"
+      },
+      {
+        "chord": [
+          67,
+          72,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "name"
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "Won -"
+      },
+      {
+        "chord": [
+          75,
+          84
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "der"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 1.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          47
+        ],
+        "beat": 1.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          50
+        ],
+        "beat": 1.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 2.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          59
+        ],
+        "beat": 2.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          60
+        ],
+        "beat": 4.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 4.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 4.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 4.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 4.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          36
+        ],
+        "beat": 4.833,
+        "dur": "16th",
+        "triplet": true
+      }
+    ]
+  },
+  {
+    "number": 25,
+    "treble": [
+      {
+        "chord": [
+          72,
+          75,
+          80
+        ],
+        "beat": 1.0,
+        "dur": "dottedQuarter",
+        "lyric": "or"
+      },
+      {
+        "chord": [
+          72,
+          75,
+          80
+        ],
+        "beat": 2.0,
+        "dur": "dottedQuarter",
+        "lyric": "dis -"
+      },
+      {
+        "chord": [
+          72,
+          75,
+          79
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "may"
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "Mad -"
+      },
+      {
+        "chord": [
+          75,
+          84
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "ness"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          39
+        ],
+        "beat": 3.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 3.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 3.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 3.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          56
+        ],
+        "beat": 3.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 26,
+    "treble": [
+      {
+        "chord": [
+          74,
+          77,
+          82
+        ],
+        "beat": 1.0,
+        "dur": "dottedQuarter",
+        "lyric": "or"
+      },
+      {
+        "chord": [
+          74,
+          77,
+          82
+        ],
+        "beat": 2.0,
+        "dur": "dottedQuarter",
+        "lyric": "de -"
+      },
+      {
+        "chord": [
+          74,
+          77,
+          82
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "cay"
+      },
+      {
+        "chord": [
+          65,
+          74
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          70,
+          77
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "With"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          34
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          41
+        ],
+        "beat": 3.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          46
+        ],
+        "beat": 3.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          50
+        ],
+        "beat": 3.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 3.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          58
+        ],
+        "beat": 3.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 27,
+    "treble": [
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "lyric": "fra-"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.5,
+        "dur": "8th",
+        "lyric": "-gile"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "light"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "I"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "vow"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "to"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "guard"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "a"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36
+        ],
+        "beat": 1.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 1.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 1.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 1.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          60
+        ],
+        "beat": 1.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          39
+        ],
+        "beat": 3.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 3.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 3.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 3.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          56
+        ],
+        "beat": 3.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  },
+  {
+    "number": 28,
+    "treble": [
+      {
+        "chord": [
+          65,
+          71,
+          74
+        ],
+        "beat": 1.0,
+        "dur": "quarter",
+        "lyric": "world"
+      },
+      {
+        "chord": [
+          71,
+          74
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "I"
+      },
+      {
+        "chord": [
+          67,
+          72,
+          75
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "stay"
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "Stir -"
+      },
+      {
+        "chord": [
+          75,
+          84
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "ring"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          31,
+          38,
+          43
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 1.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          47
+        ],
+        "beat": 1.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          50
+        ],
+        "beat": 1.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 2.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 2.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          59
+        ],
+        "beat": 2.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 3.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          60
+        ],
+        "beat": 4.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 4.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 4.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 4.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 4.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          36
+        ],
+        "beat": 4.833,
+        "dur": "16th",
+        "triplet": true
+      }
+    ]
+  },
+  {
+    "number": 29,
+    "treble": [
+      {
+        "chord": [
+          72,
+          75,
+          80
+        ],
+        "beat": 1.0,
+        "dur": "dottedQuarter",
+        "lyric": "or"
+      },
+      {
+        "chord": [
+          72,
+          75,
+          80
+        ],
+        "beat": 2.0,
+        "dur": "dottedQuarter",
+        "lyric": "de -"
+      },
+      {
+        "chord": [
+          72,
+          75,
+          79
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "lay"
+      },
+      {
+        "chord": [
+          72,
+          75
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "Re -"
+      },
+      {
+        "chord": [
+          75,
+          84
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "birth"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 1.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          39
+        ],
+        "beat": 3.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 3.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 3.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 3.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          56
+        ],
+        "beat": 3.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48,
+          51,
+          56
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 30,
+    "treble": [
+      {
+        "chord": [
+          74,
+          77,
+          82
+        ],
+        "beat": 1.0,
+        "dur": "dottedQuarter",
+        "lyric": "or"
+      },
+      {
+        "chord": [
+          74,
+          77,
+          82
+        ],
+        "beat": 2.0,
+        "dur": "dottedQuarter",
+        "lyric": "be"
+      },
+      {
+        "chord": [
+          74,
+          77,
+          82
+        ],
+        "beat": 3.0,
+        "dur": "quarter",
+        "lyric": "same"
+      },
+      {
+        "chord": [
+          65,
+          74
+        ],
+        "beat": 4.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          70,
+          77
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "With"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          34,
+          41,
+          46
+        ],
+        "beat": 1.0,
+        "dur": "dotted8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 1.75,
+        "dur": "16th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.0,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 2.5,
+        "dur": "8th"
+      },
+      {
+        "chord": [
+          34
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          41
+        ],
+        "beat": 3.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          46
+        ],
+        "beat": 3.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          50
+        ],
+        "beat": 3.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          53
+        ],
+        "beat": 3.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          58
+        ],
+        "beat": 3.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          50,
+          53,
+          58
+        ],
+        "beat": 4.5,
+        "dur": "8th"
+      }
+    ]
+  },
+  {
+    "number": 31,
+    "treble": [
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.0,
+        "dur": "8th",
+        "lyric": "whis-"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 1.5,
+        "dur": "8th",
+        "lyric": "-pers"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.0,
+        "dur": "8th",
+        "lyric": "in"
+      },
+      {
+        "chord": [
+          63,
+          67,
+          72
+        ],
+        "beat": 2.5,
+        "dur": "8th",
+        "lyric": "gray"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.0,
+        "dur": "8th",
+        "lyric": "guide"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 3.5,
+        "dur": "8th",
+        "lyric": "my"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.0,
+        "dur": "8th",
+        "lyric": "sha -"
+      },
+      {
+        "chord": [
+          63,
+          68,
+          72
+        ],
+        "beat": 4.5,
+        "dur": "8th",
+        "lyric": "- dow"
+      }
+    ],
+    "bass": [
+      {
+        "chord": [
+          36
+        ],
+        "beat": 1.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          43
+        ],
+        "beat": 1.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 1.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 1.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          55
+        ],
+        "beat": 1.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          60
+        ],
+        "beat": 1.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          36,
+          43,
+          48
+        ],
+        "beat": 2.0,
+        "dur": "quarter"
+      },
+      {
+        "chord": [
+          32
+        ],
+        "beat": 3.0,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          39
+        ],
+        "beat": 3.167,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          44
+        ],
+        "beat": 3.333,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          48
+        ],
+        "beat": 3.5,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          51
+        ],
+        "beat": 3.667,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          56
+        ],
+        "beat": 3.833,
+        "dur": "16th",
+        "triplet": true
+      },
+      {
+        "chord": [
+          32,
+          39,
+          44
+        ],
+        "beat": 4.0,
+        "dur": "quarter"
+      }
+    ]
+  }
+]

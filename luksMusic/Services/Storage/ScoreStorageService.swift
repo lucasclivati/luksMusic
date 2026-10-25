@@ -31,7 +31,7 @@ final class ScoreStorageService {
         if !existingScores.isEmpty {
             if let existingDarkDream = existingScores.first(where: { $0.title.contains("Dark Dream") }) {
                 let hasLyrics = existingDarkDream.measures.first?.notes.contains(where: { $0.lyric != nil }) ?? false
-                if !hasLyrics || existingDarkDream.measures.count < 9 {
+                if !hasLyrics || existingDarkDream.measures.count < 31 || !existingDarkDream.composer.contains("11Minnie11") {
                     modelContext.delete(existingDarkDream)
                     let newDarkDream = createDarkDream()
                     newDarkDream.dateCreated = Date().addingTimeInterval(3600)
@@ -128,325 +128,1191 @@ final class ScoreStorageService {
     /// Key of C Minor / Eb Major (3 flats: Bb, Eb, Ab), 72 BPM, 4/4 time signature.
     func createDarkDream() -> Score {
         var measures: [Measure] = []
-        
-        // Measure 1: "When my eyes a-wake"
-        let m1Notes = [
-            // Right Hand (Treble): Accompaniment triplets (G4-C5-Eb5) + Melody (G5)
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, lyric: "When", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "my", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "eyes", isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "a-wake", isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): C3 + G3 on beat 1, G3 on 2, C3 on 3, C3 on 4
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 1
+        var m1Notes: [Note] = []
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "When", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "my", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "eyes", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "a-wake", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m1Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 1, notes: m1Notes))
-        
-        // Measure 2: "Skies start to break"
-        let m2Notes = [
-            // Right Hand (Treble): Accompaniment triplets + Melody (G5)
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, lyric: "Skies", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "start", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "to", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "break", isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "break", isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): Bb2 + G3 on beat 1, G3 on 2, C3 on 3, C3 on 4
-            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 2
+        var m2Notes: [Note] = []
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "Skies", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "start", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "to", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "break", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m2Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 2, notes: m2Notes))
-        
-        // Measure 3: "Storms o-ver-take"
-        let m3Notes = [
-            // Right Hand (Treble): G4+G5 on 1.0, Ab4+Ab5 on 3.0
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, lyric: "Storms", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "o-", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, lyric: "-ver-", position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "take", isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): Ab3 + C4 on beat 1, C4 on 2, F3 on 3, F3 on 4
-            Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 3
+        var m3Notes: [Note] = []
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "Storms", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "o -", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "ver -", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "take", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m3Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 3, notes: m3Notes))
-        
-        // Measure 4: "Clocks cease to shake" (B natural!)
-        let m4Notes = [
-            // Right Hand (Treble): Ab4+F5 on 1.0, B4 natural on 3.33 & 4.33
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .quarter, staff: .treble, lyric: "Clocks", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "cease", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "to", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, lyric: "shake", isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): B2 natural + G3 on 1.0, F3 on 2, Eb3 on 3, D3 on 4
-            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .natural), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 4
+        var m4Notes: [Note] = []
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "Clocks", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "cease", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "to", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "shake", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .natural), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3, accidental: .natural), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m4Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 4, notes: m4Notes))
-        
-        // Measure 5: "Home-less for-sake"
-        let m5Notes = [
-            // Right Hand (Treble)
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, lyric: "Home-", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "-less", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "for-", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "sake", isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): C2 + G2 + C3 on 1.0, G3 on 2, D2 + C3 on 3, Eb2 + C3 on 4
-            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 5
+        var m5Notes: [Note] = []
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "Home-less", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "for -", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "sake", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m5Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 5, notes: m5Notes))
-        
-        // Measure 6: "Dream I'll cre-ate"
-        let m6Notes = [
-            // Right Hand (Treble)
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, lyric: "Dream", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "I'll", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "cre-", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "-ate", isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): Bb1 + F2 + Bb2 on 1.0, G3 on 2, G2 + C3 on 3, C3 on 4
-            Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 6
+        var m6Notes: [Note] = []
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "Dream", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5, accidental: .sharp), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "I'll", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5, accidental: .sharp), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "cre -", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5, accidental: .sharp), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "ate", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5, accidental: .sharp), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m6Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 6, notes: m6Notes))
-        
-        // Measure 7: "Burns to re-make"
-        let m7Notes = [
-            // Right Hand (Treble)
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, lyric: "Burns", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "to", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "re-", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "make", isTriplet: true, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.67)),
-            
-            // Left Hand (Bass): Eb3 + Ab3 + C4 on 1.0, C4 on 2, F3 + D4 on 3, F3 on 4
-            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 7
+        var m7Notes: [Note] = []
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "Burns", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "to", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "re -", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "make", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m7Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 7, notes: m7Notes))
-        
-        // Measure 8: "Craft dic-tates the" + Melodic High Flourish
-        let m8Notes = [
-            // Right Hand (Treble)
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .quarter, staff: .treble, lyric: "Craft", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.67)),
-            
-            Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "dic-", isTriplet: true, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.67)),
-            
-            Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, lyric: "-tates", isTriplet: true, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.67)),
-            
-            // Rapid high register flourish on beat 4: D6 -> Eb6 -> D6 -> C6 -> [G5 + G6]
-            Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 6, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.25)),
-            Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)),
-            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.75)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.75)),
-            Note(pitch: Pitch(noteName: .G, octave: 6), duration: .eighth, staff: .treble, lyric: "fate", position: NotePosition(beat: 4.75)),
-            
-            // Left Hand (Bass): G2 + D3 + G3 on 1.0, Ab3 on 2, G2 + D3 + Bb3 on 3, G2 + D3 + C4 on 4
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
+
+        // Measure 8
+        var m8Notes: [Note] = []
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "Craft", isTriplet: true, position: NotePosition(beat: 1.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "dic -", isTriplet: true, position: NotePosition(beat: 2.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 2.667)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "tates", isTriplet: true, position: NotePosition(beat: 3.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .eighth, staff: .treble, lyric: "the", isTriplet: true, position: NotePosition(beat: 4.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 6), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 6), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .B, octave: 6), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 6), duration: .eighth, staff: .treble, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m8Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
         measures.append(Measure(number: 8, notes: m8Notes))
-        
-        // Measure 9: "Fate ... I've made ... Where" (Arpeggios)
-        let m9Notes = [
-            // Right Hand (Treble): Sextuplet arpeggio waves (C6-G5-Eb5-C5-Eb5-G5)
-            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "Fate...", position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.17)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.33)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.83)),
-            
-            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.17)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.33)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.83)),
-            
-            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "I've made...", position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.17)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.33)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.83)),
-            
-            Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.17)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.33)),
-            Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)),
-            Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.67)),
-            Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.83)),
-            
-            // Left Hand (Bass): C3 + G3 + D4 on 1.0, C2 + C3 on 2, C3 + Eb3 + G3 on 3, D2 + D3 on 4
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 4), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)),
-            Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)),
-            Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0))
-        ]
-        measures.append(Measure(number: 9, notes: m9Notes, barlineType: .final))
-        
+
+        // Measure 9
+        var m9Notes: [Note] = []
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "Fate", position: NotePosition(beat: 1.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.167)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.333)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.667)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.833)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "I've", position: NotePosition(beat: 2.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.167)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.333)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.667)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.833)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "made", position: NotePosition(beat: 3.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.167)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.333)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.667)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.833)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "Where", position: NotePosition(beat: 4.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.167)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.333)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.667)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.833)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m9Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 9, notes: m9Notes))
+
+        // Measure 10
+        var m10Notes: [Note] = []
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "e", position: NotePosition(beat: 1.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.167)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.333)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.667)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.833)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "-", position: NotePosition(beat: 2.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.167)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.333)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.667)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.833)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "rave", position: NotePosition(beat: 3.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.167)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.333)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.667)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.833)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "Where", position: NotePosition(beat: 4.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.167)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.333)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.667)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.833)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m10Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 10, notes: m10Notes))
+
+        // Measure 11
+        var m11Notes: [Note] = []
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, lyric: "stars", position: NotePosition(beat: 1.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.167)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.333)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.667)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.833)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, lyric: "can't", position: NotePosition(beat: 2.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.167)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.333)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.667)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.833)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, lyric: "save", position: NotePosition(beat: 3.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.167)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.333)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.667)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.833)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 6), duration: .sixteenth, staff: .treble, lyric: "can", position: NotePosition(beat: 4.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.167)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.333)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.667)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.833)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 3.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m11Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 11, notes: m11Notes))
+
+        // Measure 12
+        var m12Notes: [Note] = []
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "we", position: NotePosition(beat: 1.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.167)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.333)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.667)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 1.833)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, lyric: "bend", position: NotePosition(beat: 2.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.167)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.333)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.667)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.833)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 6, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "the", position: NotePosition(beat: 3.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.167)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.333)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.667)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.833)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 6), duration: .sixteenth, staff: .treble, lyric: "wave", position: NotePosition(beat: 4.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 6, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.167)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.333)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.667)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 6, accidental: .flat), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 4.833)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m12Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        measures.append(Measure(number: 12, notes: m12Notes))
+
+        // Measure 13
+        var m13Notes: [Note] = []
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "Void", position: NotePosition(beat: 1.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "ex-", position: NotePosition(beat: 2.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "pands", position: NotePosition(beat: 2.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "the", position: NotePosition(beat: 3.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "world", position: NotePosition(beat: 3.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "I", position: NotePosition(beat: 4.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "see", position: NotePosition(beat: 4.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m13Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 13, notes: m13Notes))
+
+        // Measure 14
+        var m14Notes: [Note] = []
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "Crim-", position: NotePosition(beat: 1.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "son", position: NotePosition(beat: 2.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "floods", position: NotePosition(beat: 2.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "the", position: NotePosition(beat: 3.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "moon's", position: NotePosition(beat: 3.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "de -", position: NotePosition(beat: 4.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "cree", position: NotePosition(beat: 4.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m14Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 14, notes: m14Notes))
+
+        // Measure 15
+        var m15Notes: [Note] = []
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "Light", position: NotePosition(beat: 1.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "rip -", position: NotePosition(beat: 2.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "ples", position: NotePosition(beat: 2.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "through", position: NotePosition(beat: 3.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .eighth, staff: .treble, lyric: "time's", position: NotePosition(beat: 3.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "de -", position: NotePosition(beat: 4.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, lyric: "bris", position: NotePosition(beat: 4.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m15Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 15, notes: m15Notes))
+
+        // Measure 16
+        var m16Notes: [Note] = []
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "Bleeds", position: NotePosition(beat: 1.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .quarter, staff: .treble, lyric: "my", position: NotePosition(beat: 2.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "sto -", position: NotePosition(beat: 3.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4, accidental: .natural), duration: .quarter, staff: .treble, lyric: "ry", position: NotePosition(beat: 4.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .natural), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5, accidental: .natural), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m16Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 16, notes: m16Notes))
+
+        // Measure 17
+        var m17Notes: [Note] = []
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "Where", isTriplet: true, position: NotePosition(beat: 1.333)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "are", isTriplet: true, position: NotePosition(beat: 1.555)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "the", isTriplet: true, position: NotePosition(beat: 1.777)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "hands", position: NotePosition(beat: 2.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "that", position: NotePosition(beat: 2.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "write", position: NotePosition(beat: 3.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "my", position: NotePosition(beat: 3.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "sto -", position: NotePosition(beat: 4.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "ry", position: NotePosition(beat: 4.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 2.75)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.25)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m17Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 17, notes: m17Notes))
+
+        // Measure 18
+        var m18Notes: [Note] = []
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .sixteenth, staff: .treble, lyric: "Where", isTriplet: true, position: NotePosition(beat: 1.333)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .sixteenth, staff: .treble, lyric: "are", isTriplet: true, position: NotePosition(beat: 1.555)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .sixteenth, staff: .treble, lyric: "the", isTriplet: true, position: NotePosition(beat: 1.777)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "chains", position: NotePosition(beat: 2.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "that", position: NotePosition(beat: 2.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "lock", position: NotePosition(beat: 3.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "my", position: NotePosition(beat: 3.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "glo -", position: NotePosition(beat: 4.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "ry", position: NotePosition(beat: 4.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 2.75)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.25)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m18Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.75)))
+        measures.append(Measure(number: 18, notes: m18Notes))
+
+        // Measure 19
+        var m19Notes: [Note] = []
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "Where", isTriplet: true, position: NotePosition(beat: 1.333)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "are", isTriplet: true, position: NotePosition(beat: 1.555)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "the", isTriplet: true, position: NotePosition(beat: 1.777)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "lines", position: NotePosition(beat: 2.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "that", position: NotePosition(beat: 2.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "I", position: NotePosition(beat: 3.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "can't", position: NotePosition(beat: 3.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "out -", position: NotePosition(beat: 4.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "pray", position: NotePosition(beat: 4.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 2.75)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.25)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m19Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.75)))
+        measures.append(Measure(number: 19, notes: m19Notes))
+
+        // Measure 20
+        var m20Notes: [Note] = []
+        m20Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .quarter, staff: .treble, lyric: "Who", position: NotePosition(beat: 1.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "can", position: NotePosition(beat: 2.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "see", position: NotePosition(beat: 3.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "me", position: NotePosition(beat: 4.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 4.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m20Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 20, notes: m20Notes))
+
+        // Measure 21
+        var m21Notes: [Note] = []
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "Where", isTriplet: true, position: NotePosition(beat: 1.333)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "are", isTriplet: true, position: NotePosition(beat: 1.555)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, lyric: "the", isTriplet: true, position: NotePosition(beat: 1.777)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "flames", position: NotePosition(beat: 2.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "that", position: NotePosition(beat: 2.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "come", position: NotePosition(beat: 3.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "in", position: NotePosition(beat: 3.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "fu -", position: NotePosition(beat: 4.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "ry", position: NotePosition(beat: 4.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 2.75)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.25)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m21Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.75)))
+        measures.append(Measure(number: 21, notes: m21Notes))
+
+        // Measure 22
+        var m22Notes: [Note] = []
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .sixteenth, staff: .treble, lyric: "Where", isTriplet: true, position: NotePosition(beat: 1.333)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .sixteenth, staff: .treble, lyric: "are", isTriplet: true, position: NotePosition(beat: 1.555)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.555)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .sixteenth, staff: .treble, lyric: "the", isTriplet: true, position: NotePosition(beat: 1.777)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .sixteenth, staff: .treble, isTriplet: true, position: NotePosition(beat: 1.777)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "keys", position: NotePosition(beat: 2.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "that", position: NotePosition(beat: 2.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "carve", position: NotePosition(beat: 3.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "truth", position: NotePosition(beat: 3.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "from", position: NotePosition(beat: 4.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 4), duration: .eighth, staff: .treble, lyric: "me", position: NotePosition(beat: 4.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 2.75)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.25)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m22Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.75)))
+        measures.append(Measure(number: 22, notes: m22Notes))
+
+        // Measure 23
+        var m23Notes: [Note] = []
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "In -", position: NotePosition(beat: 1.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "- to", position: NotePosition(beat: 2.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "the", position: NotePosition(beat: 2.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "dark", position: NotePosition(beat: 3.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "to", position: NotePosition(beat: 3.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "dream", position: NotePosition(beat: 4.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "and", position: NotePosition(beat: 4.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 2.75)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 3.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 3.75)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.0)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.25)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m23Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 4.75)))
+        measures.append(Measure(number: 23, notes: m23Notes))
+
+        // Measure 24
+        var m24Notes: [Note] = []
+        m24Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .quarter, staff: .treble, lyric: "scream", position: NotePosition(beat: 1.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "my", position: NotePosition(beat: 2.5)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "name", position: NotePosition(beat: 3.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "Won -", position: NotePosition(beat: 4.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, lyric: "der", position: NotePosition(beat: 4.5)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.5)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.833)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 2.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 2.167)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.167)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.5)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m24Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.833)))
+        measures.append(Measure(number: 24, notes: m24Notes))
+
+        // Measure 25
+        var m25Notes: [Note] = []
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "or", position: NotePosition(beat: 1.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "dis -", position: NotePosition(beat: 2.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .quarter, staff: .treble, lyric: "may", position: NotePosition(beat: 3.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "Mad -", position: NotePosition(beat: 4.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, lyric: "ness", position: NotePosition(beat: 4.5)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.167)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.5)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.833)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m25Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 25, notes: m25Notes))
+
+        // Measure 26
+        var m26Notes: [Note] = []
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "or", position: NotePosition(beat: 1.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "de -", position: NotePosition(beat: 2.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, lyric: "cay", position: NotePosition(beat: 3.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "With", position: NotePosition(beat: 4.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.167)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.833)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m26Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 26, notes: m26Notes))
+
+        // Measure 27
+        var m27Notes: [Note] = []
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "fra-", position: NotePosition(beat: 1.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "-gile", position: NotePosition(beat: 1.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "light", position: NotePosition(beat: 2.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "I", position: NotePosition(beat: 2.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "vow", position: NotePosition(beat: 3.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "to", position: NotePosition(beat: 3.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "guard", position: NotePosition(beat: 4.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "a", position: NotePosition(beat: 4.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.167)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.833)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.167)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.5)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.833)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m27Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        measures.append(Measure(number: 27, notes: m27Notes))
+
+        // Measure 28
+        var m28Notes: [Note] = []
+        m28Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .quarter, staff: .treble, lyric: "world", position: NotePosition(beat: 1.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "I", position: NotePosition(beat: 2.5)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .quarter, staff: .treble, lyric: "stay", position: NotePosition(beat: 3.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "Stir -", position: NotePosition(beat: 4.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, lyric: "ring", position: NotePosition(beat: 4.5)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 1), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .D, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.5)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.833)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 2.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 2.167)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 2.333)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 3.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.0)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.167)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.333)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.5)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.667)))
+        m28Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 4.833)))
+        measures.append(Measure(number: 28, notes: m28Notes))
+
+        // Measure 29
+        var m29Notes: [Note] = []
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "or", position: NotePosition(beat: 1.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "de -", position: NotePosition(beat: 2.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .quarter, staff: .treble, lyric: "lay", position: NotePosition(beat: 3.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .G, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, lyric: "Re -", position: NotePosition(beat: 4.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 5, accidental: .flat), duration: .eighth, staff: .treble, lyric: "birth", position: NotePosition(beat: 4.5)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 6), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 1.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.167)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.5)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.833)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m29Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 29, notes: m29Notes))
+
+        // Measure 30
+        var m30Notes: [Note] = []
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "or", position: NotePosition(beat: 1.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 1.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .dottedQuarter, staff: .treble, lyric: "be", position: NotePosition(beat: 2.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .dottedQuarter, staff: .treble, position: NotePosition(beat: 2.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .quarter, staff: .treble, lyric: "same", position: NotePosition(beat: 3.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 5, accidental: .flat), duration: .quarter, staff: .treble, position: NotePosition(beat: 3.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "With", position: NotePosition(beat: 4.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .dottedEighth, staff: .bass, position: NotePosition(beat: 1.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, position: NotePosition(beat: 1.75)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 2.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.167)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.833)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .D, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .F, octave: 3), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        m30Notes.append(Note(pitch: Pitch(noteName: .B, octave: 3, accidental: .flat), duration: .eighth, staff: .bass, position: NotePosition(beat: 4.5)))
+        measures.append(Measure(number: 30, notes: m30Notes))
+
+        // Measure 31
+        var m31Notes: [Note] = []
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "whis-", position: NotePosition(beat: 1.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "-pers", position: NotePosition(beat: 1.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 1.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "in", position: NotePosition(beat: 2.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "gray", position: NotePosition(beat: 2.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 4), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 2.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "guide", position: NotePosition(beat: 3.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "my", position: NotePosition(beat: 3.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 3.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "sha -", position: NotePosition(beat: 4.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, lyric: "- dow", position: NotePosition(beat: 4.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 4, accidental: .flat), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 5), duration: .eighth, staff: .treble, position: NotePosition(beat: 4.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.167)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.333)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.667)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 4), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 1.833)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .G, octave: 2), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .quarter, staff: .bass, position: NotePosition(beat: 2.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.167)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.333)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .C, octave: 3), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.5)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.667)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 3, accidental: .flat), duration: .sixteenth, staff: .bass, isTriplet: true, position: NotePosition(beat: 3.833)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 1, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .E, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        m31Notes.append(Note(pitch: Pitch(noteName: .A, octave: 2, accidental: .flat), duration: .quarter, staff: .bass, position: NotePosition(beat: 4.0)))
+        measures.append(Measure(number: 31, notes: m31Notes))
+
         return Score(
-            title: "Dark Dream (Lord of Mysteries ED)",
-            composer: "Curley Gao (Arr. 11Minnie11)",
+            title: "Dark Dream (LOTM ED)",
+            composer: "Curley Gao • Arr. 11Minnie11 (Authentic)",
             difficulty: .intermediate,
-            source: .manual,
-            isFavorite: true,
+            source: .bundled,
             tempo: 70,
-            keySignatureValue: -3,
             timeSignatureTop: 4,
             timeSignatureBottom: 4,
-            estimatedDuration: 180,
+            keySignatureValue: -3,
             measures: measures
         )
     }
