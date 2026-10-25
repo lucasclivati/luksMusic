@@ -438,16 +438,17 @@ final class MIDIFilePlayer {
         
         var currentTick: UInt32 = 0
         for measure in score.measures {
-            for note in measure.notes {
-                let noteTick = currentTick + UInt32(note.beat * Double(ticksPerBeat))
-                let noteDurationTicks = UInt32(note.duration * Double(ticksPerBeat))
+            for note in measure.notes where !note.isRest {
+                let noteTick = currentTick + UInt32(max(0.0, (note.position.beat - 1.0)) * Double(ticksPerBeat))
+                let noteDurationTicks = UInt32(note.duration.beats * Double(ticksPerBeat))
                 
                 // Note On
                 events.append((tick: noteTick, statusByte: 0x90, note: note.midiNote, velocity: 80))
                 // Note Off
                 events.append((tick: noteTick + noteDurationTicks, statusByte: 0x80, note: note.midiNote, velocity: 0))
             }
-            currentTick += UInt32(Double(measure.timeSignatureNumerator) * Double(ticksPerBeat))
+            let numBeats = Double(measure.timeSignatureNumerator ?? score.timeSignatureTop)
+            currentTick += UInt32(numBeats * Double(ticksPerBeat))
         }
         
         // Sort events by tick

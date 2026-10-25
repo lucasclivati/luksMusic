@@ -27,6 +27,7 @@ enum ScanStatus: Equatable {
     }
 }
 
+@MainActor
 @Observable
 final class ScannerViewModel {
     

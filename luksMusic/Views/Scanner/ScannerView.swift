@@ -7,6 +7,7 @@
 import SwiftUI
 import PhotosUI
 
+@MainActor
 struct ScannerView: View {
     @State private var viewModel = ScannerViewModel()
     @State private var selectedPhotoItem: PhotosPickerItem? = nil

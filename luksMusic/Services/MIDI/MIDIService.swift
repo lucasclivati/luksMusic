@@ -65,6 +65,9 @@ private enum MIDIMessageType {
 @Observable
 final class MIDIService {
     
+    // MARK: - Singleton
+    static let shared = MIDIService()
+    
     // MARK: - Published Properties
     
     /// List of currently detected MIDI devices.

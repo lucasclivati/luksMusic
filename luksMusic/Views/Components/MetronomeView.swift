@@ -3,6 +3,7 @@ import SwiftUI
 // MARK: - Metronome View Model
 
 /// View model managing metronome state and timing.
+@MainActor
 @Observable
 final class MetronomeViewModel {
     /// Current tempo in BPM.
@@ -243,8 +244,10 @@ struct MetronomeView: View {
     
     private func startTimer() {
         let interval = 60.0 / viewModel.tempo
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-            viewModel.triggerBeat()
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak viewModel] _ in
+            Task { @MainActor in
+                viewModel?.triggerBeat()
+            }
         }
         // Trigger the first beat immediately
         viewModel.triggerBeat()

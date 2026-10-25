@@ -41,6 +41,7 @@ enum KeyLabelStyle: String, CaseIterable {
 // MARK: - Piano Keyboard View Model
 
 /// View model managing the interactive piano keyboard state.
+@MainActor
 @Observable
 final class PianoKeyboardViewModel {
     /// All keys in the current keyboard range.

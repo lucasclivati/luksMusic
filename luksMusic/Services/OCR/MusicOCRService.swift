@@ -10,7 +10,7 @@ import Vision
 import CoreImage
 
 /// Result of an OCR scan operation.
-struct ScanResult {
+struct ScanResult: @unchecked Sendable {
     let score: Score
     let confidence: Float // 0.0 to 1.0
     let detectedStaffRects: [CGRect]
@@ -39,6 +39,7 @@ enum MusicOCRError: LocalizedError {
 }
 
 /// Optical Music Recognition (OMR) service.
+@MainActor
 final class MusicOCRService {
     
     static let shared = MusicOCRService()

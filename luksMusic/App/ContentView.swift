@@ -1,16 +1,36 @@
 // ContentView.swift
 // luksMusic
 //
-// Root tab navigation for luksMusic (Library, Scanner, Practice, Settings).
+// Root navigation container with Google Auth gating, Firebase Sync, and TabView.
 
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var scores: [Score]
+    
+    @State private var authService = AuthService.shared
+    @State private var cloudSync = CloudSyncService.shared
     @State private var selectedTab: Int = 0
     
     var body: some View {
+        Group {
+            if authService.isAuthenticated {
+                mainTabView
+            } else {
+                LoginView()
+            }
+        }
+        .onAppear {
+            ScoreStorageService.shared.preloadSampleScoresIfNeeded(modelContext: modelContext)
+            AudioEngineService.shared.setupEngine()
+            MIDIService.shared.startListening()
+        }
+    }
+    
+    @ViewBuilder
+    private var mainTabView: some View {
         TabView(selection: $selectedTab) {
             // Tab 1: Library
             LibraryView()
@@ -33,7 +53,7 @@ struct ContentView: View {
                 }
                 .tag(2)
             
-            // Tab 4: Settings
+            // Tab 4: Settings & Cloud Sync
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape")
@@ -41,11 +61,6 @@ struct ContentView: View {
                 .tag(3)
         }
         .tint(.accentColor)
-        .onAppear {
-            ScoreStorageService.shared.preloadSampleScoresIfNeeded(modelContext: modelContext)
-            AudioEngineService.shared.setupEngine()
-            MIDIService.shared.startListening()
-        }
     }
 }
 
@@ -74,16 +89,13 @@ struct PracticeHistoryView: View {
                     .padding(.vertical, 40)
                     .listRowBackground(Color.clear)
                 } else {
-                    // Summary Card
                     Section {
                         summaryStatsCard()
                     }
                     
-                    // Sessions List
                     Section("Recent Sessions") {
                         ForEach(sessions) { session in
                             HStack(spacing: 12) {
-                                // Accuracy indicator ring
                                 ZStack {
                                     Circle()
                                         .stroke(Color.secondary.opacity(0.2), lineWidth: 4)
@@ -123,7 +135,6 @@ struct PracticeHistoryView: View {
     @ViewBuilder
     private func summaryStatsCard() -> some View {
         HStack(spacing: 16) {
-            let totalNotes = sessions.reduce(0) { $0 + $1.totalNotesPlayed }
             let avgAccuracy = sessions.isEmpty ? 0.0 : (sessions.reduce(0.0) { $0 + $1.accuracy } / Double(sessions.count))
             let maxStreak = sessions.reduce(0) { max($0, $1.longestStreak) }
             
@@ -163,28 +174,79 @@ struct PracticeHistoryView: View {
 // MARK: - Settings Tab
 
 struct SettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var scores: [Score]
+    
+    @State private var authService = AuthService.shared
+    @State private var cloudSync = CloudSyncService.shared
     @State private var selectedSoundFont = "Concert Grand Piano"
     @State private var keyboardOctaves = 3
     @State private var showNoteLabels = true
     @State private var hapticFeedbackEnabled = true
-    @State private var midiDeviceName = "Searching for MIDI devices..."
     
     var body: some View {
         NavigationStack {
             Form {
+                // User Account / Google Login Section
+                Section("Account & Firebase Cloud") {
+                    if let user = authService.currentUser {
+                        HStack(spacing: 12) {
+                            Circle()
+                                .fill(Color.accentColor)
+                                .frame(width: 44, height: 44)
+                                .overlay(
+                                    Text(String(user.displayName.prefix(1)))
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                )
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(user.displayName)
+                                    .font(.headline)
+                                Text("\(user.email) (\(user.authProvider.rawValue))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                        
+                        // Sync Button
+                        Button {
+                            Task {
+                                await cloudSync.syncLibrary(scores: scores)
+                            }
+                        } label: {
+                            HStack {
+                                Label("Sync Scores to Firebase", systemImage: "arrow.triangle.2.circlepath")
+                                Spacer()
+                                if cloudSync.isSyncing {
+                                    ProgressView()
+                                } else if let lastSync = cloudSync.lastSyncDate {
+                                    Text(lastSync, format: .dateTime.hour().minute())
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        
+                        Button("Sign Out", role: .destructive) {
+                            authService.signOut()
+                        }
+                    } else {
+                        Button("Sign in with Google") {
+                            Task {
+                                await authService.signInWithGoogle()
+                            }
+                        }
+                    }
+                }
+                
                 Section("Piano Audio Engine") {
                     Picker("Sound Instrument", selection: $selectedSoundFont) {
                         Text("Concert Grand Piano (Steinway)").tag("Concert Grand Piano")
                         Text("Upright Acoustic Piano").tag("Upright Acoustic Piano")
                         Text("Electric Grand (CP80)").tag("Electric Grand (CP80)")
                         Text("Rhodes Vintage Piano").tag("Rhodes Vintage Piano")
-                    }
-                    
-                    HStack {
-                        Text("Master Volume")
-                        Spacer()
-                        Text("100%")
-                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -216,9 +278,9 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                     HStack {
-                        Text("Optical Music Recognition")
+                        Text("Cloud Backend")
                         Spacer()
-                        Text("Apple Vision AI Enabled")
+                        Text("Google Firebase Enabled")
                             .foregroundColor(.secondary)
                     }
                 }
