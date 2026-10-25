@@ -57,7 +57,7 @@ final class AudioEngineService {
     // MARK: - Singleton
     
     /// Shared singleton instance.
-    static let shared = AudioEngineService()
+    nonisolated(unsafe) static let shared = AudioEngineService()
     
     // MARK: - Published Properties
     

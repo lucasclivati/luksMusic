@@ -65,8 +65,9 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         view.layer.addSublayer(preview)
         self.previewLayer = preview
         
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.captureSession.startRunning()
+        let session = self.captureSession
+        DispatchQueue.global(qos: .userInitiated).async {
+            session.startRunning()
         }
     }
     
@@ -133,11 +134,11 @@ final class CameraViewController: UIViewController, AVCapturePhotoCaptureDelegat
         dismiss(animated: true)
     }
     
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+    nonisolated func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let data = photo.fileDataRepresentation(),
               let image = UIImage(data: data) else { return }
         
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             self?.onPhotoCaptured?(image)
         }
     }

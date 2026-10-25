@@ -66,7 +66,7 @@ private enum MIDIMessageType {
 final class MIDIService {
     
     // MARK: - Singleton
-    static let shared = MIDIService()
+    nonisolated(unsafe) static let shared = MIDIService()
     
     // MARK: - Published Properties
     

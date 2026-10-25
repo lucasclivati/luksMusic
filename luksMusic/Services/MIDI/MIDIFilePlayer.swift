@@ -176,7 +176,7 @@ final class MIDIFilePlayer {
         let newSequencer = AVAudioSequencer(audioEngine: engine)
         
         do {
-            try newSequencer.load(from: url, options: .smfChannelsToTracks)
+            try newSequencer.load(from: url, options: [])
             self.sequencer = newSequencer
             
             // Calculate total beats from all tracks
@@ -218,7 +218,7 @@ final class MIDIFilePlayer {
         }
         
         do {
-            try newSequencer.load(from: midiData, options: .smfChannelsToTracks)
+            try newSequencer.load(from: midiData, options: [])
             self.sequencer = newSequencer
             
             totalBeats = calculateTotalBeats(from: newSequencer)

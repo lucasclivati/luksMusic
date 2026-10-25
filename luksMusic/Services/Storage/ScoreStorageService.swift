@@ -8,6 +8,7 @@ import SwiftData
 import Observation
 
 /// Service managing persistence and file I/O for piano scores.
+@MainActor
 @Observable
 final class ScoreStorageService {
     

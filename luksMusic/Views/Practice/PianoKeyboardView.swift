@@ -155,6 +155,8 @@ final class PianoKeyboardViewModel {
 /// visual feedback, and configurable note labels.
 struct PianoKeyboardView: View {
     @Bindable var viewModel: PianoKeyboardViewModel
+    var onKeyPress: ((Int) -> Void)? = nil
+    var onKeyRelease: ((Int) -> Void)? = nil
     
     /// Ratio of black key width to white key width.
     private let blackKeyWidthRatio: CGFloat = 0.6
@@ -181,8 +183,14 @@ struct PianoKeyboardView: View {
                             highlightColor: viewModel.keyColor(for: key),
                             labelStyle: viewModel.labelStyle,
                             isSustainActive: viewModel.isSustainActive,
-                            onPress: { viewModel.keyPressed(key) },
-                            onRelease: { viewModel.keyReleased(key) }
+                            onPress: {
+                                viewModel.keyPressed(key)
+                                onKeyPress?(key.id)
+                            },
+                            onRelease: {
+                                viewModel.keyReleased(key)
+                                onKeyRelease?(key.id)
+                            }
                         )
                     }
                 }
@@ -202,8 +210,14 @@ struct PianoKeyboardView: View {
                         height: blackKeyHeight,
                         highlightColor: viewModel.keyColor(for: key),
                         labelStyle: viewModel.labelStyle,
-                        onPress: { viewModel.keyPressed(key) },
-                        onRelease: { viewModel.keyReleased(key) }
+                        onPress: {
+                            viewModel.keyPressed(key)
+                            onKeyPress?(key.id)
+                        },
+                        onRelease: {
+                            viewModel.keyReleased(key)
+                            onKeyRelease?(key.id)
+                        }
                     )
                     .offset(x: xOffset)
                 }
