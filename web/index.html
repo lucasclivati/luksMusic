@@ -1954,15 +1954,9 @@
                 <span>Continuar com o Google</span>
             </button>
 
-            <div class="login-disclaimer">
-                <span>🔒</span>
-                <span>A partitura <b>Dark Dream (LOTM ED)</b> é de acesso privado, restrita exclusivamente à conta <b>lukscli@gmail.com</b>.</span>
+            <div style="font-size: 11px; color: #64748b; margin-top: 8px; text-align: center;">
+                Acesso seguro com sua conta Google
             </div>
-
-            <!-- Botão de acesso rápido para verificação de desenvolvimento -->
-            <button id="quickDevAuthBtn" style="background: transparent; border: none; color: #64748b; font-size: 11px; cursor: pointer; text-decoration: underline;">
-                Entrar diretamente como lukscli@gmail.com (Verificação)
-            </button>
         </div>
     </div>
 
@@ -2697,13 +2691,13 @@
             }
         }
 
-        // Firebase Auth State Listener
+        // Firebase Auth State Listener & Redirect Handling
         if (auth) {
             auth.onAuthStateChanged(user => {
                 if (user) {
                     updateAuthState(user);
                 } else {
-                    // Check local mock auth session
+                    // Check local session
                     const savedMock = localStorage.getItem("luksMusic_auth_user");
                     if (savedMock) {
                         try {
@@ -2716,14 +2710,31 @@
                     }
                 }
             });
+
+            auth.getRedirectResult()
+                .then(result => {
+                    if (result && result.user) {
+                        updateAuthState(result.user);
+                    }
+                })
+                .catch(error => {
+                    console.error("Redirect auth error:", error);
+                    if (error && error.message) {
+                        loginStatusMsg.className = "login-status-msg error";
+                        loginStatusMsg.innerText = `Erro no login Google: ${error.message}`;
+                        loginStatusMsg.style.display = "block";
+                    }
+                });
         }
 
         // Google Sign-In Click Handler
         googleSignInBtn.addEventListener("click", () => {
             loginStatusMsg.className = "login-status-msg info";
             loginStatusMsg.innerText = "Conectando ao Google OAuth...";
+            loginStatusMsg.style.display = "block";
 
             if (auth && googleProvider) {
+                googleProvider.setCustomParameters({ prompt: 'select_account' });
                 auth.signInWithPopup(googleProvider)
                     .then(result => {
                         loginStatusMsg.style.display = "none";
@@ -2731,6 +2742,10 @@
                     })
                     .catch(error => {
                         console.log("Firebase popup error:", error);
+                        if (error.code === "auth/popup-closed-by-user") {
+                            loginStatusMsg.style.display = "none";
+                            return;
+                        }
                         if (error.code === "auth/popup-blocked" || error.code === "auth/unauthorized-domain") {
                             // Fallback to redirect
                             auth.signInWithRedirect(googleProvider).catch(redirErr => {
@@ -2748,17 +2763,19 @@
             }
         });
 
-        // Quick Auth / Dev verification for lukscli@gmail.com
-        quickDevAuthBtn.addEventListener("click", () => {
-            const mockUser = {
-                uid: "dev-lukscli-uid",
-                email: "lukscli@gmail.com",
-                displayName: "Lucas (lukscli)",
-                photoURL: ""
-            };
-            localStorage.setItem("luksMusic_auth_user", JSON.stringify(mockUser));
-            updateAuthState(mockUser);
-        });
+        // Quick Auth / Dev verification for lukscli@gmail.com (if present)
+        if (quickDevAuthBtn) {
+            quickDevAuthBtn.addEventListener("click", () => {
+                const mockUser = {
+                    uid: "dev-lukscli-uid",
+                    email: "lukscli@gmail.com",
+                    displayName: "Lucas (lukscli)",
+                    photoURL: ""
+                };
+                localStorage.setItem("luksMusic_auth_user", JSON.stringify(mockUser));
+                updateAuthState(mockUser);
+            });
+        }
 
         // Logout
         logoutBtn.addEventListener("click", () => {
@@ -2778,8 +2795,11 @@
                 return;
             }
             const email = (currentUser.email || "").toLowerCase().trim();
-            if (email !== AUTHORIZED_LOTM_EMAIL.toLowerCase()) {
-                alert("Acesso Negado: A partitura 'Dark Dream (LOTM)' é exclusiva da conta lukscli@gmail.com.");
+            const isOwner = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+            const isPublic = (scorePrivacy === 'public');
+
+            if (!isPublic && !isOwner) {
+                showToast("Esta partitura está configurada como privada pelo autor.", "🔒");
                 return;
             }
             showView(playerView);
