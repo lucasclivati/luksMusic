@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>luksMusic - Biblioteca & Partituras Interativas</title>
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -698,6 +698,10 @@
             color: #38bdf8;
         }
 
+        :root {
+            --sheet-width: 900px;
+        }
+
         .score-scroll-area {
             flex: 1;
             overflow-y: auto;
@@ -709,6 +713,9 @@
             align-items: center;
             gap: 36px;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x pan-y pinch-zoom;
+            position: relative;
         }
 
         .sheet-paper {
@@ -716,14 +723,92 @@
             box-shadow: 0 10px 35px rgba(0,0,0,0.45);
             padding: 0;
             border-radius: 4px;
-            width: 900px;
-            height: 1272.7px;
+            width: var(--sheet-width, 900px);
+            height: calc(var(--sheet-width, 900px) * 1.4141);
+            aspect-ratio: 900 / 1272.7;
             position: relative;
             flex-shrink: 0;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             cursor: pointer;
+            transition: width 0.15s ease, height 0.15s ease;
+        }
+        .sheet-paper.is-zooming {
+            transition: none !important;
+        }
+
+        /* Floating Score HUD (Zoom, Fullscreen & Piano dock toggle) */
+        .score-floating-hud {
+            position: fixed;
+            bottom: calc(var(--dock-height, 142px) + 14px);
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 9999px;
+            padding: 4px 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
+            z-index: 45;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .score-floating-hud .hud-btn {
+            background: transparent;
+            border: none;
+            color: #e2e8f0;
+            padding: 5px 9px;
+            font-size: 13px;
+            font-weight: 700;
+            border-radius: 9999px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            min-width: 32px;
+            height: 32px;
+        }
+
+        .score-floating-hud .hud-btn:hover {
+            background: #334155;
+            color: #38bdf8;
+            transform: scale(1.06);
+        }
+
+        .score-floating-hud .hud-btn.active {
+            background: #0284c7;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+        }
+
+        .score-floating-hud .hud-sep {
+            width: 1px;
+            height: 18px;
+            background: #334155;
+            margin: 0 2px;
+        }
+
+        .bottom-dock.dock-hidden {
+            display: none !important;
+        }
+
+        /* In-App Fullscreen & Focus Mode */
+        #playerView.score-fullscreen-mode header.player-header {
+            display: none !important;
+        }
+        #playerView.score-fullscreen-mode .bottom-dock {
+            display: none !important;
+        }
+        #playerView.score-fullscreen-mode .score-floating-hud {
+            bottom: 18px;
+            right: 18px;
         }
 
         .page-badge {
@@ -1927,6 +2012,145 @@
             }
         }
 
+        /* =========================================================
+           RESPONSIVE MOBILE STYLES (Celulares e Telas Pequenas)
+           ========================================================= */
+        @media (max-width: 768px) {
+            /* Header Compacto no Celular */
+            header.player-header {
+                height: 50px;
+                padding: 4px 8px;
+                gap: 6px;
+            }
+            .brand-section .brand-badge {
+                display: none;
+            }
+            .brand-section {
+                gap: 6px;
+            }
+            .btn-back-lib {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+            .song-info h1 {
+                font-size: 11px;
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .song-info p {
+                display: none;
+            }
+            .header-tools {
+                display: none;
+            }
+            .piano-selector-wrapper {
+                display: none;
+            }
+            .playback-main-controls {
+                gap: 4px;
+            }
+            button.btn-ctrl {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+            button.btn-play-hero {
+                width: 38px !important;
+                height: 38px !important;
+                min-width: 38px !important;
+                min-height: 38px !important;
+                font-size: 16px;
+            }
+
+            /* Score Area & Sheet Mobile Sizing */
+            .score-scroll-area {
+                padding: 10px 8px 60px;
+                gap: 16px;
+            }
+            .sheet-paper {
+                box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+                border-radius: 2px;
+            }
+
+            /* Floating HUD no Celular */
+            .score-floating-hud {
+                bottom: calc(var(--dock-height, 100px) + 8px);
+                right: 8px;
+                padding: 3px 6px;
+                background: rgba(15, 23, 42, 0.94);
+            }
+            .score-floating-hud .hud-btn {
+                padding: 4px 6px;
+                font-size: 11px;
+                min-width: 28px;
+                height: 28px;
+            }
+
+            /* Right Sidebar as Drawer on Mobile */
+            .sidebar-wrapper {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 60;
+                height: 100%;
+            }
+            .musescore-sidebar {
+                width: min(320px, 86vw);
+                box-shadow: -10px 0 35px rgba(0,0,0,0.75);
+            }
+
+            /* Bottom Dock on Mobile */
+            .bottom-dock {
+                height: 105px;
+            }
+            .timeline-bar {
+                padding: 4px 10px;
+                gap: 6px;
+            }
+            .time-display {
+                font-size: 11px;
+                min-width: 75px;
+            }
+            .measure-badge-btn {
+                padding: 2px 6px;
+                font-size: 10px;
+            }
+            .mini-mixer-pill {
+                display: none;
+            }
+
+            /* Biblioteca no Celular */
+            .library-body {
+                padding: 16px 12px;
+            }
+            .songs-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .song-card {
+                padding: 14px;
+            }
+            .song-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .song-card-details {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .btn-open-score {
+                width: 100%;
+            }
+            .login-card {
+                width: calc(100vw - 32px);
+                padding: 24px 20px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -2170,6 +2394,16 @@
             </div> <!-- end sheetPage7 -->
 
             </div> <!-- end scoreScrollArea -->
+
+            <!-- FLOATING SCORE CONTROLS HUD (Zoom, Fullscreen & Piano dock toggle) -->
+            <div class="score-floating-hud" id="scoreFloatingHUD">
+                <button id="zoomOutBtn" class="hud-btn" title="Diminuir Zoom (-)">🔍−</button>
+                <button id="zoomResetBtn" class="hud-btn zoom-level-btn" title="Ajustar à tela / 100% (0)">Ajustar</button>
+                <button id="zoomInBtn" class="hud-btn" title="Aumentar Zoom (+)">🔍+</button>
+                <span class="hud-sep"></span>
+                <button id="togglePianoDockBtn" class="hud-btn" title="Ocultar/Exibir Teclado do Piano (P)">🎹</button>
+                <button id="fullscreenScoreBtn" class="hud-btn" title="Ver em Tela Cheia (F)">⛶</button>
+            </div>
 
             <!-- COLLAPSIBLE MUSESCORE SIDEBAR -->
             <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -3545,6 +3779,16 @@
                 loopBtn.click();
             } else if (e.code === "KeyX") {
                 toggleMixer();
+            } else if (e.code === "KeyF") {
+                toggleFullscreen();
+            } else if (e.code === "KeyP") {
+                togglePianoDock();
+            } else if (e.code === "Equal" || e.code === "NumpadAdd") {
+                zoomIn();
+            } else if (e.code === "Minus" || e.code === "NumpadSubtract") {
+                zoomOut();
+            } else if (e.code === "Digit0") {
+                toggleFitOrZoom();
             } else if (e.code === "Home" || e.code === "KeyZ") {
                 seekToBeat(0);
             }
@@ -3789,6 +4033,214 @@
             toastTimer = setTimeout(() => {
                 toastNotification.classList.add('hidden');
             }, 3000);
+        }
+
+        // =============================================================
+        // ZOOM, PINCH-TO-ZOOM, FULLSCREEN & PIANO DOCK CONTROLS
+        // =============================================================
+        const zoomOutBtn = document.getElementById("zoomOutBtn");
+        const zoomResetBtn = document.getElementById("zoomResetBtn");
+        const zoomInBtn = document.getElementById("zoomInBtn");
+        const togglePianoDockBtn = document.getElementById("togglePianoDockBtn");
+        const fullscreenScoreBtn = document.getElementById("fullscreenScoreBtn");
+
+        let currentSheetWidth = 900;
+        let isFitWidth = window.innerWidth <= 768;
+
+        function getFitWidth() {
+            const availW = (scoreScrollArea ? scoreScrollArea.clientWidth : window.innerWidth) || window.innerWidth;
+            const margin = window.innerWidth <= 768 ? 16 : 40;
+            return Math.max(300, Math.min(1400, availW - margin));
+        }
+
+        function setSheetWidth(width, updateLabel = true, savePref = true) {
+            currentSheetWidth = Math.max(300, Math.min(2400, Math.round(width)));
+            document.documentElement.style.setProperty('--sheet-width', `${currentSheetWidth}px`);
+
+            if (updateLabel && zoomResetBtn) {
+                const fitW = getFitWidth();
+                const pct = Math.round((currentSheetWidth / 900) * 100);
+                if (Math.abs(currentSheetWidth - fitW) < 15) {
+                    zoomResetBtn.innerText = "Ajustar";
+                    zoomResetBtn.title = "Ajustado à tela. Clique para 100%";
+                } else {
+                    zoomResetBtn.innerText = `${pct}%`;
+                    zoomResetBtn.title = `Zoom: ${pct}%. Clique para Ajustar à tela`;
+                }
+            }
+
+            if (savePref) {
+                try {
+                    localStorage.setItem("luksmusic_sheet_width", currentSheetWidth);
+                } catch(e) {}
+            }
+        }
+
+        function zoomIn() {
+            isFitWidth = false;
+            setSheetWidth(currentSheetWidth * 1.25);
+            showToast(`Zoom: ${Math.round((currentSheetWidth / 900) * 100)}%`, "🔍");
+        }
+
+        function zoomOut() {
+            isFitWidth = false;
+            setSheetWidth(currentSheetWidth / 1.25);
+            showToast(`Zoom: ${Math.round((currentSheetWidth / 900) * 100)}%`, "🔍");
+        }
+
+        function toggleFitOrZoom() {
+            const fitW = getFitWidth();
+            if (Math.abs(currentSheetWidth - fitW) < 20) {
+                isFitWidth = false;
+                setSheetWidth(900);
+                showToast("Zoom: 100% (900px)", "🔍");
+            } else {
+                isFitWidth = true;
+                setSheetWidth(fitW);
+                showToast("Ajustado à tela", "📐");
+            }
+        }
+
+        if (zoomInBtn) zoomInBtn.addEventListener("click", zoomIn);
+        if (zoomOutBtn) zoomOutBtn.addEventListener("click", zoomOut);
+        if (zoomResetBtn) zoomResetBtn.addEventListener("click", toggleFitOrZoom);
+
+        // Fullscreen Toggle
+        function toggleFullscreen() {
+            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            if (!isFs) {
+                const target = playerView || document.documentElement;
+                if (target.requestFullscreen) {
+                    target.requestFullscreen().catch(() => {});
+                } else if (target.webkitRequestFullscreen) {
+                    target.webkitRequestFullscreen();
+                }
+                playerView.classList.add("score-fullscreen-mode");
+                if (fullscreenScoreBtn) {
+                    fullscreenScoreBtn.innerHTML = "🗗";
+                    fullscreenScoreBtn.classList.add("active");
+                    fullscreenScoreBtn.title = "Sair da Tela Cheia (F)";
+                }
+                showToast("Tela Cheia: Partitura Expandida", "⛶");
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                playerView.classList.remove("score-fullscreen-mode");
+                if (fullscreenScoreBtn) {
+                    fullscreenScoreBtn.innerHTML = "⛶";
+                    fullscreenScoreBtn.classList.remove("active");
+                    fullscreenScoreBtn.title = "Ver em Tela Cheia (F)";
+                }
+                showToast("Tela Cheia Desativada", "🗗");
+            }
+        }
+
+        if (fullscreenScoreBtn) fullscreenScoreBtn.addEventListener("click", toggleFullscreen);
+
+        document.addEventListener("fullscreenchange", () => {
+            const isFs = !!document.fullscreenElement;
+            playerView.classList.toggle("score-fullscreen-mode", isFs);
+            if (fullscreenScoreBtn) {
+                fullscreenScoreBtn.innerHTML = isFs ? "🗗" : "⛶";
+                fullscreenScoreBtn.classList.toggle("active", isFs);
+            }
+        });
+
+        // Toggle Piano Dock (Show/Hide)
+        function togglePianoDock(forceState) {
+            if (!bottomDock) return;
+            const isHidden = bottomDock.classList.contains("dock-hidden");
+            const shouldHide = forceState !== undefined ? !forceState : !isHidden;
+            bottomDock.classList.toggle("dock-hidden", shouldHide);
+            if (togglePianoDockBtn) {
+                togglePianoDockBtn.classList.toggle("active", shouldHide);
+                togglePianoDockBtn.title = shouldHide ? "Mostrar Teclado do Piano" : "Ocultar Teclado (Mais espaço)";
+            }
+            showToast(shouldHide ? "Teclado oculto (Mais espaço para a partitura)" : "Teclado exibido", "🎹");
+            setTimeout(() => {
+                if (isFitWidth) setSheetWidth(getFitWidth());
+            }, 120);
+        }
+
+        if (togglePianoDockBtn) togglePianoDockBtn.addEventListener("click", () => togglePianoDock());
+
+        // Touch Pinch-to-Zoom & Double-Tap on Sheet Music
+        let touchStartDist = 0;
+        let pinchStartWidth = 900;
+        let isPinching = false;
+        let lastTapTime = 0;
+
+        if (scoreScrollArea) {
+            scoreScrollArea.addEventListener("touchstart", (e) => {
+                if (e.touches.length === 2) {
+                    isPinching = true;
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    touchStartDist = Math.hypot(dx, dy);
+                    pinchStartWidth = currentSheetWidth;
+                    document.querySelectorAll(".sheet-paper").forEach(p => p.classList.add("is-zooming"));
+                }
+            }, { passive: true });
+
+            scoreScrollArea.addEventListener("touchmove", (e) => {
+                if (isPinching && e.touches.length === 2 && touchStartDist > 0) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.hypot(dx, dy);
+                    const factor = dist / touchStartDist;
+                    const newW = Math.max(300, Math.min(2200, Math.round(pinchStartWidth * factor)));
+                    isFitWidth = false;
+                    setSheetWidth(newW, true, false);
+                }
+            }, { passive: true });
+
+            scoreScrollArea.addEventListener("touchend", (e) => {
+                if (isPinching && e.touches.length < 2) {
+                    isPinching = false;
+                    document.querySelectorAll(".sheet-paper").forEach(p => p.classList.remove("is-zooming"));
+                    setSheetWidth(currentSheetWidth, true, true);
+                }
+
+                // Double tap handling
+                if (e.changedTouches.length === 1 && !isPinching) {
+                    const now = performance.now();
+                    if (now - lastTapTime < 320) {
+                        toggleFitOrZoom();
+                        lastTapTime = 0;
+                        return;
+                    }
+                    lastTapTime = now;
+                }
+            });
+        }
+
+        // Initialize sheet width based on device screen
+        const savedSheetW = parseInt(localStorage.getItem("luksmusic_sheet_width") || "0", 10);
+        if (window.innerWidth <= 768) {
+            isFitWidth = true;
+            setSheetWidth(getFitWidth(), true, false);
+        } else if (savedSheetW && savedSheetW >= 320) {
+            setSheetWidth(savedSheetW, true, false);
+        } else {
+            setSheetWidth(900, true, false);
+        }
+
+        window.addEventListener("resize", () => {
+            if (isFitWidth && playerView.classList.contains("active-view")) {
+                setSheetWidth(getFitWidth(), true, false);
+            }
+        });
+
+        // Auto-collapse sidebar on mobile screens
+        if (window.innerWidth <= 768 && sidebarToggleBtn && musescoreSidebar) {
+            isSidebarCollapsed = true;
+            musescoreSidebar.classList.add('collapsed');
+            sidebarWrapper.classList.add('collapsed');
+            sidebarToggleIcon.textContent = '‹';
+            sidebarToggleBtn.title = 'Expandir barra lateral';
         }
 
         // Toggle Sidebar Collapse
