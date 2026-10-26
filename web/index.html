@@ -1001,12 +1001,132 @@
             position: absolute;
             width: 3px;
             background: #2563eb;
-            box-shadow: 0 0 8px rgba(37, 99, 235, 0.8), 0 0 2px #38bdf8;
-            pointer-events: none;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.9), 0 0 3px #38bdf8;
+            pointer-events: auto !important;
+            cursor: ew-resize;
             display: none;
-            z-index: 6;
+            z-index: 10;
             border-radius: 1px;
-            transition: left 0.03s linear;
+            transition: left 0.02s linear;
+        }
+
+        .cursor-drag-pin {
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            pointer-events: auto;
+            touch-action: none;
+            z-index: 15;
+        }
+        .cursor-drag-pin:active {
+            cursor: grabbing;
+        }
+        .cursor-pin-droplet {
+            width: 14px;
+            height: 14px;
+            background: #38bdf8;
+            border: 2px solid #0284c7;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .cursor-drag-pin:hover .cursor-pin-droplet,
+        .cursor-drag-pin:active .cursor-pin-droplet {
+            background: #7dd3fc;
+            transform: rotate(-45deg) scale(1.35);
+            box-shadow: 0 0 12px #38bdf8;
+        }
+
+        .cursor-notes-tooltip {
+            position: absolute;
+            top: -34px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.94);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            display: none;
+            z-index: 20;
+        }
+
+        /* Note Inspector Bar docked above Piano */
+        .active-notes-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 16px;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(56, 189, 248, 0.25);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 11px;
+            color: #cbd5e1;
+            min-height: 28px;
+        }
+        .notes-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .notes-bar-icon {
+            font-size: 13px;
+        }
+        .notes-bar-label {
+            font-weight: 700;
+            color: #38bdf8;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+        .notes-bar-text {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 11.5px;
+            color: #f8fafc;
+        }
+        .notes-bar-text .rh-note {
+            color: #38bdf8;
+            font-weight: 600;
+        }
+        .notes-bar-text .lh-note {
+            color: #4ade80;
+            font-weight: 600;
+        }
+        .active-chord-badge {
+            background: rgba(56, 189, 248, 0.15);
+            color: #7dd3fc;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .held-key {
+            transform: translateY(2px) scale(0.985);
+            filter: brightness(1.2);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .page-overlay {
+            cursor: crosshair;
         }
 
         /* Mixer HUD */
@@ -2693,7 +2813,12 @@
                     <img src="score_page_1.svg" class="score-svg-img" alt="Página 1">
                     <div class="page-overlay" id="pageOverlay1">
                         <div class="active-measure-box" id="measureBox1"></div>
-                        <div class="playback-cursor-line" id="cursorLine1"></div>
+                        <div class="playback-cursor-line" id="cursorLine1">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip1"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2705,7 +2830,12 @@
                     <img src="score_page_2.svg" class="score-svg-img" alt="Página 2">
                     <div class="page-overlay" id="pageOverlay2">
                         <div class="active-measure-box" id="measureBox2"></div>
-                        <div class="playback-cursor-line" id="cursorLine2"></div>
+                        <div class="playback-cursor-line" id="cursorLine2">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip2"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2717,7 +2847,12 @@
                     <img src="score_page_3.svg" class="score-svg-img" alt="Página 3">
                     <div class="page-overlay" id="pageOverlay3">
                         <div class="active-measure-box" id="measureBox3"></div>
-                        <div class="playback-cursor-line" id="cursorLine3"></div>
+                        <div class="playback-cursor-line" id="cursorLine3">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip3"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2729,7 +2864,12 @@
                     <img src="score_page_4.svg" class="score-svg-img" alt="Página 4">
                     <div class="page-overlay" id="pageOverlay4">
                         <div class="active-measure-box" id="measureBox4"></div>
-                        <div class="playback-cursor-line" id="cursorLine4"></div>
+                        <div class="playback-cursor-line" id="cursorLine4">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip4"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2741,7 +2881,12 @@
                     <img src="score_page_5.svg" class="score-svg-img" alt="Página 5">
                     <div class="page-overlay" id="pageOverlay5">
                         <div class="active-measure-box" id="measureBox5"></div>
-                        <div class="playback-cursor-line" id="cursorLine5"></div>
+                        <div class="playback-cursor-line" id="cursorLine5">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip5"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2753,7 +2898,12 @@
                     <img src="score_page_6.svg" class="score-svg-img" alt="Página 6">
                     <div class="page-overlay" id="pageOverlay6">
                         <div class="active-measure-box" id="measureBox6"></div>
-                        <div class="playback-cursor-line" id="cursorLine6"></div>
+                        <div class="playback-cursor-line" id="cursorLine6">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip6"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2765,7 +2915,12 @@
                     <img src="score_page_7.svg" class="score-svg-img" alt="Página 7">
                     <div class="page-overlay" id="pageOverlay7">
                         <div class="active-measure-box" id="measureBox7"></div>
-                        <div class="playback-cursor-line" id="cursorLine7"></div>
+                        <div class="playback-cursor-line" id="cursorLine7">
+                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                <div class="cursor-pin-droplet"></div>
+                            </div>
+                            <div class="cursor-notes-tooltip" id="cursorTooltip7"></div>
+                        </div>
                     </div>
                 </div>
             </div> <!-- end sheetPage7 -->
@@ -3153,6 +3308,18 @@
                     <span style="color: var(--accent-cyan);">RH: <b id="miniRhVol">95%</b></span>
                     <span style="color: #64748b;">•</span>
                     <span style="color: var(--accent-green);">LH: <b id="miniLhVol">90%</b></span>
+                </div>
+            </div>
+
+            <!-- ACTIVE NOTES INSPECTOR BAR (held on pause & scrubbing) -->
+            <div class="active-notes-bar" id="activeNotesBar">
+                <div class="notes-bar-left">
+                    <span class="notes-bar-icon">🎹</span>
+                    <span class="notes-bar-label">Notas no Cursor:</span>
+                    <span id="activeNotesText" class="notes-bar-text">Pausado — arraste a linha azul ou dê play para conferir as notas</span>
+                </div>
+                <div class="notes-bar-right">
+                    <span id="activeChordPill" class="active-chord-badge">Curley Gao • LOTM ED</span>
                 </div>
             </div>
 
@@ -4157,32 +4324,265 @@
             seekToBeat(0);
         });
 
+        // =============================================================
+        // NOTE INSPECTION & REAL-TIME DRAGGABLE PLAYHEAD ENGINE
+        // =============================================================
+        function getNoteDurationInBeats(n) {
+            if (n.triplet) return 1.0 / 3.0;
+            switch (n.dur) {
+                case "whole": return 4.0;
+                case "dottedHalf": return 3.0;
+                case "half": return 2.0;
+                case "dottedQuarter": return 1.5;
+                case "quarter": return 1.0;
+                case "dotted8th": return 0.75;
+                case "8th": return 0.5;
+                case "16th": return 0.25;
+                case "32nd": return 0.125;
+                default: return 0.5;
+            }
+        }
+
+        function getNotesActiveAt(mIdx, targetBeat) {
+            if (mIdx < 0 || mIdx >= SCORE_DATA.length) {
+                return { trebleChords: [], bassChords: [], trebleMidi: [], bassMidi: [], allMidi: [] };
+            }
+            const m = SCORE_DATA[mIdx];
+            if (!m) return { trebleChords: [], bassChords: [], trebleMidi: [], bassMidi: [], allMidi: [] };
+
+            function findActiveInList(list) {
+                if (!list || !list.length) return [];
+                const active = [];
+                for (const n of list) {
+                    const dur = getNoteDurationInBeats(n);
+                    if (targetBeat >= (n.beat - 0.05) && targetBeat < (n.beat + dur - 0.01)) {
+                        active.push(n);
+                    }
+                }
+                if (!active.length) {
+                    const past = list.filter(n => n.beat <= targetBeat + 0.05);
+                    if (past.length > 0) {
+                        active.push(past[past.length - 1]);
+                    } else {
+                        active.push(list[0]);
+                    }
+                }
+                return active;
+            }
+
+            const activeTreble = findActiveInList(m.treble || []);
+            const activeBass = findActiveInList(m.bass || []);
+
+            const trebleMidi = [...new Set(activeTreble.flatMap(n => n.chord || []))];
+            const bassMidi = [...new Set(activeBass.flatMap(n => n.chord || []))];
+            const allMidi = [...new Set([...trebleMidi, ...bassMidi])];
+
+            return {
+                activeTreble,
+                activeBass,
+                trebleMidi,
+                bassMidi,
+                allMidi
+            };
+        }
+
+        function midiToNoteName(midi) {
+            const ptNames = ["Dó", "Dó#", "Ré", "Mi♭", "Mi", "Fá", "Fá#", "Sol", "Lá♭", "Lá", "Si♭", "Si"];
+            const enNames = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+            const octave = Math.floor(midi / 12) - 1;
+            const idx = midi % 12;
+            return `${ptNames[idx]}${octave} (${enNames[idx]}${octave})`;
+        }
+
+        function clearHeldKeys() {
+            keyElementsMap.forEach(el => {
+                el.classList.remove("active-rh", "active-lh", "held-key");
+            });
+        }
+
+        function holdActiveKeysOnPiano(trebleMidi, bassMidi) {
+            clearHeldKeys();
+            (trebleMidi || []).forEach(m => {
+                const el = keyElementsMap.get(m);
+                if (el) {
+                    el.classList.add("active-rh", "held-key");
+                }
+            });
+            (bassMidi || []).forEach(m => {
+                const el = keyElementsMap.get(m);
+                if (el) {
+                    el.classList.add("active-lh", "held-key");
+                }
+            });
+        }
+
+        let lastPlayedScrubChord = "";
+
+        function updateActiveNotesUI(playSound = false) {
+            const active = getNotesActiveAt(currentMeasureIdx, currentBeat);
+            
+            // Keep keys pressed down on the piano keyboard!
+            holdActiveKeysOnPiano(active.trebleMidi, active.bassMidi);
+
+            // Format note text for the inspector bar
+            const rhStr = active.trebleMidi.length > 0 
+                ? active.trebleMidi.map(m => midiToNoteName(m)).join(", ") 
+                : "—";
+            const lhStr = active.bassMidi.length > 0 
+                ? active.bassMidi.map(m => midiToNoteName(m)).join(", ") 
+                : "—";
+
+            const textEl = document.getElementById("activeNotesText");
+            if (textEl) {
+                textEl.innerHTML = `<span class="rh-note">Mão Dir (Clave Sol):</span> ${rhStr} &nbsp;•&nbsp; <span class="lh-note">Mão Esq (Clave Fá):</span> ${lhStr}`;
+            }
+
+            const mNum = currentMeasureIdx + 1;
+            const mDef = MEASURE_LAYOUT.find(m => m.number === mNum);
+            const targetPage = mDef ? mDef.page : 1;
+            const tooltip = document.getElementById(`cursorTooltip${targetPage}`);
+            if (tooltip) {
+                const rhShort = active.trebleMidi.map(m => midiToNoteName(m).split(" ")[0]).join(", ") || "—";
+                const lhShort = active.bassMidi.map(m => midiToNoteName(m).split(" ")[0]).join(", ") || "—";
+                tooltip.textContent = `C.${mNum} (T.${currentBeat.toFixed(1)}) • RH: ${rhShort} | LH: ${lhShort}`;
+                tooltip.style.display = isScrubbing || !isPlaying ? "block" : "none";
+            }
+
+            // Play scrub audio preview if chord changed
+            if (playSound && active.allMidi.length > 0 && !useOriginalAudio) {
+                const chordKey = active.allMidi.slice().sort().join("-");
+                if (chordKey !== lastPlayedScrubChord) {
+                    lastPlayedScrubChord = chordKey;
+                    if (audio) {
+                        audio.playChord(active.allMidi, 0.4, 0.85);
+                    }
+                }
+            }
+        }
+
+        function findMeasureAndBeatAtPoint(page, clickXPct, clickYPct) {
+            const pageMeasures = MEASURE_LAYOUT.filter(m => m.page === page);
+            if (!pageMeasures.length) return null;
+
+            // 1. Direct hit with padding
+            let matchM = pageMeasures.find(m => {
+                return clickXPct >= (m.left_pct - 1.5) &&
+                    clickXPct <= (m.left_pct + m.width_pct + 1.5) &&
+                    clickYPct >= (m.top_pct - 2.5) &&
+                    clickYPct <= (m.top_pct + m.height_pct + 4.0);
+            });
+
+            // 2. If not a direct hit, find system (row) with closest Y
+            if (!matchM) {
+                const rows = [];
+                pageMeasures.forEach(m => {
+                    let row = rows.find(r => Math.abs(r[0].top_pct - m.top_pct) < 2.5);
+                    if (!row) {
+                        row = [];
+                        rows.push(row);
+                    }
+                    row.push(m);
+                });
+
+                let closestRow = rows[0];
+                let minDistY = 999999;
+                rows.forEach(r => {
+                    const midY = r[0].top_pct + r[0].height_pct / 2.0;
+                    const distY = Math.abs(clickYPct - midY);
+                    if (distY < minDistY) {
+                        minDistY = distY;
+                        closestRow = r;
+                    }
+                });
+
+                closestRow.sort((a, b) => a.left_pct - b.left_pct);
+                if (clickXPct <= closestRow[0].left_pct) {
+                    matchM = closestRow[0];
+                } else if (clickXPct >= (closestRow[closestRow.length - 1].left_pct + closestRow[closestRow.length - 1].width_pct)) {
+                    matchM = closestRow[closestRow.length - 1];
+                } else {
+                    matchM = closestRow.find(m => clickXPct >= m.left_pct && clickXPct <= (m.left_pct + m.width_pct)) || closestRow[0];
+                }
+            }
+
+            if (!matchM) return null;
+
+            const beatFrac = Math.max(0, Math.min(1.0, (clickXPct - matchM.left_pct) / matchM.width_pct));
+            const beat = 1.0 + beatFrac * 4.0;
+            return {
+                measure: matchM,
+                measureIdx: matchM.number - 1,
+                beat: beat,
+                totalBeats: (matchM.number - 1) * 4 + (beat - 1.0)
+            };
+        }
+
         timelineSlider.addEventListener("input", (e) => {
             const totalBeats = parseFloat(e.target.value);
-            seekToBeat(totalBeats);
+            seekToBeat(totalBeats, true);
         });
+
+        let isScrubbing = false;
+        let lastScrubPage = 1;
+
+        function startScrubbing(page, clientX, clientY) {
+            isScrubbing = true;
+            lastScrubPage = page;
+            document.body.style.userSelect = 'none';
+            if (isPlaying) {
+                pausePlayback();
+            }
+            handleScrubMove(page, clientX, clientY);
+        }
+
+        function handleScrubMove(page, clientX, clientY) {
+            const overlay = document.getElementById(`pageOverlay${page}`);
+            if (!overlay) return;
+            const rect = overlay.getBoundingClientRect();
+            const clickXPct = ((clientX - rect.left) / rect.width) * 100.0;
+            const clickYPct = ((clientY - rect.top) / rect.height) * 100.0;
+
+            const hit = findMeasureAndBeatAtPoint(page, clickXPct, clickYPct);
+            if (hit) {
+                seekToBeat(hit.totalBeats, true);
+            }
+        }
+
+        function stopScrubbing() {
+            if (!isScrubbing) return;
+            isScrubbing = false;
+            document.body.style.userSelect = '';
+            updateActiveNotesUI(false);
+            setTimeout(() => {
+                for (let p = 1; p <= 7; p++) {
+                    const tip = document.getElementById(`cursorTooltip${p}`);
+                    if (tip && !isScrubbing && isPlaying) tip.style.display = 'none';
+                }
+            }, 2500);
+        }
+
+        window.addEventListener("pointermove", (e) => {
+            if (isScrubbing) {
+                handleScrubMove(lastScrubPage, e.clientX, e.clientY);
+            }
+        });
+
+        window.addEventListener("pointerup", stopScrubbing);
+        window.addEventListener("pointercancel", stopScrubbing);
 
         for (let p = 1; p <= 7; p++) {
             const overlay = document.getElementById(`pageOverlay${p}`);
             if (overlay) {
-                overlay.addEventListener("click", (e) => {
-                    const rect = overlay.getBoundingClientRect();
-                    const clickX = e.clientX - rect.left;
-                    const clickY = e.clientY - rect.top;
-                    const clickXPct = (clickX / rect.width) * 100.0;
-                    const clickYPct = (clickY / rect.height) * 100.0;
-
-                    const matchM = MEASURE_LAYOUT.find(m => {
-                        return m.page === p &&
-                            clickXPct >= (m.left_pct - 1.0) &&
-                            clickXPct <= (m.left_pct + m.width_pct + 1.0) &&
-                            clickYPct >= (m.top_pct - 2.5) &&
-                            clickYPct <= (m.top_pct + m.height_pct + 4.0);
-                    });
-
-                    if (matchM) {
-                        seekToBeat((matchM.number - 1) * 4);
-                    }
+                overlay.addEventListener("pointerdown", (e) => {
+                    if (e.button !== 0 && e.pointerType === "mouse") return;
+                    startScrubbing(p, e.clientX, e.clientY);
+                });
+            }
+            const curLine = document.getElementById(`cursorLine${p}`);
+            if (curLine) {
+                curLine.addEventListener("pointerdown", (e) => {
+                    e.stopPropagation();
+                    startScrubbing(p, e.clientX, e.clientY);
                 });
             }
         }
@@ -4239,9 +4639,13 @@
             if (fsPlayIcon) fsPlayIcon.textContent = "▶";
             if (origAudio) origAudio.pause();
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            // Keep blue playhead cursor visible and hold active notes on piano!
+            updateScorePlayhead();
+            updateActiveNotesUI(false);
         }
 
-        function seekToBeat(totalBeats) {
+        function seekToBeat(totalBeats, playSound = false) {
             if (origAudio) {
                 origAudio.currentTime = Math.max(0, totalBeats * (60.0 / BASE_BPM));
             }
@@ -4255,6 +4659,7 @@
 
             updateScrubberAndDisplay();
             updateScorePlayhead();
+            updateActiveNotesUI(playSound);
         }
 
         function playbackLoop(timestamp) {
@@ -4381,10 +4786,11 @@
 
             const targetPage = mDef.page;
 
+            // Always display active box and cursor on targetPage, even when paused!
             for (let p = 1; p <= 7; p++) {
                 const box = document.getElementById(`measureBox${p}`);
                 const cur = document.getElementById(`cursorLine${p}`);
-                if (p === targetPage && isPlaying) {
+                if (p === targetPage) {
                     if (box) box.style.display = "block";
                     if (cur) cur.style.display = "block";
                 } else {
@@ -4393,15 +4799,13 @@
                 }
             }
 
-            if (isPlaying && targetPage !== lastActivePage) {
+            if (targetPage !== lastActivePage) {
                 lastActivePage = targetPage;
                 const pageEl = document.getElementById(`sheetPage${targetPage}`);
-                if (pageEl) {
+                if (pageEl && (isPlaying || isScrubbing)) {
                     pageEl.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
             }
-
-            if (!isPlaying) return;
 
             const box = document.getElementById(`measureBox${targetPage}`);
             const cur = document.getElementById(`cursorLine${targetPage}`);
@@ -4414,11 +4818,15 @@
             box.style.width = `${mDef.width_pct}%`;
             box.style.height = `${mDef.height_pct + padH}%`;
 
-            const beatFrac = (currentBeat - 1.0) / 4.0;
+            const beatFrac = Math.max(0, Math.min(1.0, (currentBeat - 1.0) / 4.0));
             const curLeftPct = mDef.left_pct + beatFrac * mDef.width_pct;
             cur.style.left = `${curLeftPct}%`;
             cur.style.top = `${Math.max(0, mDef.top_pct - padTop)}%`;
             cur.style.height = `${mDef.height_pct + padH}%`;
+
+            if (!isPlaying && !isScrubbing) {
+                updateActiveNotesUI(false);
+            }
         }
 
         // -------------------------------------------------------------
@@ -5323,6 +5731,8 @@
 
         updateScrubberAndDisplay();
         updateEngagementUI();
+        updateScorePlayhead();
+        updateActiveNotesUI(false);
     </script>
 </body>
 </html>
