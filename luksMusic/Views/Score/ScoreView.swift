@@ -4,7 +4,8 @@
 // Authentic MuseScore iOS sheet music viewer.
 // Features pure white paper background, floating purple circular buttons,
 // expanded pill action menu (Image 4), compact 4-system portrait engraving,
-// teardrop playhead cursor, floating transport pill, and draggable bottom drawer (Image 2 & 3).
+// teardrop playhead cursor, floating transport pill, draggable bottom drawer (Image 2 & 3),
+// and fully functional Settings modal (Image 5 - Display Mode, HQ+ Sound, Keyboard, Transposition).
 
 import SwiftUI
 
@@ -13,6 +14,7 @@ struct ScoreView: View {
     @State private var showPracticeMode: Bool = false
     @State private var showEditorMode: Bool = false
     @State private var showMixerSheet: Bool = false
+    @State private var showSettingsSheet: Bool = false
     @State private var showExportShare: Bool = false
     @State private var showTopMenu: Bool = false
     @State private var exportURL: URL? = nil
@@ -20,6 +22,12 @@ struct ScoreView: View {
     
     // Zoom control
     @State private var zoomScale: CGFloat = 1.0
+    
+    // Settings state matching MuseScore Settings screen
+    @State private var displayMode: ScoreDisplayMode = .portraitView
+    @State private var hqSoundEnabled: Bool = true
+    @State private var showKeyboard: Bool = false
+    @State private var keyboardViewModel = PianoKeyboardViewModel(rangeStart: 48, rangeEnd: 84)
     
     // Bottom Drawer State (Expanded in Image 2 & 4, Collapsed in Image 3)
     @State private var isDrawerExpanded: Bool = true
@@ -46,78 +54,12 @@ struct ScoreView: View {
                 // Background Pure White matching MuseScore paper
                 Color.white.ignoresSafeArea()
                 
-                // Sheet Music Area (Continuous Vertical Flow - 3 to 4 Systems Visible)
-                ScrollViewReader { scrollProxy in
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 14) {
-                            // Top spacing for floating back/action buttons
-                            Spacer().frame(height: 52)
-                            
-                            // Score Title (Classic MuseScore Serif Typography)
-                            VStack(spacing: 3) {
-                                Text("DARK DREAM (LOTM ED)")
-                                    .font(.system(size: 19, weight: .regular, design: .serif))
-                                    .tracking(0.8)
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.black)
-                                
-                                Text("Curley Gao • Arr. lukscli")
-                                    .font(.system(size: 11, weight: .regular, design: .serif))
-                                    .foregroundColor(Color.black.opacity(0.65))
-                            }
-                            .padding(.top, 4)
-                            .padding(.bottom, 6)
-                            
-                            // Vertical Grand Staff Systems (Compact lineSpacing allows 4 systems on screen)
-                            ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
-                                let isCurrent = (index == viewModel.currentMeasureIndex)
-                                let isFirstMeasure = (index == 0)
-                                let leftWidth: CGFloat = isFirstMeasure ? 64.0 : 48.0
-                                let systemWidth = max(260.0, geometry.size.width - 24.0)
-                                let measureWidth = systemWidth - leftWidth
-                                let lineSpacing: CGFloat = 6.4 * zoomScale
-                                
-                                HStack(alignment: .top, spacing: 0) {
-                                    // Left Clefs, Signatures & Grand Staff Brace
-                                    StaffView(
-                                        lineSpacing: lineSpacing,
-                                        keySignatureValue: viewModel.score.keySignatureValue,
-                                        timeSignatureTop: viewModel.score.timeSignatureTop,
-                                        timeSignatureBottom: viewModel.score.timeSignatureBottom,
-                                        showClefsAndSignatures: true,
-                                        showTimeSignature: isFirstMeasure
-                                    )
-                                    .frame(width: leftWidth)
-                                    
-                                    // Measure Notes, Triplets, Lyrics, Pedal Line & Teardrop Cursor
-                                    MeasureView(
-                                        measure: measure,
-                                        isCurrent: isCurrent,
-                                        currentBeat: viewModel.currentBeat,
-                                        lineSpacing: lineSpacing,
-                                        measureWidth: measureWidth,
-                                        showMeasureNumber: true,
-                                        showTempoAndDynamics: isFirstMeasure
-                                    )
-                                }
-                                .id(index)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    viewModel.seekToMeasure(index)
-                                }
-                            }
-                            
-                            // Bottom padding so last measure is not blocked
-                            Spacer().frame(height: isDrawerExpanded ? 320 : 120)
-                        }
-                        .padding(.horizontal, 12)
-                    }
-                    .background(Color.white)
-                    .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            scrollProxy.scrollTo(newIndex, anchor: .center)
-                        }
-                    }
+                // Sheet Music Area based on selected Display Mode
+                switch displayMode {
+                case .singleLine:
+                    singleLineScoreView(geometry: geometry)
+                case .verticalScroll, .portraitView:
+                    verticalScoreView(geometry: geometry)
                 }
                 
                 // Floating Top Left Back Button (Circular MuseScore Deep Purple)
@@ -172,9 +114,9 @@ struct ScoreView: View {
                                 .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
                         }
                         
-                        // 3. Settings / Mixer Button
+                        // 3. Settings Button (Opens authentic MuseScore Settings Sheet)
                         Button {
-                            showMixerSheet = true
+                            showSettingsSheet = true
                         } label: {
                             Circle()
                                 .fill(musePurple)
@@ -227,9 +169,14 @@ struct ScoreView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 
-                // Bottom Layer: Transport Pill + Draggable Bottom Drawer
-                VStack(spacing: 10) {
+                // Bottom Layer: Interactive Piano Keyboard + Transport Pill + Draggable Bottom Drawer
+                VStack(spacing: 8) {
                     Spacer()
+                    
+                    // Interactive Piano Keyboard (when toggled on in Settings)
+                    if showKeyboard {
+                        interactiveKeyboardDock
+                    }
                     
                     // Floating MuseScore Transport Bar Pill
                     floatingTransportPill
@@ -250,6 +197,9 @@ struct ScoreView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .onChange(of: viewModel.activeMidiNotes) { _, activeMidi in
+            keyboardViewModel.midiActiveKeys = activeMidi
+        }
         .sheet(isPresented: $showPracticeMode) {
             PracticeView(score: viewModel.score)
         }
@@ -260,11 +210,213 @@ struct ScoreView: View {
             handsMixerSheet
                 .presentationDetents([.fraction(0.38)])
         }
+        .sheet(isPresented: $showSettingsSheet) {
+            ScoreSettingsView(
+                viewModel: viewModel,
+                displayMode: $displayMode,
+                hqSoundEnabled: $hqSoundEnabled,
+                showKeyboard: $showKeyboard
+            )
+            .presentationDetents([.fraction(0.68)])
+            .presentationDragIndicator(.hidden)
+        }
         .sheet(isPresented: $showExportShare) {
             if let url = exportURL {
                 ShareSheet(items: [url])
             }
         }
+    }
+    
+    // MARK: - Vertical / Portrait View
+    
+    @ViewBuilder
+    private func verticalScoreView(geometry: GeometryProxy) -> some View {
+        ScrollViewReader { scrollProxy in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: displayMode == .portraitView ? 14 : 20) {
+                    // Top spacing for floating back/action buttons
+                    Spacer().frame(height: 52)
+                    
+                    // Score Title (Classic MuseScore Serif Typography)
+                    VStack(spacing: 3) {
+                        Text("DARK DREAM (LOTM ED)")
+                            .font(.system(size: 19, weight: .regular, design: .serif))
+                            .tracking(0.8)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.black)
+                        
+                        Text("Curley Gao • Arr. lukscli")
+                            .font(.system(size: 11, weight: .regular, design: .serif))
+                            .foregroundColor(Color.black.opacity(0.65))
+                    }
+                    .padding(.top, 4)
+                    .padding(.bottom, 6)
+                    
+                    // Vertical Grand Staff Systems
+                    ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
+                        let isCurrent = (index == viewModel.currentMeasureIndex)
+                        let isFirstMeasure = (index == 0)
+                        let leftWidth: CGFloat = isFirstMeasure ? 64.0 : 48.0
+                        let systemWidth = max(260.0, geometry.size.width - 24.0)
+                        let measureWidth = systemWidth - leftWidth
+                        let lineSpacing: CGFloat = (displayMode == .portraitView ? 6.4 : 7.2) * zoomScale
+                        
+                        HStack(alignment: .top, spacing: 0) {
+                            // Left Clefs, Signatures & Grand Staff Brace
+                            StaffView(
+                                lineSpacing: lineSpacing,
+                                keySignatureValue: viewModel.currentKeySignatureValue,
+                                timeSignatureTop: viewModel.score.timeSignatureTop,
+                                timeSignatureBottom: viewModel.score.timeSignatureBottom,
+                                showClefsAndSignatures: true,
+                                showTimeSignature: isFirstMeasure
+                            )
+                            .frame(width: leftWidth)
+                            
+                            // Measure Notes, Triplets, Lyrics, Pedal Line & Teardrop Cursor
+                            MeasureView(
+                                measure: measure,
+                                isCurrent: isCurrent,
+                                currentBeat: viewModel.currentBeat,
+                                lineSpacing: lineSpacing,
+                                measureWidth: measureWidth,
+                                showMeasureNumber: true,
+                                showTempoAndDynamics: isFirstMeasure
+                            )
+                        }
+                        .id(index)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            viewModel.seekToMeasure(index)
+                        }
+                    }
+                    
+                    // Bottom padding so last measure is not blocked
+                    Spacer().frame(height: isDrawerExpanded ? 340 : (showKeyboard ? 260 : 120))
+                }
+                .padding(.horizontal, 12)
+            }
+            .background(Color.white)
+            .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    scrollProxy.scrollTo(newIndex, anchor: .center)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Single Line (Horizontal Flow) Display Mode
+    
+    @ViewBuilder
+    private func singleLineScoreView(geometry: GeometryProxy) -> some View {
+        ScrollViewReader { scrollProxy in
+            VStack {
+                Spacer().frame(height: 70)
+                
+                // Score Title
+                VStack(spacing: 2) {
+                    Text("DARK DREAM (LOTM ED)")
+                        .font(.system(size: 17, weight: .regular, design: .serif))
+                        .tracking(0.6)
+                        .foregroundColor(.black)
+                    Text("Curley Gao • Arr. lukscli")
+                        .font(.system(size: 11, design: .serif))
+                        .foregroundColor(.gray)
+                }
+                .padding(.bottom, 12)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 0) {
+                        ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
+                            let isCurrent = (index == viewModel.currentMeasureIndex)
+                            let isFirstMeasure = (index == 0)
+                            let leftWidth: CGFloat = isFirstMeasure ? 64.0 : 44.0
+                            let measureWidth: CGFloat = 280.0 * zoomScale
+                            let lineSpacing: CGFloat = 7.0 * zoomScale
+                            
+                            HStack(alignment: .top, spacing: 0) {
+                                StaffView(
+                                    lineSpacing: lineSpacing,
+                                    keySignatureValue: viewModel.currentKeySignatureValue,
+                                    timeSignatureTop: viewModel.score.timeSignatureTop,
+                                    timeSignatureBottom: viewModel.score.timeSignatureBottom,
+                                    showClefsAndSignatures: true,
+                                    showTimeSignature: isFirstMeasure
+                                )
+                                .frame(width: leftWidth)
+                                
+                                MeasureView(
+                                    measure: measure,
+                                    isCurrent: isCurrent,
+                                    currentBeat: viewModel.currentBeat,
+                                    lineSpacing: lineSpacing,
+                                    measureWidth: measureWidth,
+                                    showMeasureNumber: true,
+                                    showTempoAndDynamics: isFirstMeasure
+                                )
+                            }
+                            .id(index)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                viewModel.seekToMeasure(index)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                }
+                .frame(height: 180)
+                
+                Spacer()
+            }
+            .background(Color.white)
+            .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    scrollProxy.scrollTo(newIndex, anchor: .center)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Interactive Piano Keyboard Dock
+    
+    @ViewBuilder
+    private var interactiveKeyboardDock: some View {
+        VStack(spacing: 4) {
+            HStack {
+                Text("Piano Interativo (C3 - C6)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color.black.opacity(0.6))
+                Spacer()
+                Button {
+                    withAnimation {
+                        showKeyboard = false
+                    }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 15))
+                        .foregroundColor(Color.black.opacity(0.4))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
+            
+            PianoKeyboardView(
+                viewModel: keyboardViewModel,
+                onKeyPress: { midiNote in
+                    AudioEngineService.shared.playNote(midiNote: UInt8(midiNote), velocity: 90)
+                },
+                onKeyRelease: { midiNote in
+                    AudioEngineService.shared.stopNote(midiNote: UInt8(midiNote))
+                }
+            )
+            .frame(height: 112)
+        }
+        .padding(.bottom, 4)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.12), radius: 6, y: -2)
+        .padding(.horizontal, 8)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
     
     // MARK: - Floating Transport Pill (Image 2 & 3 Parity)
@@ -537,6 +689,18 @@ struct ScoreView: View {
             .padding(.top, 10)
             
             Divider()
+            
+            // Settings Button
+            Button {
+                showTopMenu = false
+                showSettingsSheet = true
+            } label: {
+                Label("Configurações (Settings)", systemImage: "gearshape.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+            }
             
             // Practice Mode Button
             Button {
