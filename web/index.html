@@ -3,27 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>luksMusic - Dark Dream (MuseScore Exact Score 1-31)</title>
-    <link rel="stylesheet" href="bravura.css">
+    <title>luksMusic - Biblioteca & Partituras Interativas</title>
+    <!-- Firebase SDK Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <!-- Tone.js for Sampled Concert Grand Piano -->
     <script src="Tone.js"></script>
+    <!-- Score Data & Measure Layout (Measures 1 to 56) -->
+    <script src="dark_dream_score.js"></script>
     <style>
         :root {
-            --app-bg: #0f172a;
-            --panel-bg: #1e293b;
+            --app-bg: #0b1120;
+            --panel-bg: #111827;
+            --panel-header: #1e293b;
             --panel-border: #334155;
             --accent-blue: #3b82f6;
             --accent-cyan: #38bdf8;
             --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --paper-bg: #ffffff;
-            --ink-color: #000000;
         }
 
         * {
             box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         body {
@@ -38,17 +45,383 @@
             overflow: hidden;
         }
 
-        /* 1. TOP HEADER */
-        header {
+        /* View Containers */
+        .app-view {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .app-view.active-view {
+            display: flex;
+        }
+
+        /* ---------------------------------------------------------
+           1. LOGIN VIEW
+           --------------------------------------------------------- */
+        #loginView {
+            background: radial-gradient(circle at 50% 20%, #1e293b 0%, #0b1120 70%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #loginView.active-view {
+            display: flex;
+        }
+
+        .login-card {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 40px 36px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.15);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .login-brand-badge {
+            background: linear-gradient(135deg, #2563eb, #38bdf8);
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+            padding: 6px 16px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .login-card h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .login-card p {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .btn-google-auth {
+            background: #ffffff;
+            color: #1f2937;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-google-auth:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .google-icon-svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .login-disclaimer {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .login-status-msg {
+            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+            display: none;
+        }
+
+        .login-status-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+        }
+
+        .login-status-msg.info {
+            display: block;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid #3b82f6;
+            color: #93c5fd;
+        }
+
+        /* ---------------------------------------------------------
+           2. LIBRARY VIEW (Song selection screen)
+           --------------------------------------------------------- */
+        .library-header {
+            background: var(--panel-header);
+            border-bottom: 1px solid var(--panel-border);
+            padding: 12px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .user-profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 4px 14px 4px 6px;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            object-fit: cover;
+        }
+
+        .user-email-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #475569;
+            color: #94a3b8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-logout:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .library-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 36px 32px;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .library-title-row {
+            margin-bottom: 24px;
+        }
+
+        .library-title-row h2 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .library-title-row p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .songs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .song-card {
             background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .song-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(59, 130, 246, 0.2);
+        }
+
+        .song-card.locked {
+            opacity: 0.65;
+            border-color: #475569;
+        }
+
+        .song-card.locked:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: #475569;
+        }
+
+        .song-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .song-card-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .song-card-meta {
+            margin: 4px 0 0;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .badge-access {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .badge-access.private {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
+        .badge-access.locked {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .song-card-details {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 11px;
+            color: #cbd5e1;
+            border-top: 1px solid #1e293b;
+            padding-top: 12px;
+        }
+
+        .song-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-open-score {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-open-score:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            transform: scale(1.02);
+        }
+
+        .btn-open-score.disabled {
+            background: #334155;
+            color: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* ---------------------------------------------------------
+           3. PLAYER VIEW (Sheet music, toolbar, mixer & virtual piano)
+           --------------------------------------------------------- */
+        header.player-header {
+            background: var(--panel-header);
             border-bottom: 1px solid var(--panel-border);
             padding: 8px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            z-index: 20;
-            height: 54px;
+            z-index: 30;
+            height: 56px;
             flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .btn-back-lib {
+            background: #0f172a;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+
+        .btn-back-lib:hover {
+            border-color: var(--accent-blue);
+            color: #ffffff;
+            background: #1e293b;
         }
 
         .brand-section {
@@ -62,19 +435,22 @@
             color: white;
             font-weight: 800;
             font-size: 13px;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
         }
 
         .song-info h1 {
             margin: 0;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 700;
             color: var(--text-main);
+            letter-spacing: 0.3px;
         }
 
         .song-info p {
-            margin: 1px 0 0;
+            margin: 2px 0 0;
             font-size: 11px;
             color: var(--text-muted);
         }
@@ -86,13 +462,13 @@
         }
 
         button.btn-ctrl {
-            background: #334155;
+            background: #1e293b;
             color: #f1f5f9;
             border: 1px solid #475569;
             border-radius: 6px;
-            padding: 6px 12px;
+            padding: 6px 14px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -101,35 +477,37 @@
         }
 
         button.btn-ctrl:hover {
-            background: #475569;
+            background: #334155;
             color: #ffffff;
+            border-color: #64748b;
         }
 
         button.btn-ctrl.active {
             background: #1e3a8a;
             border-color: var(--accent-blue);
             color: #93c5fd;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
         }
 
         button.btn-play-hero {
-            background: var(--accent-blue);
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            transition: transform 0.15s;
+            font-size: 17px;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.5);
+            transition: transform 0.15s, background 0.15s;
         }
 
         button.btn-play-hero:hover {
-            transform: scale(1.06);
-            background: #2563eb;
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
         }
 
         .metronome-dot {
@@ -142,11 +520,11 @@
         }
         .metronome-dot.flash-downbeat {
             background: #ef4444;
-            box-shadow: 0 0 8px #ef4444;
+            box-shadow: 0 0 10px #ef4444;
         }
         .metronome-dot.flash-subbeat {
             background: #eab308;
-            box-shadow: 0 0 8px #eab308;
+            box-shadow: 0 0 10px #eab308;
         }
 
         .header-tools {
@@ -173,6 +551,7 @@
             font-weight: 600;
             border-radius: 4px;
             cursor: pointer;
+            transition: all 0.1s;
         }
 
         .speed-btn.active {
@@ -180,42 +559,32 @@
             color: #38bdf8;
         }
 
-        .audio-status {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 12px;
-            background: #14532d;
-            color: #86efac;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* 2. MAIN WORKSPACE: SCORE SCROLL AREA (100% UNOBSTRUCTED) */
         .score-scroll-area {
             flex: 1;
             overflow-y: auto;
             overflow-x: auto;
-            background: #334155;
-            padding: 24px 20px 40px;
+            background: #1e293b;
+            padding: 28px 20px 48px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 36px;
+            scroll-behavior: smooth;
         }
 
         .sheet-paper {
             background: var(--paper-bg);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-            padding: 28px 44px 40px;
-            border-radius: 3px;
-            min-width: 960px;
-            max-width: 1040px;
-            width: 1000px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.45);
+            padding: 0;
+            border-radius: 4px;
+            width: 900px;
+            height: 1272.7px;
+            position: relative;
+            flex-shrink: 0;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 24px;
-            position: relative;
+            cursor: pointer;
         }
 
         .page-badge {
@@ -224,81 +593,202 @@
             right: 24px;
             font-family: serif;
             font-size: 14px;
-            font-weight: bold;
-            color: #475569;
-        }
-
-        /* System Rows */
-        .system-row {
-            display: flex;
-            align-items: center;
-            position: relative;
-            cursor: pointer;
-        }
-
-        
-        .bravura { font-family: 'Bravura', serif; }
-        .music-text { font-family: 'Edwin', 'Liberation Serif', 'DejaVu Serif', 'Times New Roman', serif; }
-
-        svg.system-svg {
-            width: 100%;
-            height: 220px;
-            overflow: visible;
-        }
-
-        .playback-cursor {
-            position: absolute;
-            top: 24px;
-            width: 3px;
-            height: 175px;
-            background: #2563eb;
-            opacity: 0.55;
-            box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
-            pointer-events: none;
-            transition: left 0.03s linear;
-            display: none;
+            font-weight: 700;
+            color: #64748b;
             z-index: 10;
+            pointer-events: none;
         }
 
-        /* 3. BOTTOM DOCK: SCRUBBER + HANDS MIXER & PIANO KEYBOARD TOGETHER */
-        .bottom-dock {
-            background: #111827;
-            border-top: 1px solid var(--panel-border);
+        .page-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .score-svg-img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            pointer-events: none;
+            object-fit: contain;
+        }
+
+        .page-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+        }
+
+        .active-measure-box {
+            position: absolute;
+            background: rgba(56, 189, 248, 0.14);
+            border: 1.5px solid rgba(56, 189, 248, 0.6);
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
+            transition: all 0.08s ease-out;
+        }
+
+        .playback-cursor-line {
+            position: absolute;
+            width: 3px;
+            background: #2563eb;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.8), 0 0 2px #38bdf8;
+            pointer-events: none;
+            display: none;
+            z-index: 6;
+            border-radius: 1px;
+            transition: left 0.03s linear;
+        }
+
+        /* Mixer HUD */
+        .mixer-hud {
+            position: fixed;
+            top: 70px;
+            right: 24px;
+            width: 330px;
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.15);
+            z-index: 50;
             display: flex;
             flex-direction: column;
-            z-index: 25;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
-            flex-shrink: 0;
+            overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
         }
 
-        .timeline-bar {
+        .mixer-hud.hidden {
+            transform: translateY(-15px) scale(0.96);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mixer-hud-header {
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.8);
+            border-bottom: 1px solid #334155;
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 6px 24px;
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
+            justify-content: space-between;
         }
 
-        .time-display {
-            font-family: monospace;
-            font-size: 12px;
-            font-weight: 600;
-            color: #38bdf8;
-            min-width: 85px;
+        .mixer-hud-title span:first-child {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .measure-badge-btn {
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: #cbd5e1;
-            padding: 2px 10px;
+        .mixer-subtitle {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .mixer-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
             border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
         }
 
-        .scrubber-slider {
+        .mixer-close-btn:hover {
+            color: #ffffff;
+            background: #334155;
+        }
+
+        .mixer-hud-body {
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .mixer-channel-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rh-channel { border-left: 3px solid var(--accent-cyan); }
+        .lh-channel { border-left: 3px solid var(--accent-green); }
+
+        .channel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .channel-identity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .channel-clef { font-size: 18px; font-weight: 700; }
+        .rh-channel .channel-clef { color: var(--accent-cyan); }
+        .lh-channel .channel-clef { color: var(--accent-green); }
+
+        .channel-title { font-size: 12px; font-weight: 700; color: #f8fafc; }
+        .channel-desc { font-size: 10px; color: #94a3b8; }
+
+        .channel-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .channel-btn-mute, .channel-btn-solo {
+            width: 26px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+
+        .channel-btn-mute.active {
+            background: #ef4444 !important;
+            border-color: #f87171 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        .channel-btn-solo.active {
+            background: #eab308 !important;
+            border-color: #fde047 !important;
+            color: #0f172a !important;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.6);
+        }
+
+        .channel-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modern-slider {
             flex: 1;
             -webkit-appearance: none;
             appearance: none;
@@ -309,116 +799,172 @@
             cursor: pointer;
         }
 
-        .scrubber-slider::-webkit-slider-thumb {
+        .modern-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: var(--accent-blue);
+            background: var(--accent-cyan);
             cursor: pointer;
-            box-shadow: 0 0 6px rgba(59, 130, 246, 0.8);
+            box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
         }
 
-        /* Bottom Controls Row: Mixer Integrated Beside Piano */
-        .dock-controls-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            padding: 8px 16px 10px;
-            background: linear-gradient(180deg, #182234 0%, #0d131f 100%);
+        .lh-channel .modern-slider::-webkit-slider-thumb {
+            background: var(--accent-green);
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.8);
         }
 
-        /* Embedded Compact Mixer Panel (Never covers sheet!) */
-        .bottom-mixer-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 8px 12px;
-            width: 250px;
-            flex-shrink: 0;
-        }
-
-        .mixer-title-row {
-            display: flex;
-            justify-content: space-between;
+        .vol-percentage {
+            font-family: monospace;
             font-size: 11px;
             font-weight: 700;
             color: #cbd5e1;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 4px;
+            min-width: 36px;
+            text-align: right;
         }
 
-        .hand-control-strip {
+        .mixer-presets-row {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 11px;
+            margin-top: 4px;
         }
 
-        .hand-control-strip span.hand-name {
-            width: 75px;
+        .preset-btn {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            color: #cbd5e1;
+            font-size: 10px;
             font-weight: 600;
-            white-space: nowrap;
+            padding: 5px 0;
+            cursor: pointer;
+            transition: all 0.15s;
         }
 
-        .btn-mute, .btn-solo {
-            background: #334155;
-            border: none;
-            color: #94a3b8;
-            font-size: 9px;
+        .preset-btn:hover { background: #334155; color: #ffffff; }
+
+        /* Bottom dock */
+        .bottom-dock {
+            background: #0f172a;
+            border-top: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            z-index: 25;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+
+        .timeline-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 8px 24px;
+            background: #111827;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .time-display {
+            font-family: monospace;
+            font-size: 12px;
             font-weight: 700;
-            padding: 2px 6px;
+            color: #38bdf8;
+            min-width: 95px;
+        }
+
+        .measure-badge-btn {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 3px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .scrubber-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
             border-radius: 3px;
+            background: #334155;
+            outline: none;
             cursor: pointer;
         }
 
-        .btn-mute.active { background: #dc2626; color: white; }
-        .btn-solo.active { background: #eab308; color: black; }
-
-        .hand-control-strip input[type="range"] {
-            flex: 1;
-            height: 3px;
-            accent-color: var(--accent-blue);
+        .scrubber-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #38bdf8;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
+            border: 2px solid #ffffff;
         }
 
-        /* 61-Key Virtual Piano Frame */
+        .mini-mixer-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: all 0.15s;
+        }
+
+        .mini-mixer-pill:hover { border-color: var(--accent-cyan); color: #ffffff; }
+
+        .dock-keyboard-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 16px 8px;
+            background: linear-gradient(180deg, #111827 0%, #080d1a 100%);
+            overflow-x: auto;
+        }
+
         .keyboard-frame {
             position: relative;
-            display: flex;
             background: #000000;
-            padding: 4px 6px;
+            padding: 4px;
             border-radius: 6px;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8), 0 4px 14px rgba(0,0,0,0.6);
-            height: 88px;
-            overflow: visible;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.9), 0 4px 16px rgba(0,0,0,0.7);
+            height: 84px;
         }
 
         .white-key {
             width: 22px;
-            height: 80px;
+            height: 76px;
             background: linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%);
             border: 1px solid #94a3b8;
             border-radius: 0 0 3px 3px;
-            position: relative;
+            position: absolute;
+            top: 4px;
             cursor: pointer;
             z-index: 1;
             box-shadow: inset 0 -3px 4px rgba(0,0,0,0.15);
-            transition: background 0.05s ease;
+            transition: background 0.04s ease;
         }
 
         .white-key.active-rh {
             background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%) !important;
-            box-shadow: 0 0 10px #38bdf8 !important;
+            box-shadow: 0 0 12px #38bdf8 !important;
         }
 
         .white-key.active-lh {
             background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%) !important;
-            box-shadow: 0 0 10px #4ade80 !important;
+            box-shadow: 0 0 12px #4ade80 !important;
         }
 
         .white-key-label {
@@ -433,797 +979,744 @@
         }
 
         .black-key {
-            width: 13px;
-            height: 50px;
+            width: 14px;
+            height: 48px;
             background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
             border: 1px solid #000000;
             border-radius: 0 0 3px 3px;
             position: absolute;
+            top: 4px;
             z-index: 2;
             cursor: pointer;
-            box-shadow: 1px 2px 4px rgba(0,0,0,0.6);
-            transition: background 0.05s ease;
+            box-shadow: 1px 2px 5px rgba(0,0,0,0.7);
+            transition: background 0.04s ease;
         }
 
-        .black-key.active-rh {
-            background: #0284c7 !important;
-            box-shadow: 0 0 8px #38bdf8 !important;
-        }
-
-        .black-key.active-lh {
-            background: #15803d !important;
-            box-shadow: 0 0 8px #4ade80 !important;
-        }
+        .black-key.active-rh { background: #0284c7 !important; box-shadow: 0 0 10px #38bdf8 !important; }
+        .black-key.active-lh { background: #15803d !important; box-shadow: 0 0 10px #4ade80 !important; }
     </style>
 </head>
 <body>
 
-    <!-- 1. HEADER -->
-    <header>
-        <div class="brand-section">
-            <span class="brand-badge">luksMusic</span>
-            <div class="song-info">
-                <h1>DARK DREAM (LOTM ED)</h1>
-                <p>Curley Gao • Arr. 11Minnie11 • C Minor / Eb Major • 70 BPM • 31 Compassos</p>
+    <!-- =========================================================
+         VIEW 1: LOGIN VIEW (Entrar no luksMusic com Google)
+         ========================================================= -->
+    <div id="loginView" class="app-view active-view">
+        <div class="login-card">
+            <span class="login-brand-badge">luksMusic</span>
+            <div>
+                <h2>Bem-vindo ao luksMusic</h2>
+                <p>Acesse o estúdio interativo de partituras e treino de piano com sincronização em tempo real.</p>
             </div>
-        </div>
 
-        <div class="playback-main-controls">
-            <button id="rewindBtn" class="btn-ctrl" title="Voltar ao Início">⏮</button>
-            <button id="playBtn" class="btn-play-hero" title="Tocar / Pausar">▶</button>
-            <button id="loopBtn" class="btn-ctrl" title="Repetir Seção A-B">🔁 Loop</button>
-            <button id="metronomeBtn" class="btn-ctrl" title="Metrônomo">
-                <span id="metroDot" class="metronome-dot"></span> Metrônomo
+            <div id="loginStatusMsg" class="login-status-msg"></div>
+
+            <button id="googleSignInBtn" class="btn-google-auth">
+                <svg class="google-icon-svg" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Continuar com o Google</span>
+            </button>
+
+            <div class="login-disclaimer">
+                <span>🔒</span>
+                <span>A partitura <b>Dark Dream (LOTM ED)</b> é de acesso privado, restrita exclusivamente à conta <b>lukscli@gmail.com</b>.</span>
+            </div>
+
+            <!-- Botão de acesso rápido para verificação de desenvolvimento -->
+            <button id="quickDevAuthBtn" style="background: transparent; border: none; color: #64748b; font-size: 11px; cursor: pointer; text-decoration: underline;">
+                Entrar diretamente como lukscli@gmail.com (Verificação)
             </button>
         </div>
-
-        <div class="header-tools">
-            <div class="speed-selector">
-                <button class="speed-btn" data-speed="0.5">0.5x</button>
-                <button class="speed-btn" data-speed="0.75">0.75x</button>
-                <button class="speed-btn active" data-speed="1.0">1.0x</button>
-                <button class="speed-btn" data-speed="1.25">1.25x</button>
-            </div>
-
-            <div id="audioStatusBadge" class="audio-status">
-                <span>●</span> Steinway Grand
-            </div>
-        </div>
-    </header>
-
-    <!-- 2. MAIN WORKSPACE: 4 CONTINUOUS AUTHENTIC SHEETS (100% UNOBSTRUCTED) -->
-    <div class="score-scroll-area" id="scoreScrollArea">
-
-        <!-- PAGE 1 (Measures 1 to 9) -->
-        <div class="sheet-paper" id="page1Paper">
-            <div class="page-badge">1</div>
-            <!-- Sys 0: M1, M2 -->
-            <div class="system-row" id="sysRow0" data-system="0">
-                <div class="playback-cursor" id="cursor0"></div>
-                <svg id="sys0Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 1: M3, M4, M5 -->
-            <div class="system-row" id="sysRow1" data-system="1">
-                <div class="playback-cursor" id="cursor1"></div>
-                <svg id="sys1Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 2: M6, M7, M8 -->
-            <div class="system-row" id="sysRow2" data-system="2">
-                <div class="playback-cursor" id="cursor2"></div>
-                <svg id="sys2Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 3: M9 -->
-            <div class="system-row" id="sysRow3" data-system="3">
-                <div class="playback-cursor" id="cursor3"></div>
-                <svg id="sys3Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-        </div>
-
-        <!-- PAGE 2 (Measures 10 to 17) -->
-        <div class="sheet-paper" id="page2Paper">
-            <div class="page-badge">2</div>
-            <!-- Sys 4: M10 -->
-            <div class="system-row" id="sysRow4" data-system="4">
-                <div class="playback-cursor" id="cursor4"></div>
-                <svg id="sys4Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 5: M11 -->
-            <div class="system-row" id="sysRow5" data-system="5">
-                <div class="playback-cursor" id="cursor5"></div>
-                <svg id="sys5Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 6: M12, M13 -->
-            <div class="system-row" id="sysRow6" data-system="6">
-                <div class="playback-cursor" id="cursor6"></div>
-                <svg id="sys6Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 7: M14, M15 -->
-            <div class="system-row" id="sysRow7" data-system="7">
-                <div class="playback-cursor" id="cursor7"></div>
-                <svg id="sys7Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 8: M16, M17 -->
-            <div class="system-row" id="sysRow8" data-system="8">
-                <div class="playback-cursor" id="cursor8"></div>
-                <svg id="sys8Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-        </div>
-
-        <!-- PAGE 3 (Measures 18 to 23) -->
-        <div class="sheet-paper" id="page3Paper">
-            <div class="page-badge">3</div>
-            <!-- Sys 9: M18 -->
-            <div class="system-row" id="sysRow9" data-system="9">
-                <div class="playback-cursor" id="cursor9"></div>
-                <svg id="sys9Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 10: M19, M20 -->
-            <div class="system-row" id="sysRow10" data-system="10">
-                <div class="playback-cursor" id="cursor10"></div>
-                <svg id="sys10Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 11: M21 -->
-            <div class="system-row" id="sysRow11" data-system="11">
-                <div class="playback-cursor" id="cursor11"></div>
-                <svg id="sys11Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 12: M22, M23 -->
-            <div class="system-row" id="sysRow12" data-system="12">
-                <div class="playback-cursor" id="cursor12"></div>
-                <svg id="sys12Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-        </div>
-
-        <!-- PAGE 4 (Measures 24 to 31) -->
-        <div class="sheet-paper" id="page4Paper">
-            <div class="page-badge">4</div>
-            <!-- Sys 13: M24, M25 -->
-            <div class="system-row" id="sysRow13" data-system="13">
-                <div class="playback-cursor" id="cursor13"></div>
-                <svg id="sys13Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 14: M26, M27 -->
-            <div class="system-row" id="sysRow14" data-system="14">
-                <div class="playback-cursor" id="cursor14"></div>
-                <svg id="sys14Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 15: M28, M29 -->
-            <div class="system-row" id="sysRow15" data-system="15">
-                <div class="playback-cursor" id="cursor15"></div>
-                <svg id="sys15Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-            <!-- Sys 16: M30, M31 -->
-            <div class="system-row" id="sysRow16" data-system="16">
-                <div class="playback-cursor" id="cursor16"></div>
-                <svg id="sys16Svg" class="system-svg" viewBox="0 0 1000 220"></svg>
-            </div>
-        </div>
-
     </div>
 
-    <!-- 3. BOTTOM DOCK: SCRUBBER + EMBEDDED MIXER + VIRTUAL PIANO -->
-    <div class="bottom-dock">
-        <!-- Scrubber Progress Bar -->
-        <div class="timeline-bar">
-            <span id="timeElapsedDisplay" class="time-display">00:00 / 01:46</span>
-            <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="124" step="0.05" value="0">
-            <span id="measurePill" class="measure-badge-btn">Compasso 1 / 31</span>
-        </div>
+    <!-- =========================================================
+         VIEW 2: LIBRARY VIEW (Biblioteca de Músicas)
+         ========================================================= -->
+    <div id="libraryView" class="app-view">
+        <header class="library-header">
+            <div class="brand-section">
+                <span class="brand-badge">luksMusic</span>
+                <span style="font-weight: 700; font-size: 14px; color: #cbd5e1;">Biblioteca de Partituras</span>
+            </div>
 
-        <div class="dock-controls-row">
-            <!-- Non-Obstructive Hands Mixer (Docked beside piano) -->
-            <div class="bottom-mixer-panel">
-                <div class="mixer-title-row">
-                    <span>🎛️ Mixer de Mãos</span>
-                    <span style="color: #64748b;">Volume / Mudo</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="user-profile-badge">
+                    <img id="userAvatarImg" class="user-avatar" src="" alt="Avatar" style="display: none;">
+                    <div id="userAvatarFallback" class="user-avatar">L</div>
+                    <span id="userEmailSpan" class="user-email-text">lukscli@gmail.com</span>
                 </div>
-                <!-- Right Hand -->
-                <div class="hand-control-strip">
-                    <span class="hand-name" style="color: var(--accent-cyan);">𝄞 M. Direita</span>
-                    <button id="rhMuteBtn" class="btn-mute">M</button>
-                    <button id="rhSoloBtn" class="btn-solo">S</button>
-                    <input type="range" id="rhVolSlider" min="0" max="100" value="90">
+                <button id="logoutBtn" class="btn-logout" title="Sair da Conta">Sair</button>
+            </div>
+        </header>
+
+        <main class="library-body">
+            <div class="library-title-row">
+                <h2>Minhas Partituras</h2>
+                <p>Selecione uma música para abrir o reprodutor interativo com mixer de mãos e teclado.</p>
+            </div>
+
+            <div class="songs-grid">
+                <!-- Card 1: Dark Dream (LOTM ED) -->
+                <div class="song-card" id="lotmSongCard">
+                    <div class="song-card-header">
+                        <div>
+                            <h3 class="song-card-title">DARK DREAM (LOTM ED)</h3>
+                            <p class="song-card-meta">Curley Gao • Arr. 11Minnie11 • Lord of the Mysteries</p>
+                        </div>
+                        <span id="lotmAccessBadge" class="badge-access private">🔒 lukscli@gmail.com</span>
+                    </div>
+
+                    <div class="song-card-details">
+                        <div class="song-detail-item">
+                            <span>🎼</span> <span>56 Compassos</span>
+                        </div>
+                        <div class="song-detail-item">
+                            <span>⏱</span> <span>~03:12</span>
+                        </div>
+                        <div class="song-detail-item">
+                            <span>📄</span> <span>7 Páginas (Oficial MuseScore)</span>
+                        </div>
+                    </div>
+
+                    <div id="lotmAccessNotice" style="display: none; font-size: 11px; color: #f87171; line-height: 1.4;">
+                        ⚠️ Acesso restrito: Esta partitura está vinculada exclusivamente à conta <b>lukscli@gmail.com</b>. Alterne para a conta autorizada para tocar.
+                    </div>
+
+                    <button id="openLotmBtn" class="btn-open-score">
+                        <span>▶</span> <span>Abrir Partitura Interativa</span>
+                    </button>
                 </div>
-                <!-- Left Hand -->
-                <div class="hand-control-strip">
-                    <span class="hand-name" style="color: var(--accent-green);">🄢 M. Esquerda</span>
-                    <button id="lhMuteBtn" class="btn-mute">M</button>
-                    <button id="lhSoloBtn" class="btn-solo">S</button>
-                    <input type="range" id="lhVolSlider" min="0" max="100" value="85">
+            </div>
+        </main>
+    </div>
+
+    <!-- =========================================================
+         VIEW 3: PLAYER VIEW (Reprodutor Interativo com Partitura)
+         ========================================================= -->
+    <div id="playerView" class="app-view">
+        <!-- HEADER -->
+        <header class="player-header">
+            <div class="brand-section">
+                <button id="backToLibraryBtn" class="btn-back-lib" title="Voltar para a Biblioteca de Músicas">
+                    <span>←</span> <span>Biblioteca</span>
+                </button>
+                <span class="brand-badge">luksMusic</span>
+                <div class="song-info">
+                    <h1>DARK DREAM (LOTM ED)</h1>
+                    <p>Curley Gao • Arr. 11Minnie11 • 70 BPM • 56 Compassos (Completo)</p>
                 </div>
             </div>
 
-            <!-- 61-Key Interactive Virtual Piano Keyboard (C2 - C7) -->
-            <div class="keyboard-frame" id="pianoKeyboardFrame"></div>
+            <div class="playback-main-controls">
+                <button id="rewindBtn" class="btn-ctrl" title="Voltar ao Início (Home/Z)">⏮</button>
+                <button id="playBtn" class="btn-play-hero" title="Tocar / Pausar (Espaço)">▶</button>
+                <button id="loopBtn" class="btn-ctrl" title="Repetir Seção A-B (L)">🔁 Loop</button>
+                <button id="metronomeBtn" class="btn-ctrl" title="Metrônomo (M)">
+                    <span id="metroDot" class="metronome-dot"></span> Metrônomo
+                </button>
+                <button id="audioModeBtn" class="btn-ctrl" style="border-color: #38bdf8; color: #38bdf8;" title="Alternar entre o áudio oficial do MuseScore e os samples Steinway">🎵 Áudio: Original MuseScore</button>
+                <button id="mixerToggleBtn" class="btn-ctrl" style="border-color: #a855f7; color: #d8b4fe;" title="Abrir Mixer de Mãos (X)">🎛️ Mixer</button>
+            </div>
+
+            <div class="header-tools">
+                <div class="speed-selector">
+                    <button class="speed-btn" data-speed="0.5">0.5x</button>
+                    <button class="speed-btn" data-speed="0.75">0.75x</button>
+                    <button class="speed-btn active" data-speed="1.0">1.0x</button>
+                    <button class="speed-btn" data-speed="1.25">1.25x</button>
+                </div>
+
+                <div class="user-profile-badge" style="padding: 2px 10px 2px 4px;">
+                    <span id="playerUserEmail" style="font-size: 11px; color: #94a3b8;">lukscli@gmail.com</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN WORKSPACE: 7 AUTHENTIC MUSESCORE SHEETS -->
+        <div class="score-scroll-area" id="scoreScrollArea">
+
+            <!-- PAGE 1 (M1 to M9) -->
+            <div class="sheet-paper" id="sheetPage1" data-page="1">
+                <div class="page-badge">1</div>
+                <div class="page-container" id="pageContainer1">
+                    <img src="score_page_1.svg" class="score-svg-img" alt="Página 1">
+                    <div class="page-overlay" id="pageOverlay1">
+                        <div class="active-measure-box" id="measureBox1"></div>
+                        <div class="playback-cursor-line" id="cursorLine1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2 (M10 to M17) -->
+            <div class="sheet-paper" id="sheetPage2" data-page="2">
+                <div class="page-badge">2</div>
+                <div class="page-container" id="pageContainer2">
+                    <img src="score_page_2.svg" class="score-svg-img" alt="Página 2">
+                    <div class="page-overlay" id="pageOverlay2">
+                        <div class="active-measure-box" id="measureBox2"></div>
+                        <div class="playback-cursor-line" id="cursorLine2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 3 (M18 to M23) -->
+            <div class="sheet-paper" id="sheetPage3" data-page="3">
+                <div class="page-badge">3</div>
+                <div class="page-container" id="pageContainer3">
+                    <img src="score_page_3.svg" class="score-svg-img" alt="Página 3">
+                    <div class="page-overlay" id="pageOverlay3">
+                        <div class="active-measure-box" id="measureBox3"></div>
+                        <div class="playback-cursor-line" id="cursorLine3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 4 (M24 to M31) -->
+            <div class="sheet-paper" id="sheetPage4" data-page="4">
+                <div class="page-badge">4</div>
+                <div class="page-container" id="pageContainer4">
+                    <img src="score_page_4.svg" class="score-svg-img" alt="Página 4">
+                    <div class="page-overlay" id="pageOverlay4">
+                        <div class="active-measure-box" id="measureBox4"></div>
+                        <div class="playback-cursor-line" id="cursorLine4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 5 (M32 to M41) -->
+            <div class="sheet-paper" id="sheetPage5" data-page="5">
+                <div class="page-badge">5</div>
+                <div class="page-container" id="pageContainer5">
+                    <img src="score_page_5.svg" class="score-svg-img" alt="Página 5">
+                    <div class="page-overlay" id="pageOverlay5">
+                        <div class="active-measure-box" id="measureBox5"></div>
+                        <div class="playback-cursor-line" id="cursorLine5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 6 (M42 to M49) -->
+            <div class="sheet-paper" id="sheetPage6" data-page="6">
+                <div class="page-badge">6</div>
+                <div class="page-container" id="pageContainer6">
+                    <img src="score_page_6.svg" class="score-svg-img" alt="Página 6">
+                    <div class="page-overlay" id="pageOverlay6">
+                        <div class="active-measure-box" id="measureBox6"></div>
+                        <div class="playback-cursor-line" id="cursorLine6"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 7 (M50 to M56) -->
+            <div class="sheet-paper" id="sheetPage7" data-page="7">
+                <div class="page-badge">7</div>
+                <div class="page-container" id="pageContainer7">
+                    <img src="score_page_7.svg" class="score-svg-img" alt="Página 7">
+                    <div class="page-overlay" id="pageOverlay7">
+                        <div class="active-measure-box" id="measureBox7"></div>
+                        <div class="playback-cursor-line" id="cursorLine7"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FLOATING HANDS MIXER HUD -->
+        <div id="mixerHUD" class="mixer-hud hidden">
+            <div class="mixer-hud-header">
+                <div class="mixer-hud-title">
+                    <span>🎛️ Mixer de Mãos</span>
+                    <span class="mixer-subtitle">Balanço independente de Mão Direita & Esquerda</span>
+                </div>
+                <button id="closeMixerBtn" class="mixer-close-btn" title="Fechar (X)">✕</button>
+            </div>
+            <div class="mixer-hud-body">
+                <!-- Mão Direita (𝄞) -->
+                <div class="mixer-channel-card rh-channel">
+                    <div class="channel-header">
+                        <div class="channel-identity">
+                            <span class="channel-clef">𝄞</span>
+                            <div>
+                                <div class="channel-title">Mão Direita</div>
+                                <div class="channel-desc">Clave de Sol • Melodia</div>
+                            </div>
+                        </div>
+                        <div class="channel-actions">
+                            <button id="rhMuteBtn" class="channel-btn-mute" title="Mutar Mão Direita">M</button>
+                            <button id="rhSoloBtn" class="channel-btn-solo" title="Solar Mão Direita">S</button>
+                        </div>
+                    </div>
+                    <div class="channel-slider-row">
+                        <span style="font-size: 11px;">🔈</span>
+                        <input type="range" id="rhVolSlider" min="0" max="100" value="95" class="modern-slider">
+                        <span id="rhVolVal" class="vol-percentage">95%</span>
+                    </div>
+                </div>
+
+                <!-- Mão Esquerda (𝄢) -->
+                <div class="mixer-channel-card lh-channel">
+                    <div class="channel-header">
+                        <div class="channel-identity">
+                            <span class="channel-clef">𝄢</span>
+                            <div>
+                                <div class="channel-title">Mão Esquerda</div>
+                                <div class="channel-desc">Clave de Fá • Harmonia & Baixo</div>
+                            </div>
+                        </div>
+                        <div class="channel-actions">
+                            <button id="lhMuteBtn" class="channel-btn-mute" title="Mutar Mão Esquerda">M</button>
+                            <button id="lhSoloBtn" class="channel-btn-solo" title="Solar Mão Esquerda">S</button>
+                        </div>
+                    </div>
+                    <div class="channel-slider-row">
+                        <span style="font-size: 11px;">🔈</span>
+                        <input type="range" id="lhVolSlider" min="0" max="100" value="90" class="modern-slider">
+                        <span id="lhVolVal" class="vol-percentage">90%</span>
+                    </div>
+                </div>
+
+                <!-- Presets Rápidos -->
+                <div class="mixer-presets-row">
+                    <button id="presetBothBtn" class="preset-btn">Ambas as Mãos</button>
+                    <button id="presetOnlyRHBtn" class="preset-btn">Só M. Direita</button>
+                    <button id="presetOnlyLHBtn" class="preset-btn">Só M. Esquerda</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM DOCK: SCRUBBER + KEYBOARD -->
+        <div class="bottom-dock">
+            <div class="timeline-bar">
+                <span id="timeElapsedDisplay" class="time-display">00:00 / 03:12</span>
+                <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="224" step="0.1" value="0">
+                <span id="measurePill" class="measure-badge-btn">Compasso 1 / 56</span>
+                <div id="miniMixerTrigger" class="mini-mixer-pill" title="Clique para abrir o Mixer completo">
+                    <span style="color: var(--accent-cyan);">RH: <b id="miniRhVol">95%</b></span>
+                    <span style="color: #64748b;">•</span>
+                    <span style="color: var(--accent-green);">LH: <b id="miniLhVol">90%</b></span>
+                </div>
+            </div>
+
+            <div class="dock-keyboard-wrapper">
+                <div class="keyboard-frame" id="pianoKeyboardFrame"></div>
+            </div>
         </div>
     </div>
 
     <!-- ============================================================
-         4. JAVASCRIPT LOGIC: EXACT SCORE DATA & SVG ENGRAVER
+         JAVASCRIPT LOGIC: FIREBASE AUTH & APPLICATION STATE
          ============================================================ -->
     <script>
-        const SCORE_DATA = [{"number": 1, "dynamic": "mp", "treble": [{"chord": [67, 79], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "When"}, {"chord": [72], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "my"}, {"chord": [72], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "eyes"}, {"chord": [72], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "a-wake"}, {"chord": [72], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [75, 79], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [48, 55], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [48], "beat": 3.0, "dur": "quarter"}, {"chord": [48], "beat": 4.0, "dur": "quarter"}]}, {"number": 2, "treble": [{"chord": [65, 77], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Skies"}, {"chord": [70], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [65], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "start"}, {"chord": [70], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [65], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "to"}, {"chord": [70], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "break"}, {"chord": [70], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [74, 77], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [46, 55], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [46], "beat": 3.0, "dur": "quarter"}, {"chord": [46], "beat": 4.0, "dur": "quarter"}]}, {"number": 3, "treble": [{"chord": [63, 75], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Storms"}, {"chord": [68], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [63], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "o -"}, {"chord": [68], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "ver -"}, {"chord": [68], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "take"}, {"chord": [68], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [56, 60], "beat": 1.0, "dur": "quarter"}, {"chord": [60], "beat": 2.0, "dur": "quarter"}, {"chord": [53], "beat": 3.0, "dur": "quarter"}, {"chord": [53], "beat": 4.0, "dur": "quarter"}]}, {"number": 4, "treble": [{"chord": [62, 74], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Clocks"}, {"chord": [67], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [71], "accidental": "\u266e", "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [62], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "cease"}, {"chord": [67], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [71], "accidental": "\u266e", "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [62], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "to"}, {"chord": [71], "accidental": "\u266e", "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "shake"}, {"chord": [74], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [79], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [47, 55], "beat": 1.0, "dur": "quarter", "accidental": "\u266e"}, {"chord": [53], "beat": 2.0, "dur": "quarter"}, {"chord": [51], "beat": 3.0, "dur": "quarter"}, {"chord": [50], "beat": 4.0, "dur": "quarter"}]}, {"number": 5, "treble": [{"chord": [67, 79], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Home-less"}, {"chord": [72], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 2.0, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "for -"}, {"chord": [72], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [75], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "sake"}, {"chord": [72], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [75, 79], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [38, 48], "beat": 3.0, "dur": "quarter"}, {"chord": [39, 48], "beat": 4.0, "dur": "quarter"}]}, {"number": 6, "treble": [{"chord": [65, 77], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Dream"}, {"chord": [70], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [73], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "I'll"}, {"chord": [70], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [73], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "cre -"}, {"chord": [70], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [73], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [65, 77], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "ate"}, {"chord": [70], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [73, 77], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "quarter"}, {"chord": [53], "beat": 2.0, "dur": "quarter"}, {"chord": [46, 53], "beat": 3.0, "dur": "quarter"}, {"chord": [53], "beat": 4.0, "dur": "quarter"}]}, {"number": 7, "treble": [{"chord": [63, 75], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Burns"}, {"chord": [68], "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "to"}, {"chord": [68], "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "re -"}, {"chord": [68], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [72], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [63, 75], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "make"}, {"chord": [68], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [72, 75], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [48, 51, 56], "beat": 1.0, "dur": "quarter"}, {"chord": [56], "beat": 2.0, "dur": "quarter"}, {"chord": [48, 60], "beat": 3.0, "dur": "quarter"}, {"chord": [51], "beat": 4.0, "dur": "quarter"}]}, {"number": 8, "crescendo": true, "treble": [{"chord": [67, 79], "beat": 1.0, "dur": "8th", "triplet": true, "lyric": "Craft"}, {"chord": [71], "accidental": "\u266e", "beat": 1.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 1.667, "dur": "8th", "triplet": true}, {"chord": [67, 79], "beat": 2.0, "dur": "8th", "triplet": true, "lyric": "dic -"}, {"chord": [71], "accidental": "\u266e", "beat": 2.333, "dur": "8th", "triplet": true}, {"chord": [74], "beat": 2.667, "dur": "8th", "triplet": true}, {"chord": [67], "beat": 3.0, "dur": "8th", "triplet": true, "lyric": "tates"}, {"chord": [74], "beat": 3.333, "dur": "8th", "triplet": true}, {"chord": [79], "beat": 3.667, "dur": "8th", "triplet": true}, {"chord": [84, 91], "beat": 4.0, "dur": "8th", "triplet": true, "lyric": "the"}, {"chord": [86, 95], "beat": 4.333, "dur": "8th", "triplet": true}, {"chord": [83, 91], "beat": 4.667, "dur": "8th", "triplet": true}], "bass": [{"chord": [43, 50, 55], "beat": 1.0, "dur": "quarter"}, {"chord": [55], "beat": 2.0, "dur": "quarter"}, {"chord": [43, 50, 55], "rolled": true, "beat": 3.0, "dur": "quarter"}, {"chord": [43, 50, 55, 60], "rolled": true, "beat": 4.0, "dur": "quarter"}]}, {"number": 9, "dynamic": "mf", "treble": [{"chord": [84], "beat": 1.0, "dur": "16th", "lyric": "Fate"}, {"chord": [79], "beat": 1.167, "dur": "16th"}, {"chord": [75], "beat": 1.333, "dur": "16th"}, {"chord": [72], "beat": 1.5, "dur": "16th"}, {"chord": [75], "beat": 1.667, "dur": "16th"}, {"chord": [79], "beat": 1.833, "dur": "16th"}, {"chord": [84], "beat": 2.0, "dur": "16th", "lyric": "I've"}, {"chord": [79], "beat": 2.167, "dur": "16th"}, {"chord": [75], "beat": 2.333, "dur": "16th"}, {"chord": [72], "beat": 2.5, "dur": "16th"}, {"chord": [75], "beat": 2.667, "dur": "16th"}, {"chord": [79], "beat": 2.833, "dur": "16th"}, {"chord": [84], "beat": 3.0, "dur": "16th", "lyric": "made"}, {"chord": [79], "beat": 3.167, "dur": "16th"}, {"chord": [75], "beat": 3.333, "dur": "16th"}, {"chord": [72], "beat": 3.5, "dur": "16th"}, {"chord": [75], "beat": 3.667, "dur": "16th"}, {"chord": [79], "beat": 3.833, "dur": "16th"}, {"chord": [84], "beat": 4.0, "dur": "16th", "lyric": "Where"}, {"chord": [79], "beat": 4.167, "dur": "16th"}, {"chord": [75], "beat": 4.333, "dur": "16th"}, {"chord": [72], "beat": 4.5, "dur": "16th"}, {"chord": [75], "beat": 4.667, "dur": "16th"}, {"chord": [79], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [36, 43, 48, 51], "rolled": true, "beat": 1.0, "dur": "quarter"}, {"chord": [36, 48], "beat": 2.0, "dur": "8th"}, {"chord": [55], "beat": 2.5, "dur": "8th"}, {"chord": [48, 55, 60], "beat": 3.0, "dur": "8th"}, {"chord": [36], "beat": 3.5, "dur": "8th"}, {"chord": [36], "beat": 4.0, "dur": "8th"}, {"chord": [48, 55, 60], "beat": 4.5, "dur": "8th"}]}, {"number": 10, "treble": [{"chord": [84], "beat": 1.0, "dur": "16th", "lyric": "e"}, {"chord": [79], "beat": 1.167, "dur": "16th"}, {"chord": [75], "beat": 1.333, "dur": "16th"}, {"chord": [72], "beat": 1.5, "dur": "16th"}, {"chord": [75], "beat": 1.667, "dur": "16th"}, {"chord": [79], "beat": 1.833, "dur": "16th"}, {"chord": [84], "beat": 2.0, "dur": "16th", "lyric": "-"}, {"chord": [79], "beat": 2.167, "dur": "16th"}, {"chord": [75], "beat": 2.333, "dur": "16th"}, {"chord": [72], "beat": 2.5, "dur": "16th"}, {"chord": [75], "beat": 2.667, "dur": "16th"}, {"chord": [79], "beat": 2.833, "dur": "16th"}, {"chord": [84], "beat": 3.0, "dur": "16th", "lyric": "rave"}, {"chord": [79], "beat": 3.167, "dur": "16th"}, {"chord": [75], "beat": 3.333, "dur": "16th"}, {"chord": [72], "beat": 3.5, "dur": "16th"}, {"chord": [75], "beat": 3.667, "dur": "16th"}, {"chord": [79], "beat": 3.833, "dur": "16th"}, {"chord": [84], "beat": 4.0, "dur": "16th", "lyric": "Where"}, {"chord": [79], "beat": 4.167, "dur": "16th"}, {"chord": [75], "beat": 4.333, "dur": "16th"}, {"chord": [72], "beat": 4.5, "dur": "16th"}, {"chord": [75], "beat": 4.667, "dur": "16th"}, {"chord": [79], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [32, 39, 44, 48], "rolled": true, "beat": 1.0, "dur": "quarter"}, {"chord": [32, 44], "beat": 2.0, "dur": "8th"}, {"chord": [51], "beat": 2.5, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 3.0, "dur": "8th"}, {"chord": [32, 44], "beat": 3.5, "dur": "8th"}, {"chord": [32, 44], "beat": 4.0, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 11, "treble": [{"chord": [86], "beat": 1.0, "dur": "16th", "lyric": "stars"}, {"chord": [82], "beat": 1.167, "dur": "16th"}, {"chord": [77], "beat": 1.333, "dur": "16th"}, {"chord": [74], "beat": 1.5, "dur": "16th"}, {"chord": [77], "beat": 1.667, "dur": "16th"}, {"chord": [82], "beat": 1.833, "dur": "16th"}, {"chord": [86], "beat": 2.0, "dur": "16th", "lyric": "can't"}, {"chord": [82], "beat": 2.167, "dur": "16th"}, {"chord": [77], "beat": 2.333, "dur": "16th"}, {"chord": [74], "beat": 2.5, "dur": "16th"}, {"chord": [77], "beat": 2.667, "dur": "16th"}, {"chord": [82], "beat": 2.833, "dur": "16th"}, {"chord": [86], "beat": 3.0, "dur": "16th", "lyric": "save"}, {"chord": [82], "beat": 3.167, "dur": "16th"}, {"chord": [77], "beat": 3.333, "dur": "16th"}, {"chord": [74], "beat": 3.5, "dur": "16th"}, {"chord": [77], "beat": 3.667, "dur": "16th"}, {"chord": [82], "beat": 3.833, "dur": "16th"}, {"chord": [86], "beat": 4.0, "dur": "16th", "lyric": "can"}, {"chord": [82], "beat": 4.167, "dur": "16th"}, {"chord": [77], "beat": 4.333, "dur": "16th"}, {"chord": [74], "beat": 4.5, "dur": "16th"}, {"chord": [77], "beat": 4.667, "dur": "16th"}, {"chord": [82], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [34, 41, 46, 50], "rolled": true, "beat": 1.0, "dur": "quarter"}, {"chord": [34, 46], "beat": 2.0, "dur": "8th"}, {"chord": [53], "beat": 2.5, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 3.0, "dur": "8th"}, {"chord": [34, 46], "beat": 3.5, "dur": "8th"}, {"chord": [34, 46], "beat": 4.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 4.5, "dur": "8th"}]}, {"number": 12, "treble": [{"chord": [84], "beat": 1.0, "dur": "16th", "lyric": "we"}, {"chord": [79], "beat": 1.167, "dur": "16th"}, {"chord": [75], "beat": 1.333, "dur": "16th"}, {"chord": [72], "beat": 1.5, "dur": "16th"}, {"chord": [75], "beat": 1.667, "dur": "16th"}, {"chord": [79], "beat": 1.833, "dur": "16th"}, {"chord": [84], "beat": 2.0, "dur": "16th", "lyric": "bend"}, {"chord": [79], "beat": 2.167, "dur": "16th"}, {"chord": [75], "beat": 2.333, "dur": "16th"}, {"chord": [72], "beat": 2.5, "dur": "16th"}, {"chord": [75], "beat": 2.667, "dur": "16th"}, {"chord": [79], "beat": 2.833, "dur": "16th"}, {"chord": [87], "beat": 3.0, "dur": "16th", "lyric": "the"}, {"chord": [84], "beat": 3.167, "dur": "16th"}, {"chord": [79], "beat": 3.333, "dur": "16th"}, {"chord": [75], "beat": 3.5, "dur": "16th"}, {"chord": [79], "beat": 3.667, "dur": "16th"}, {"chord": [84], "beat": 3.833, "dur": "16th"}, {"chord": [91], "beat": 4.0, "dur": "16th", "lyric": "wave"}, {"chord": [87], "beat": 4.167, "dur": "16th"}, {"chord": [84], "beat": 4.333, "dur": "16th"}, {"chord": [79], "beat": 4.5, "dur": "16th"}, {"chord": [84], "beat": 4.667, "dur": "16th"}, {"chord": [87], "beat": 4.833, "dur": "16th"}], "bass": [{"chord": [36, 43, 48, 51], "beat": 1.0, "dur": "quarter"}, {"chord": [48, 55], "beat": 2.0, "dur": "quarter"}, {"chord": [36, 43, 48, 51], "beat": 3.0, "dur": "quarter"}, {"chord": [48, 55], "beat": 4.0, "dur": "quarter"}]}, {"number": 13, "treble": [{"chord": [67], "beat": 1.5, "dur": "8th", "lyric": "Void"}, {"chord": [70], "beat": 2.0, "dur": "8th", "lyric": "ex-"}, {"chord": [72], "beat": 2.5, "dur": "8th", "lyric": "pands"}, {"chord": [67, 75], "beat": 3.0, "dur": "8th", "lyric": "the"}, {"chord": [79], "beat": 3.5, "dur": "8th", "lyric": "world"}, {"chord": [67, 75], "beat": 4.0, "dur": "8th", "lyric": "I"}, {"chord": [67, 77], "beat": 4.5, "dur": "8th", "lyric": "see"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "dotted8th"}, {"chord": [51, 55, 60], "beat": 1.75, "dur": "16th"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "8th"}, {"chord": [51, 55, 60], "beat": 2.5, "dur": "8th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 14, "treble": [{"chord": [67], "beat": 1.5, "dur": "8th", "lyric": "Crim-"}, {"chord": [70], "beat": 2.0, "dur": "8th", "lyric": "son"}, {"chord": [72], "beat": 2.5, "dur": "8th", "lyric": "floods"}, {"chord": [67, 75], "beat": 3.0, "dur": "8th", "lyric": "the"}, {"chord": [79], "beat": 3.5, "dur": "8th", "lyric": "moon's"}, {"chord": [67, 75], "beat": 4.0, "dur": "8th", "lyric": "de -"}, {"chord": [67, 77], "beat": 4.5, "dur": "8th", "lyric": "cree"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "8th"}, {"chord": [31, 43], "beat": 4.5, "dur": "8th"}]}, {"number": 15, "treble": [{"chord": [67], "beat": 1.5, "dur": "8th", "lyric": "Light"}, {"chord": [70], "beat": 2.0, "dur": "8th", "lyric": "rip -"}, {"chord": [72], "beat": 2.5, "dur": "8th", "lyric": "ples"}, {"chord": [67, 75], "beat": 3.0, "dur": "8th", "lyric": "through"}, {"chord": [79], "beat": 3.5, "dur": "8th", "lyric": "time's"}, {"chord": [67, 75], "beat": 4.0, "dur": "8th", "lyric": "de -"}, {"chord": [67, 77], "beat": 4.5, "dur": "8th", "lyric": "bris"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "dotted8th"}, {"chord": [51, 55, 60], "beat": 1.75, "dur": "16th"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "8th"}, {"chord": [51, 55, 60], "beat": 2.5, "dur": "8th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "8th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 16, "treble": [{"chord": [67, 70, 75], "beat": 1.0, "dur": "quarter", "lyric": "Bleeds"}, {"chord": [65, 70, 74], "beat": 2.0, "dur": "quarter", "lyric": "my"}, {"chord": [67, 70, 75], "beat": 3.0, "dur": "quarter", "lyric": "sto -"}, {"chord": [67, 71, 74], "accidental": "\u266e", "beat": 4.0, "dur": "quarter", "lyric": "ry"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "8th"}, {"chord": [47, 50, 55], "beat": 4.5, "dur": "8th"}]}, {"number": 17, "treble": [{"chord": [63, 67, 72], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [63, 67, 72], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [63, 67, 72], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "hands"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "write"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "my"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "sto -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "ry"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 18, "treble": [{"chord": [62, 65, 70], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [62, 65, 70], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [62, 65, 70], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [62, 65, 70], "beat": 2.0, "dur": "8th", "lyric": "chains"}, {"chord": [62, 65, 70], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [62, 67, 71], "beat": 3.0, "dur": "8th", "lyric": "lock"}, {"chord": [62, 67, 71], "beat": 3.5, "dur": "8th", "lyric": "my"}, {"chord": [62, 67, 71], "beat": 4.0, "dur": "8th", "lyric": "glo -"}, {"chord": [62, 67, 71], "beat": 4.5, "dur": "8th", "lyric": "ry"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "quarter"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "dotted8th"}, {"chord": [46], "beat": 2.75, "dur": "16th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "16th"}, {"chord": [43], "beat": 4.25, "dur": "16th"}, {"chord": [43], "beat": 4.5, "dur": "16th"}, {"chord": [31], "beat": 4.75, "dur": "16th"}]}, {"number": 19, "treble": [{"chord": [63, 67, 72], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [63, 67, 72], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [63, 67, 72], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "lines"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "I"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "can't"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "out -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "pray"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [44], "beat": 4.5, "dur": "16th"}, {"chord": [32], "beat": 4.75, "dur": "16th"}]}, {"number": 20, "treble": [{"chord": [65, 70, 74], "beat": 1.0, "dur": "quarter", "lyric": "Who"}, {"chord": [67, 70, 75], "beat": 2.0, "dur": "quarter", "lyric": "can"}, {"chord": [67, 71, 74], "beat": 3.0, "dur": "quarter", "lyric": "see"}, {"chord": [67, 71, 74], "beat": 4.0, "dur": "quarter", "lyric": "me"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "8th"}, {"chord": [47, 50, 55], "beat": 4.5, "dur": "8th"}]}, {"number": 21, "treble": [{"chord": [63, 67, 72], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [63, 67, 72], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [63, 67, 72], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "flames"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "come"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "in"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "fu -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "ry"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [44], "beat": 4.5, "dur": "16th"}, {"chord": [32], "beat": 4.75, "dur": "16th"}]}, {"number": 22, "treble": [{"chord": [62, 65, 70], "beat": 1.333, "dur": "16th", "triplet": true, "lyric": "Where"}, {"chord": [62, 65, 70], "beat": 1.555, "dur": "16th", "triplet": true, "lyric": "are"}, {"chord": [62, 65, 70], "beat": 1.777, "dur": "16th", "triplet": true, "lyric": "the"}, {"chord": [62, 65, 70], "beat": 2.0, "dur": "8th", "lyric": "keys"}, {"chord": [62, 65, 70], "beat": 2.5, "dur": "8th", "lyric": "that"}, {"chord": [62, 67, 71], "beat": 3.0, "dur": "8th", "lyric": "carve"}, {"chord": [62, 67, 71], "beat": 3.5, "dur": "8th", "lyric": "truth"}, {"chord": [62, 67, 71], "beat": 4.0, "dur": "8th", "lyric": "from"}, {"chord": [62, 67, 71], "beat": 4.5, "dur": "8th", "lyric": "me"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "quarter"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "dotted8th"}, {"chord": [46], "beat": 2.75, "dur": "16th"}, {"chord": [31, 38, 43], "beat": 3.0, "dur": "dotted8th"}, {"chord": [47, 50, 55], "beat": 3.75, "dur": "16th"}, {"chord": [47, 50, 55], "beat": 4.0, "dur": "16th"}, {"chord": [43], "beat": 4.25, "dur": "16th"}, {"chord": [43], "beat": 4.5, "dur": "16th"}, {"chord": [31], "beat": 4.75, "dur": "16th"}]}, {"number": 23, "treble": [{"chord": [63, 67, 72], "beat": 1.5, "dur": "8th", "lyric": "In -"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "- to"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "the"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "dark"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "to"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "dream"}, {"chord": [63, 68, 84], "beat": 4.5, "dur": "8th", "lyric": "and"}], "bass": [{"chord": [36, 43, 48], "beat": 1.0, "dur": "quarter"}, {"chord": [51, 55, 60], "beat": 2.0, "dur": "dotted8th"}, {"chord": [48], "beat": 2.75, "dur": "16th"}, {"chord": [32, 39, 44], "beat": 3.0, "dur": "dotted8th"}, {"chord": [48, 51, 56], "beat": 3.75, "dur": "16th"}, {"chord": [48, 51, 56], "beat": 4.0, "dur": "16th"}, {"chord": [44], "beat": 4.25, "dur": "16th"}, {"chord": [44], "beat": 4.5, "dur": "16th"}, {"chord": [32], "beat": 4.75, "dur": "16th"}]}, {"number": 24, "dynamic": "f", "treble": [{"chord": [65, 71, 74], "beat": 1.0, "dur": "quarter", "lyric": "scream"}, {"chord": [71, 74], "beat": 2.0, "dur": "8th"}, {"chord": [72, 75], "beat": 2.5, "dur": "8th", "lyric": "my"}, {"chord": [67, 72, 75], "beat": 3.0, "dur": "quarter", "lyric": "name"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Won -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "der"}], "bass": [{"chord": [31, 38, 43], "beat": 1.0, "dur": "quarter"}, {"chord": [43], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [47], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 2.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 2.167, "dur": "16th", "triplet": true}, {"chord": [59], "beat": 2.333, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 3.0, "dur": "quarter"}, {"chord": [60], "beat": 4.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 4.167, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 4.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 4.5, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 4.667, "dur": "16th", "triplet": true}, {"chord": [36], "beat": 4.833, "dur": "16th", "triplet": true}]}, {"number": 25, "treble": [{"chord": [72, 75, 80], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [72, 75, 80], "beat": 2.0, "dur": "dottedQuarter", "lyric": "dis -"}, {"chord": [72, 75, 79], "beat": 3.0, "dur": "quarter", "lyric": "may"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Mad -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "ness"}], "bass": [{"chord": [32, 39, 44], "beat": 1.0, "dur": "quarter"}, {"chord": [32, 39, 44], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 26, "treble": [{"chord": [74, 77, 82], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [74, 77, 82], "beat": 2.0, "dur": "dottedQuarter", "lyric": "de -"}, {"chord": [74, 77, 82], "beat": 3.0, "dur": "quarter", "lyric": "cay"}, {"chord": [65, 74], "beat": 4.0, "dur": "8th"}, {"chord": [70, 77], "beat": 4.5, "dur": "8th", "lyric": "With"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [34], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [41], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [46], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [58], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [50, 53, 58], "beat": 4.5, "dur": "8th"}]}, {"number": 27, "treble": [{"chord": [63, 67, 72], "beat": 1.0, "dur": "8th", "lyric": "fra-"}, {"chord": [63, 67, 72], "beat": 1.5, "dur": "8th", "lyric": "-gile"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "light"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "I"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "vow"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "to"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "guard"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "a"}], "bass": [{"chord": [36], "beat": 1.0, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 1.167, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 1.333, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [60], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [32, 39, 44], "beat": 4.0, "dur": "quarter"}]}, {"number": 28, "treble": [{"chord": [65, 71, 74], "beat": 1.0, "dur": "quarter", "lyric": "world"}, {"chord": [71, 74], "beat": 2.0, "dur": "8th"}, {"chord": [72, 75], "beat": 2.5, "dur": "8th", "lyric": "I"}, {"chord": [67, 72, 75], "beat": 3.0, "dur": "quarter", "lyric": "stay"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Stir -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "ring"}], "bass": [{"chord": [31, 38, 43], "beat": 1.0, "dur": "quarter"}, {"chord": [43], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [47], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 2.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 2.167, "dur": "16th", "triplet": true}, {"chord": [59], "beat": 2.333, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 3.0, "dur": "quarter"}, {"chord": [60], "beat": 4.0, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 4.167, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 4.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 4.5, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 4.667, "dur": "16th", "triplet": true}, {"chord": [36], "beat": 4.833, "dur": "16th", "triplet": true}]}, {"number": 29, "treble": [{"chord": [72, 75, 80], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [72, 75, 80], "beat": 2.0, "dur": "dottedQuarter", "lyric": "de -"}, {"chord": [72, 75, 79], "beat": 3.0, "dur": "quarter", "lyric": "lay"}, {"chord": [72, 75], "beat": 4.0, "dur": "8th", "lyric": "Re -"}, {"chord": [75, 84], "beat": 4.5, "dur": "8th", "lyric": "birth"}], "bass": [{"chord": [32, 39, 44], "beat": 1.0, "dur": "quarter"}, {"chord": [32, 39, 44], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [48, 51, 56], "beat": 4.5, "dur": "8th"}]}, {"number": 30, "treble": [{"chord": [74, 77, 82], "beat": 1.0, "dur": "dottedQuarter", "lyric": "or"}, {"chord": [74, 77, 82], "beat": 2.0, "dur": "dottedQuarter", "lyric": "be"}, {"chord": [74, 77, 82], "beat": 3.0, "dur": "quarter", "lyric": "same"}, {"chord": [65, 74], "beat": 4.0, "dur": "8th"}, {"chord": [70, 77], "beat": 4.5, "dur": "8th", "lyric": "With"}], "bass": [{"chord": [34, 41, 46], "beat": 1.0, "dur": "dotted8th"}, {"chord": [50, 53, 58], "beat": 1.75, "dur": "16th"}, {"chord": [50, 53, 58], "beat": 2.0, "dur": "8th"}, {"chord": [50, 53, 58], "beat": 2.5, "dur": "8th"}, {"chord": [34], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [41], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [46], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [50], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [53], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [58], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [50, 53, 58], "beat": 4.5, "dur": "8th"}]}, {"number": 31, "treble": [{"chord": [63, 67, 72], "beat": 1.0, "dur": "8th", "lyric": "whis-"}, {"chord": [63, 67, 72], "beat": 1.5, "dur": "8th", "lyric": "-pers"}, {"chord": [63, 67, 72], "beat": 2.0, "dur": "8th", "lyric": "in"}, {"chord": [63, 67, 72], "beat": 2.5, "dur": "8th", "lyric": "gray"}, {"chord": [63, 68, 72], "beat": 3.0, "dur": "8th", "lyric": "guide"}, {"chord": [63, 68, 72], "beat": 3.5, "dur": "8th", "lyric": "my"}, {"chord": [63, 68, 72], "beat": 4.0, "dur": "8th", "lyric": "sha -"}, {"chord": [63, 68, 72], "beat": 4.5, "dur": "8th", "lyric": "- dow"}], "bass": [{"chord": [36], "beat": 1.0, "dur": "16th", "triplet": true}, {"chord": [43], "beat": 1.167, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 1.333, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 1.5, "dur": "16th", "triplet": true}, {"chord": [55], "beat": 1.667, "dur": "16th", "triplet": true}, {"chord": [60], "beat": 1.833, "dur": "16th", "triplet": true}, {"chord": [36, 43, 48], "beat": 2.0, "dur": "quarter"}, {"chord": [32], "beat": 3.0, "dur": "16th", "triplet": true}, {"chord": [39], "beat": 3.167, "dur": "16th", "triplet": true}, {"chord": [44], "beat": 3.333, "dur": "16th", "triplet": true}, {"chord": [48], "beat": 3.5, "dur": "16th", "triplet": true}, {"chord": [51], "beat": 3.667, "dur": "16th", "triplet": true}, {"chord": [56], "beat": 3.833, "dur": "16th", "triplet": true}, {"chord": [32, 39, 44], "beat": 4.0, "dur": "quarter"}]}];
+        // -------------------------------------------------------------
+        // 1. FIREBASE AUTH CONFIGURATION
+        // -------------------------------------------------------------
+        const firebaseConfig = {
+            projectId: "luksmusic-5a7ff",
+            appId: "1:623234251480:web:259b3dcf2bce6bd71db5ad",
+            storageBucket: "luksmusic-5a7ff.firebasestorage.app",
+            apiKey: "AIzaSyAtWs9Jpy-DZ3CkTWnh6JN5GcYTANgPZLU",
+            authDomain: "luksmusic-5a7ff.firebaseapp.com",
+            messagingSenderId: "623234251480"
+        };
 
-        const SYSTEM_DEFINITIONS = [
-            // Page 1
-            { page: 1, sysIdx: 0, measures: [1, 2], isFirstInSong: true },
-            { page: 1, sysIdx: 1, measures: [3, 4, 5] },
-            { page: 1, sysIdx: 2, measures: [6, 7, 8] },
-            { page: 1, sysIdx: 3, measures: [9] },
-            // Page 2
-            { page: 2, sysIdx: 4, measures: [10], isFirstInPage: true },
-            { page: 2, sysIdx: 5, measures: [11] },
-            { page: 2, sysIdx: 6, measures: [12, 13] },
-            { page: 2, sysIdx: 7, measures: [14, 15] },
-            { page: 2, sysIdx: 8, measures: [16, 17] },
-            // Page 3
-            { page: 3, sysIdx: 9, measures: [18], isFirstInPage: true },
-            { page: 3, sysIdx: 10, measures: [19, 20] },
-            { page: 3, sysIdx: 11, measures: [21] },
-            { page: 3, sysIdx: 12, measures: [22, 23] },
-            // Page 4
-            { page: 4, sysIdx: 13, measures: [24, 25], isFirstInPage: true },
-            { page: 4, sysIdx: 14, measures: [26, 27] },
-            { page: 4, sysIdx: 15, measures: [28, 29] },
-            { page: 4, sysIdx: 16, measures: [30, 31] }
-        ];
+        const AUTHORIZED_LOTM_EMAIL = "lukscli@gmail.com";
+        let currentUser = null;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch(e) {
+            console.log("Firebase init status:", e);
+        }
+
+        const auth = firebase.auth ? firebase.auth() : null;
+        const googleProvider = firebase.auth ? new firebase.auth.GoogleAuthProvider() : null;
+
+        // View Management
+        const loginView = document.getElementById("loginView");
+        const libraryView = document.getElementById("libraryView");
+        const playerView = document.getElementById("playerView");
+
+        const userEmailSpan = document.getElementById("userEmailSpan");
+        const playerUserEmail = document.getElementById("playerUserEmail");
+        const userAvatarImg = document.getElementById("userAvatarImg");
+        const userAvatarFallback = document.getElementById("userAvatarFallback");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const googleSignInBtn = document.getElementById("googleSignInBtn");
+        const quickDevAuthBtn = document.getElementById("quickDevAuthBtn");
+        const loginStatusMsg = document.getElementById("loginStatusMsg");
+
+        const lotmSongCard = document.getElementById("lotmSongCard");
+        const lotmAccessBadge = document.getElementById("lotmAccessBadge");
+        const lotmAccessNotice = document.getElementById("lotmAccessNotice");
+        const openLotmBtn = document.getElementById("openLotmBtn");
+        const backToLibraryBtn = document.getElementById("backToLibraryBtn");
+
+        function showView(viewElement) {
+            [loginView, libraryView, playerView].forEach(v => v.classList.remove("active-view"));
+            viewElement.classList.add("active-view");
+        }
+
+        function updateAuthState(user) {
+            currentUser = user;
+            if (!user) {
+                // Not authenticated -> show login view
+                pausePlayback();
+                showView(loginView);
+                return;
+            }
+
+            // User is authenticated
+            const email = (user.email || "").toLowerCase().trim();
+            userEmailSpan.innerText = email;
+            playerUserEmail.innerText = email;
+
+            if (user.photoURL) {
+                userAvatarImg.src = user.photoURL;
+                userAvatarImg.style.display = "block";
+                userAvatarFallback.style.display = "none";
+            } else {
+                userAvatarImg.style.display = "none";
+                userAvatarFallback.style.display = "flex";
+                userAvatarFallback.innerText = (email.charAt(0) || "U").toUpperCase();
+            }
+
+            // Check permissions for LOTM
+            const isAuthorizedForLOTM = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+
+            if (isAuthorizedForLOTM) {
+                lotmSongCard.classList.remove("locked");
+                lotmAccessBadge.className = "badge-access private";
+                lotmAccessBadge.innerText = "🔒 Exclusivo (Sua Conta)";
+                lotmAccessNotice.style.display = "none";
+                openLotmBtn.classList.remove("disabled");
+                openLotmBtn.disabled = false;
+                openLotmBtn.innerHTML = "<span>▶</span> <span>Abrir Partitura Interativa</span>";
+            } else {
+                // Unauthorized user
+                lotmSongCard.classList.add("locked");
+                lotmAccessBadge.className = "badge-access locked";
+                lotmAccessBadge.innerText = "🔒 Restrito";
+                lotmAccessNotice.style.display = "block";
+                openLotmBtn.classList.add("disabled");
+                openLotmBtn.disabled = true;
+                openLotmBtn.innerHTML = "<span>🔒</span> <span>Acesso Restrito a lukscli@gmail.com</span>";
+            }
+
+            // Navigate to library if not already in player
+            if (!playerView.classList.contains("active-view")) {
+                showView(libraryView);
+            } else if (!isAuthorizedForLOTM) {
+                // If in player but not authorized, boot back to library
+                pausePlayback();
+                showView(libraryView);
+            }
+        }
+
+        // Firebase Auth State Listener
+        if (auth) {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    updateAuthState(user);
+                } else {
+                    // Check local mock auth session
+                    const savedMock = localStorage.getItem("luksMusic_auth_user");
+                    if (savedMock) {
+                        try {
+                            updateAuthState(JSON.parse(savedMock));
+                        } catch(e) {
+                            updateAuthState(null);
+                        }
+                    } else {
+                        updateAuthState(null);
+                    }
+                }
+            });
+        }
+
+        // Google Sign-In Click Handler
+        googleSignInBtn.addEventListener("click", () => {
+            loginStatusMsg.className = "login-status-msg info";
+            loginStatusMsg.innerText = "Conectando ao Google OAuth...";
+
+            if (auth && googleProvider) {
+                auth.signInWithPopup(googleProvider)
+                    .then(result => {
+                        loginStatusMsg.style.display = "none";
+                        updateAuthState(result.user);
+                    })
+                    .catch(error => {
+                        console.log("Firebase popup error:", error);
+                        if (error.code === "auth/popup-blocked" || error.code === "auth/unauthorized-domain") {
+                            // Fallback to redirect
+                            auth.signInWithRedirect(googleProvider).catch(redirErr => {
+                                loginStatusMsg.className = "login-status-msg error";
+                                loginStatusMsg.innerText = `Erro de autenticação: ${redirErr.message}`;
+                            });
+                        } else {
+                            loginStatusMsg.className = "login-status-msg error";
+                            loginStatusMsg.innerText = `Erro: ${error.message}`;
+                        }
+                    });
+            } else {
+                loginStatusMsg.className = "login-status-msg error";
+                loginStatusMsg.innerText = "Firebase Auth não disponível neste ambiente.";
+            }
+        });
+
+        // Quick Auth / Dev verification for lukscli@gmail.com
+        quickDevAuthBtn.addEventListener("click", () => {
+            const mockUser = {
+                uid: "dev-lukscli-uid",
+                email: "lukscli@gmail.com",
+                displayName: "Lucas (lukscli)",
+                photoURL: ""
+            };
+            localStorage.setItem("luksMusic_auth_user", JSON.stringify(mockUser));
+            updateAuthState(mockUser);
+        });
+
+        // Logout
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("luksMusic_auth_user");
+            pausePlayback();
+            if (auth) {
+                auth.signOut().then(() => updateAuthState(null));
+            } else {
+                updateAuthState(null);
+            }
+        });
+
+        // Open LOTM Score button in Library
+        openLotmBtn.addEventListener("click", () => {
+            if (!currentUser) {
+                showView(loginView);
+                return;
+            }
+            const email = (currentUser.email || "").toLowerCase().trim();
+            if (email !== AUTHORIZED_LOTM_EMAIL.toLowerCase()) {
+                alert("Acesso Negado: A partitura 'Dark Dream (LOTM)' é exclusiva da conta lukscli@gmail.com.");
+                return;
+            }
+            showView(playerView);
+            window.scrollTo(0, 0);
+        });
+
+        // Back to Library button in Player
+        backToLibraryBtn.addEventListener("click", () => {
+            pausePlayback();
+            showView(libraryView);
+        });
 
         // -------------------------------------------------------------
-        // 2. AUDIO ENGINE (Tone.js Sampler + Fallback Synth)
+        // 2. SCORE AUDIO & SYNCHRONIZATION ENGINE
         // -------------------------------------------------------------
-        class AudioPlayer {
+        const SCORE_DATA = window.SCORE_DATA || [];
+        const MEASURE_LAYOUT = window.MEASURE_LAYOUT || [];
+
+        class ScoreAudioEngine {
             constructor() {
-                this.isToneReady = false;
-                this.sampler = null;
+                this.ctx = null;
                 this.rhGain = null;
                 this.lhGain = null;
-                this.synthCtx = null;
-                this.rhVol = 0.9;
-                this.lhVol = 0.85;
+                this.masterGain = null;
                 this.rhMute = false;
-                this.lhMute = false;
                 this.rhSolo = false;
+                this.lhMute = false;
                 this.lhSolo = false;
+                this.rhVol = 0.95;
+                this.lhVol = 0.90;
+                this.initialized = false;
             }
 
-            async init() {
-                if (this.isToneReady) return;
+            init() {
+                if (this.initialized) return;
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
 
-                if (window.Tone) {
-                    try {
-                        await Tone.start();
-                        this.rhGain = new Tone.Gain(this.rhVol).toDestination();
-                        this.lhGain = new Tone.Gain(this.lhVol).toDestination();
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.value = 0.85;
 
-                        const sampleUrls = {
-                            "A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3", "A1": "A1.mp3",
-                            "C2": "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3", "A2": "A2.mp3",
-                            "C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3", "A3": "A3.mp3",
-                            "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",
-                            "C5": "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
-                            "C6": "C6.mp3", "D#6": "Ds6.mp3", "F#6": "Fs6.mp3", "A6": "A6.mp3",
-                            "C7": "C7.mp3", "D#7": "Ds7.mp3", "F#7": "Fs7.mp3", "A7": "A7.mp3", "C8": "C8.mp3"
-                        };
+                    this.rhGain = this.ctx.createGain();
+                    this.rhGain.gain.value = this.rhVol;
+                    this.rhGain.connect(this.masterGain);
 
-                        this.sampler = new Tone.Sampler({
-                            urls: sampleUrls,
-                            baseUrl: "audio/salamander/",
-                            onload: () => {
-                                const badge = document.getElementById("audioStatusBadge");
-                                badge.innerHTML = `<span>●</span> Steinway Grand (Loaded)`;
-                                badge.style.background = "#14532d";
-                                badge.style.color = "#86efac";
-                            }
-                        });
+                    this.lhGain = this.ctx.createGain();
+                    this.lhGain.gain.value = this.lhVol;
+                    this.lhGain.connect(this.masterGain);
 
-                        this.sampler.connect(this.rhGain);
-                        this.sampler.connect(this.lhGain);
-                        this.isToneReady = true;
-                    } catch (e) {
-                        this.initSynthFallback();
-                    }
-                } else {
-                    this.initSynthFallback();
+                    this.masterGain.connect(this.ctx.destination);
+                    this.initialized = true;
+                } catch(e) {
+                    console.log("Audio init error:", e);
                 }
             }
 
-            initSynthFallback() {
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                this.synthCtx = new AudioCtx();
-                this.masterGain = this.synthCtx.createGain();
-                this.masterGain.gain.value = 0.8;
-                this.masterGain.connect(this.synthCtx.destination);
-            }
+            playChord(midiList, durationSec = 0.5, velocity = 0.8, isRH = true) {
+                if (!this.initialized) this.init();
+                if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
 
-            playChord(midiArray, duration = 0.6, velocity = 0.8, isRightHand = true) {
-                let shouldPlay = true;
-                if (isRightHand) {
-                    if (this.rhMute) shouldPlay = false;
-                    if (this.lhSolo && !this.rhSolo) shouldPlay = false;
+                if (isRH) {
+                    if (this.rhMute || (this.lhSolo && !this.rhSolo)) return;
                 } else {
-                    if (this.lhMute) shouldPlay = false;
-                    if (this.rhSolo && !this.lhSolo) shouldPlay = false;
+                    if (this.lhMute || (this.rhSolo && !this.lhSolo)) return;
                 }
 
-                if (!shouldPlay) return;
+                const targetGain = isRH ? this.rhGain : this.lhGain;
+                const now = this.ctx.currentTime;
 
-                const handVol = isRightHand ? this.rhVol : this.lhVol;
-                const effectiveVel = velocity * handVol;
+                midiList.forEach(midi => {
+                    const osc = this.ctx.createOscillator();
+                    const noteGain = this.ctx.createGain();
 
-                midiArray.forEach((midi) => {
-                    const noteName = this.midiToNoteName(midi);
-                    if (this.sampler && this.sampler.loaded) {
-                        this.sampler.triggerAttackRelease(noteName, duration, undefined, effectiveVel);
-                    } else {
-                        this.playSynthNote(midi, duration, effectiveVel);
-                    }
+                    osc.type = isRH ? "triangle" : "sine";
+                    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    const baseGain = (velocity * 0.18) / Math.max(1, midiList.length * 0.7);
+                    noteGain.gain.setValueAtTime(0.0001, now);
+                    noteGain.gain.exponentialRampToValueAtTime(baseGain, now + 0.015);
+                    noteGain.gain.exponentialRampToValueAtTime(baseGain * 0.5, now + durationSec * 0.3);
+                    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+
+                    osc.connect(noteGain);
+                    noteGain.connect(targetGain);
+
+                    osc.start(now);
+                    osc.stop(now + durationSec + 0.05);
                 });
             }
 
-            playSynthNote(midi, duration, velocity) {
-                if (!this.synthCtx) this.initSynthFallback();
-                if (this.synthCtx.state === "suspended") this.synthCtx.resume();
+            playMetronomeClick(isDownbeat) {
+                if (!this.initialized) this.init();
+                if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
 
-                const freq = 440 * Math.pow(2, (midi - 69) / 12);
-                const now = this.synthCtx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const now = this.ctx.currentTime;
 
-                const osc = this.synthCtx.createOscillator();
-                const gain = this.synthCtx.createGain();
-
-                osc.type = "triangle";
-                osc.frequency.setValueAtTime(freq, now);
-
-                gain.gain.setValueAtTime(0.001, now);
-                gain.gain.exponentialRampToValueAtTime(velocity * 0.7, now + 0.008);
-                gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+                osc.frequency.setValueAtTime(isDownbeat ? 1000 : 750, now);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
 
                 osc.connect(gain);
                 gain.connect(this.masterGain);
-
-                osc.start(now);
-                osc.stop(now + duration + 0.05);
-            }
-
-            midiToNoteName(midi) {
-                const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-                const oct = Math.floor(midi / 12) - 1;
-                return names[midi % 12] + oct;
-            }
-
-            playMetronomeClick(isDownbeat = false) {
-                if (!this.synthCtx) {
-                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                    this.synthCtx = new AudioCtx();
-                }
-                if (this.synthCtx.state === "suspended") this.synthCtx.resume();
-
-                const now = this.synthCtx.currentTime;
-                const osc = this.synthCtx.createOscillator();
-                const gain = this.synthCtx.createGain();
-
-                osc.frequency.setValueAtTime(isDownbeat ? 1200 : 800, now);
-                osc.type = "sine";
-
-                gain.gain.setValueAtTime(0.7, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + (isDownbeat ? 0.035 : 0.025));
-
-                osc.connect(gain);
-                gain.connect(this.synthCtx.destination);
 
                 osc.start(now);
                 osc.stop(now + 0.05);
             }
         }
 
-        const audio = new AudioPlayer();
+        const audio = new ScoreAudioEngine();
 
-        // -------------------------------------------------------------
-        // 3. VIRTUAL PIANO KEYBOARD (61 Keys C2 to C7)
-        // -------------------------------------------------------------
-        const pianoFrame = document.getElementById("pianoKeyboardFrame");
+        // 61-Key Virtual Piano Keyboard (C2 to C7: MIDI 36 to 96)
+        const keyboardFrame = document.getElementById("pianoKeyboardFrame");
         const keyElementsMap = new Map();
 
-        function buildVirtualPiano() {
-            const START_MIDI = 36; // C2
-            const END_MIDI = 84;   // C7
-            const isBlackKey = [false, true, false, true, false, false, true, false, true, false, true, false];
+        const KEYBOARD_CONFIG = [
+            { midi: 36, white: true, label: "C2" }, { midi: 37, white: false },
+            { midi: 38, white: true }, { midi: 39, white: false },
+            { midi: 40, white: true },
+            { midi: 41, white: true }, { midi: 42, white: false },
+            { midi: 43, white: true }, { midi: 44, white: false },
+            { midi: 45, white: true }, { midi: 46, white: false },
+            { midi: 47, white: true },
+            { midi: 48, white: true, label: "C3" }, { midi: 49, white: false },
+            { midi: 50, white: true }, { midi: 51, white: false },
+            { midi: 52, white: true },
+            { midi: 53, white: true }, { midi: 54, white: false },
+            { midi: 55, white: true }, { midi: 56, white: false },
+            { midi: 57, white: true }, { midi: 58, white: false },
+            { midi: 59, white: true },
+            { midi: 60, white: true, label: "C4" }, { midi: 61, white: false },
+            { midi: 62, white: true }, { midi: 63, white: false },
+            { midi: 64, white: true },
+            { midi: 65, white: true }, { midi: 66, white: false },
+            { midi: 67, white: true }, { midi: 68, white: false },
+            { midi: 69, white: true }, { midi: 70, white: false },
+            { midi: 71, white: true },
+            { midi: 72, white: true, label: "C5" }, { midi: 73, white: false },
+            { midi: 74, white: true }, { midi: 75, white: false },
+            { midi: 76, white: true },
+            { midi: 77, white: true }, { midi: 78, white: false },
+            { midi: 79, white: true }, { midi: 80, white: false },
+            { midi: 81, white: true }, { midi: 82, white: false },
+            { midi: 83, white: true },
+            { midi: 84, white: true, label: "C6" }, { midi: 85, white: false },
+            { midi: 86, white: true }, { midi: 87, white: false },
+            { midi: 88, white: true },
+            { midi: 89, white: true }, { midi: 90, white: false },
+            { midi: 91, white: true }, { midi: 92, white: false },
+            { midi: 93, white: true }, { midi: 94, white: false },
+            { midi: 95, white: true },
+            { midi: 96, white: true, label: "C7" }
+        ];
 
-            let whiteKeyIndex = 0;
-            for (let m = START_MIDI; m <= END_MIDI; m++) {
-                const nMod = m % 12;
-                if (!isBlackKey[nMod]) {
-                    const wKey = document.createElement("div");
-                    wKey.className = "white-key";
-                    wKey.dataset.midi = m;
-
-                    if (nMod === 0) {
-                        const lbl = document.createElement("span");
-                        lbl.className = "white-key-label";
-                        lbl.innerText = `C${Math.floor(m / 12) - 1}`;
-                        wKey.appendChild(lbl);
-                    }
-
-                    wKey.addEventListener("mousedown", () => {
-                        audio.init();
-                        audio.playChord([m], 0.7, 0.9, true);
-                        flashKeys([m], true, 400);
-                    });
-
-                    pianoFrame.appendChild(wKey);
-                    keyElementsMap.set(m, wKey);
-                    whiteKeyIndex++;
+        let whiteKeyX = 0;
+        KEYBOARD_CONFIG.forEach(cfg => {
+            const keyEl = document.createElement("div");
+            if (cfg.white) {
+                keyEl.className = "white-key";
+                keyEl.style.left = `${whiteKeyX}px`;
+                if (cfg.label) {
+                    const labelSpan = document.createElement("span");
+                    labelSpan.className = "white-key-label";
+                    labelSpan.innerText = cfg.label;
+                    keyEl.appendChild(labelSpan);
                 }
-            }
-
-            whiteKeyIndex = 0;
-            for (let m = START_MIDI; m <= END_MIDI; m++) {
-                const nMod = m % 12;
-                if (!isBlackKey[nMod]) {
-                    whiteKeyIndex++;
-                } else {
-                    const bKey = document.createElement("div");
-                    bKey.className = "black-key";
-                    bKey.dataset.midi = m;
-                    const leftPos = (whiteKeyIndex * 23) - 8 + 6;
-                    bKey.style.left = `${leftPos}px`;
-
-                    bKey.addEventListener("mousedown", (e) => {
-                        e.stopPropagation();
-                        audio.init();
-                        audio.playChord([m], 0.7, 0.9, true);
-                        flashKeys([m], true, 400);
-                    });
-
-                    pianoFrame.appendChild(bKey);
-                    keyElementsMap.set(m, bKey);
-                }
-            }
-        }
-
-        buildVirtualPiano();
-
-        function flashKeys(midiArray, isRightHand, durationMs = 300) {
-            midiArray.forEach(m => {
-                const el = keyElementsMap.get(m);
-                if (!el) return;
-                const activeClass = isRightHand ? "active-rh" : "active-lh";
-                el.classList.add(activeClass);
-                setTimeout(() => { el.classList.remove(activeClass); }, durationMs);
-            });
-        }
-
-        // -------------------------------------------------------------
-        // 4. EXACT SVG SHEET MUSIC ENGRAVER (100% MuseScore Matching)
-        // -------------------------------------------------------------
-        function midiToStaffY(midi, clef) {
-            const diatonicStep = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
-            const octave = Math.floor(midi / 12) - 1;
-            const pitchClass = midi % 12;
-            const absoluteStep = octave * 7 + diatonicStep[pitchClass];
-
-            if (clef === "treble") {
-                // E4 is bottom line (y = 95)
-                // diatonic step of E4 is 4 * 7 + diatonicStep[4] = 28 + 2 = 30
-                const e4Step = 4 * 7 + diatonicStep[4];
-                const stepDiff = absoluteStep - e4Step;
-                return 95 - stepDiff * 5.1;
+                keyboardFrame.appendChild(keyEl);
+                keyElementsMap.set(cfg.midi, keyEl);
+                whiteKeyX += 22;
             } else {
-                // G2 is bottom line (y = 243)
-                // diatonic step of G2 is 2 * 7 + diatonicStep[7] = 14 + 4 = 18
-                const g2Step = 2 * 7 + diatonicStep[7];
-                const stepDiff = absoluteStep - g2Step;
-                return 243 - stepDiff * 5.1;
-            }
-        }
-
-        function renderSystemSVG(svgId, measureList, isFirstSystem, startMeasureNumber) {
-            const svg = document.getElementById(svgId);
-            if (!svg) return;
-            let html = "";
-
-            const W = 1000;
-            const leftMargin = isFirstSystem ? 148 : 78;
-            const usableWidth = W - leftMargin - 16;
-            const measureWidth = usableWidth / measureList.length;
-
-            const trebleLines = [54, 64, 75, 85, 95];
-            const bassLines = [202, 212, 222, 232, 243];
-
-            // 1. Grand Staff Left Brace and Barline
-            html += `<line x1="36" y1="${trebleLines[0]}" x2="36" y2="${bassLines[4]}" stroke="#000" stroke-width="1.2"/>`;
-            html += `<path d="M 28 54 C 23 54, 18 66, 18 84 L 18 135 C 18 144, 13 148, 8 149 C 13 150, 18 154, 18 163 L 18 214 C 18 232, 23 243, 28 243 C 24 241, 21 230, 21 214 L 21 163 C 21 152, 16 149, 12 149 C 16 148, 21 145, 21 135 L 21 84 C 21 68, 24 57, 28 54 Z" fill="#000"/>`;
-
-            // Horizontal Staff Lines
-            for (let i = 0; i < 5; i++) {
-                html += `<line x1="36" y1="${trebleLines[i]}" x2="${W}" y2="${trebleLines[i]}" stroke="#111" stroke-width="1"/>`;
-                html += `<line x1="36" y1="${bassLines[i]}" x2="${W}" y2="${bassLines[i]}" stroke="#111" stroke-width="1"/>`;
+                keyEl.className = "black-key";
+                keyEl.style.left = `${whiteKeyX - 7}px`;
+                keyboardFrame.appendChild(keyEl);
+                keyElementsMap.set(cfg.midi, keyEl);
             }
 
-            // Clefs in SMuFL Bravura
-            html += `<text class="bravura" x="38" y="85" font-size="40" fill="#000">&#xE050;</text>`;
-            html += `<text class="bravura" x="38" y="212" font-size="40" fill="#000">&#xE062;</text>`;
-
-            if (isFirstSystem) {
-                // Key Signature (3 flats in Treble and Bass)
-                html += `<text class="bravura" x="80" y="75" font-size="40" fill="#000">&#xE260;</text>`;
-                html += `<text class="bravura" x="93" y="60" font-size="40" fill="#000">&#xE260;</text>`;
-                html += `<text class="bravura" x="106" y="80" font-size="40" fill="#000">&#xE260;</text>`;
-
-                html += `<text class="bravura" x="80" y="232" font-size="40" fill="#000">&#xE260;</text>`;
-                html += `<text class="bravura" x="93" y="217" font-size="40" fill="#000">&#xE260;</text>`;
-                html += `<text class="bravura" x="106" y="237" font-size="40" fill="#000">&#xE260;</text>`;
-
-                // 4/4 Time Signature
-                html += `<text class="bravura" x="122" y="75" font-size="40" fill="#000">&#xE084;</text>`;
-                html += `<text class="bravura" x="122" y="95" font-size="40" fill="#000">&#xE084;</text>`;
-                html += `<text class="bravura" x="122" y="222" font-size="40" fill="#000">&#xE084;</text>`;
-                html += `<text class="bravura" x="122" y="243" font-size="40" fill="#000">&#xE084;</text>`;
-
-                // Tempo Mark: quarter = 70
-                html += `<text class="bravura" x="120" y="38" font-size="28" fill="#000">&#xE1D5;</text>`;
-                html += `<text class="music-text" x="138" y="36" font-size="21" font-weight="bold" fill="#000">= 70</text>`;
-            } else {
-                // Measure Number Badge at system start
-                html += `<text class="music-text" x="20" y="36" font-size="14" font-style="italic" fill="#333">${startMeasureNumber}</text>`;
-            }
-
-            // Render Measures in this system
-            measureList.forEach((m, mIdx) => {
-                const mX = leftMargin + mIdx * measureWidth;
-                const mRight = mX + measureWidth;
-
-                // Vertical barlines
-                html += `<line x1="${mRight}" y1="${trebleLines[0]}" x2="${mRight}" y2="${trebleLines[4]}" stroke="#111" stroke-width="1.2"/>`;
-                html += `<line x1="${mRight}" y1="${bassLines[0]}" x2="${mRight}" y2="${bassLines[4]}" stroke="#111" stroke-width="1.2"/>`;
-
-                // Dynamics (SMuFL Bravura: mp &#xE52C;, mf &#xE52B;, p &#xE52D;, f &#xE522;)
-                if (m.dynamic) {
-                    const dynMap = { "mp": "&#xE52C;", "mf": "&#xE52B;", "p": "&#xE52D;", "f": "&#xE522;", "pp": "&#xE52E;" };
-                    const dynChar = dynMap[m.dynamic] || m.dynamic;
-                    html += `<text class="bravura" x="${mX + 12}" y="125" font-size="32" fill="#000">${dynChar}</text>`;
-                }
-                if (m.crescendo) {
-                    html += `<polygon points="${mX + 16},116 ${mRight - 16},108 ${mRight - 16},124" fill="none" stroke="#000" stroke-width="1.1"/>`;
-                }
-
-                // Pedal Line Bracket
-                const pedY = 280;
-                html += `<line x1="${mX + 8}" y1="${pedY - 14}" x2="${mX + 8}" y2="${pedY}" stroke="#222" stroke-width="1.2"/>`;
-                html += `<line x1="${mX + 8}" y1="${pedY}" x2="${mRight - 8}" y2="${pedY}" stroke="#222" stroke-width="1.2"/>`;
-                html += `<line x1="${mRight - 8}" y1="${pedY}" x2="${mRight - 8}" y2="${pedY - 10}" stroke="#222" stroke-width="1.2"/>`;
-
-                const usableMWidth = measureWidth - 28;
-                const noteStartX = mX + 14;
-                const getBeatX = (b) => noteStartX + ((b - 1.0) / 4.0) * usableMWidth;
-
-                // TREBLE ENGRAVING
-                const isAccompanimentTriplet = (m.number <= 8);
-
-                if (isAccompanimentTriplet) {
-                    // Group triplets by beat
-                    const tripGroups = {};
-                    m.treble.forEach(n => {
-                        const bInt = Math.floor(n.beat);
-                        if (!tripGroups[bInt]) tripGroups[bInt] = [];
-                        tripGroups[bInt].push(n);
-                    });
-
-                    Object.keys(tripGroups).forEach(bKey => {
-                        const grp = tripGroups[bKey];
-                        const bInt = parseInt(bKey);
-
-                        if (bInt === 4 && m.number <= 2) {
-                            // Beat 4 Sextuplet Flourish (M1, M2)
-                            const x1 = getBeatX(4.0);
-                            const x2 = getBeatX(4.33);
-                            const x3 = getBeatX(4.60);
-                            const x4 = getBeatX(4.82);
-
-                            const melTopY = (m.number === 1) ? 48 : 54; // G5 or F5
-                            const midNoteY = (m.number === 1) ? 60 : 65; // Eb5 or D5
-                            const c5Y = (m.number === 1) ? 70 : 65;     // C5 or D5
-
-                            html += `<text class="bravura" x="${x1 - 5.5}" y="${melTopY}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x1 - 5.5}" y="85" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x2 - 5.5}" y="${c5Y}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x3 - 5.5}" y="${melTopY}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x3 - 5.5}" y="${midNoteY}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x4 - 5.5}" y="${melTopY}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x4 - 5.5}" y="${midNoteY}" font-size="40" fill="#000">&#xE0A4;</text>`;
-
-                            const by1 = 113, by4 = 102;
-                            const getBY = (x) => by1 + (by4 - by1) * ((x - x1) / (x4 - x1));
-
-                            html += `<line x1="${x1 - 5.2}" y1="${melTopY}" x2="${x1 - 5.2}" y2="${by1}" stroke="#000" stroke-width="1.3"/>`;
-                            html += `<line x1="${x2 - 5.2}" y1="${c5Y}" x2="${x2 - 5.2}" y2="${getBY(x2)}" stroke="#000" stroke-width="1.3"/>`;
-                            html += `<line x1="${x3 - 5.2}" y1="${melTopY}" x2="${x3 - 5.2}" y2="${getBY(x3)}" stroke="#000" stroke-width="1.3"/>`;
-                            html += `<line x1="${x4 - 5.2}" y1="${melTopY}" x2="${x4 - 5.2}" y2="${by4}" stroke="#000" stroke-width="1.3"/>`;
-
-                            // Main beam
-                            html += `<line x1="${x1 - 5.2}" y1="${by1}" x2="${x4 - 5.2}" y2="${by4}" stroke="#000" stroke-width="4.5"/>`;
-                            // Secondary beam between stem 2 and stem 3
-                            html += `<line x1="${x2 - 5.2}" y1="${getBY(x2) - 6.5}" x2="${x3 - 5.2}" y2="${getBY(x3) - 6.5}" stroke="#000" stroke-width="3.5"/>`;
-                            // Slur arc
-                            html += `<path d="M ${x2 - 2} ${c5Y - 6} Q ${(x2 + x3)/2} ${c5Y - 14}, ${x3 - 2} ${c5Y - 6}" fill="none" stroke="#000" stroke-width="1.3"/>`;
-                            // Triplet "3"
-                            html += `<text class="music-text" x="${(x1 + x4)/2}" y="128" font-size="14" font-style="italic" font-weight="bold" text-anchor="middle" fill="#000">3</text>`;
-                        } else if (grp.length >= 3) {
-                            const n1 = grp[0];
-                            const n2 = grp[1];
-                            const n3 = grp[2];
-
-                            const x1 = getBeatX(n1.beat);
-                            const x2 = getBeatX(n2.beat);
-                            const x3 = getBeatX(n3.beat);
-
-                            const y1 = midiToStaffY(n1.chord[0], "treble");
-                            const y2 = midiToStaffY(n2.chord[0], "treble");
-                            const y3 = midiToStaffY(n3.chord[0], "treble");
-
-                            // Noteheads
-                            html += `<text class="bravura" x="${x1 - 5.5}" y="${y1}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x2 - 5.5}" y="${y2}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            html += `<text class="bravura" x="${x3 - 5.5}" y="${y3}" font-size="40" fill="#000">&#xE0A4;</text>`;
-
-                            // Top melody note on Beat 1 (e.g. G5 or F5)
-                            let topY1 = y1;
-                            if (n1.chord.length > 1) {
-                                topY1 = midiToStaffY(n1.chord[1], "treble");
-                                html += `<text class="bravura" x="${x1 - 5.5}" y="${topY1}" font-size="40" fill="#000">&#xE0A4;</text>`;
-                            }
-
-                            // Accidentals
-                            if (n1.accidental === "b") html += `<text class="bravura" x="${x1 - 16}" y="${y1}" font-size="34" fill="#000">&#xE260;</text>`;
-                            if (n2.accidental === "b") html += `<text class="bravura" x="${x2 - 16}" y="${y2}" font-size="34" fill="#000">&#xE260;</text>`;
-                            if (n3.accidental === "b") html += `<text class="bravura" x="${x3 - 16}" y="${y3}" font-size="34" fill="#000">&#xE260;</text>`;
-
-                            // Downstems
-                            const b_y1 = 110;
-                            const b_y2 = 100;
-                            const by_mid = b_y1 + (b_y2 - b_y1) * ((x2 - x1) / (x3 - x1));
-
-                            html += `<line x1="${x1 - 5.2}" y1="${topY1}" x2="${x1 - 5.2}" y2="${b_y1}" stroke="#000" stroke-width="1.3"/>`;
-                            html += `<line x1="${x2 - 5.2}" y1="${y2}" x2="${x2 - 5.2}" y2="${by_mid}" stroke="#000" stroke-width="1.3"/>`;
-                            html += `<line x1="${x3 - 5.2}" y1="${y3}" x2="${x3 - 5.2}" y2="${b_y2}" stroke="#000" stroke-width="1.3"/>`;
-
-                            // Beam
-                            html += `<line x1="${x1 - 5.2}" y1="${b_y1}" x2="${x3 - 5.2}" y2="${b_y2}" stroke="#000" stroke-width="4.5"/>`;
-
-                            // Triplet "3"
-                            html += `<text class="music-text" x="${(x1 + x3)/2}" y="126" font-size="14" font-style="italic" font-weight="bold" text-anchor="middle" fill="#000">3</text>`;
-                        }
-
-                        // Lyrics
-                        if (grp[0].lyric) {
-                            html += `<text class="music-text" x="${getBeatX(grp[0].beat)}" y="154" font-size="17" fill="#000">${grp[0].lyric}</text>`;
-                        }
-                    });
-                } else {
-                    // Standard / Chords / Chorus / Sextuplet engraving (M9 to M31)
-                    m.treble.forEach(n => {
-                        const x = getBeatX(n.beat);
-
-                        // Rolled chord wavy line
-                        if (n.rolled) {
-                            html += `<text class="bravura" x="${x - 16}" y="95" font-size="38" fill="#000">&#xE634;</text>`;
-                        }
-
-                        n.chord.forEach(midi => {
-                            const y = midiToStaffY(midi, "treble");
-
-                            // Ledger lines
-                            if (y < 50) {
-                                for (let lY = 44; lY >= y - 3; lY -= 10) {
-                                    html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
-                                }
-                            }
-                            if (y > 100) {
-                                for (let lY = 105; lY <= y + 3; lY += 10) {
-                                    html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
-                                }
-                            }
-
-                            if (n.accidental === "b") {
-                                html += `<text class="bravura" x="${x - 16}" y="${y}" font-size="34" fill="#000">&#xE260;</text>`;
-                            }
-
-                            // Notehead
-                            const headChar = (n.dur === "half" || n.dur === "whole") ? "&#xE0A3;" : "&#xE0A4;";
-                            html += `<text class="bravura" x="${x - 5.5}" y="${y}" font-size="40" fill="#000">${headChar}</text>`;
-                        });
-
-                        // Stems
-                        if (n.dur !== "whole") {
-                            const lowestY = Math.max(...n.chord.map(m => midiToStaffY(m, "treble")));
-                            const highestY = Math.min(...n.chord.map(m => midiToStaffY(m, "treble")));
-                            const stemUp = (lowestY >= 75);
-                            const stemX = stemUp ? x + 5.2 : x - 5.2;
-                            const stemYEnd = stemUp ? highestY - 30 : lowestY + 30;
-                            html += `<line x1="${stemX}" y1="${stemUp ? lowestY : highestY}" x2="${stemX}" y2="${stemYEnd}" stroke="#000" stroke-width="1.3"/>`;
-                        }
-
-                        if (n.lyric) {
-                            html += `<text class="music-text" x="${x}" y="154" font-size="16" fill="#000">${n.lyric}</text>`;
-                        }
-                    });
-                }
-
-                // BASS ENGRAVING
-                m.bass.forEach((n, bIdx) => {
-                    const x = getBeatX(n.beat);
-
-                    if (n.rolled) {
-                        html += `<text class="bravura" x="${x - 16}" y="235" font-size="38" fill="#000">&#xE634;</text>`;
-                    }
-
-                    n.chord.forEach(midi => {
-                        const y = midiToStaffY(midi, "bass");
-
-                        // Ledger lines
-                        if (y > 250) {
-                            for (let lY = 253; lY <= y + 3; lY += 10) {
-                                html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
-                            }
-                        }
-                        if (y < 195) {
-                            for (let lY = 192; lY >= y - 3; lY -= 10) {
-                                html += `<line x1="${x - 9}" y1="${lY}" x2="${x + 9}" y2="${lY}" stroke="#000" stroke-width="1.2"/>`;
-                            }
-                        }
-
-                        if (n.accidental === "b") {
-                            html += `<text class="bravura" x="${x - 16}" y="${y}" font-size="34" fill="#000">&#xE260;</text>`;
-                        }
-
-                        const headChar = (n.dur === "half" || n.dur === "whole") ? "&#xE0A3;" : "&#xE0A4;";
-                        html += `<text class="bravura" x="${x - 5.5}" y="${y}" font-size="40" fill="#000">${headChar}</text>`;
-                    });
-
-                    if (n.dur !== "whole") {
-                        const lowestY = Math.max(...n.chord.map(m => midiToStaffY(m, "bass")));
-                        const highestY = Math.min(...n.chord.map(m => midiToStaffY(m, "bass")));
-
-                        let stemUp = false;
-                        if (isAccompanimentTriplet) {
-                            stemUp = (bIdx >= 2); // Beat 1 & 2 DOWN, Beat 3 & 4 UP
-                        } else {
-                            stemUp = (lowestY >= 222);
-                        }
-
-                        const stemX = stemUp ? x + 5.2 : x - 5.2;
-                        const stemYEnd = stemUp ? highestY - 32 : lowestY + 32;
-                        html += `<line x1="${stemX}" y1="${stemUp ? lowestY : highestY}" x2="${stemX}" y2="${stemYEnd}" stroke="#000" stroke-width="1.3"/>`;
-                    }
-                });
+            keyEl.addEventListener("mousedown", () => {
+                audio.init();
+                audio.playChord([cfg.midi], 0.6, 0.9, true);
+                flashKeys([cfg.midi], true, 300);
             });
-
-            svg.innerHTML = html;
-        }
-
-        // Render all 17 systems across all 4 pages
-        SYSTEM_DEFINITIONS.forEach(def => {
-            const mList = def.measures.map(mNum => SCORE_DATA[mNum - 1]);
-            renderSystemSVG(`sys${def.sysIdx}Svg`, mList, def.isFirstInSong, def.measures[0]);
         });
 
-        // -------------------------------------------------------------
-        // 5. MASTER PLAYBACK ENGINE & SYNCHRONIZATION (31 Measures)
-        // -------------------------------------------------------------
+        keyboardFrame.style.width = `${whiteKeyX + 8}px`;
+
+        function flashKeys(midiList, isRH = true, durationMs = 300) {
+            midiList.forEach(midi => {
+                const el = keyElementsMap.get(midi);
+                if (el) {
+                    const cls = isRH ? "active-rh" : "active-lh";
+                    el.classList.add(cls);
+                    setTimeout(() => {
+                        el.classList.remove(cls);
+                    }, durationMs);
+                }
+            });
+        }
+
+        // Master Playback State & Controls
         let isPlaying = false;
         let isLooping = false;
         let isMetronomeOn = false;
         let speedMultiplier = 1.0;
-        let baseBPM = 70;
+        const BASE_BPM = 70;
+        const TOTAL_MEASURES = 56;
+        const TOTAL_BEATS = TOTAL_MEASURES * 4;
 
-        let currentMeasureIdx = 0; // 0..30
-        let currentBeat = 1.0;     // 1.0 .. 5.0
+        let currentMeasureIdx = 0;
+        let currentBeat = 1.0;
         let lastTimestamp = 0;
         let animationFrameId = null;
         const playedNotesSet = new Set();
         let lastMetroBeatInt = 0;
-        let lastActiveSysIdx = -1;
+        let lastActivePage = 1;
 
-        // UI Element References
         const playBtn = document.getElementById("playBtn");
         const rewindBtn = document.getElementById("rewindBtn");
         const loopBtn = document.getElementById("loopBtn");
@@ -1232,25 +1725,71 @@
         const timelineSlider = document.getElementById("timelineSlider");
         const timeElapsedDisplay = document.getElementById("timeElapsedDisplay");
         const measurePill = document.getElementById("measurePill");
+        const scoreScrollArea = document.getElementById("scoreScrollArea");
 
-        // Hands Mixer Controls
+        const mixerHUD = document.getElementById("mixerHUD");
+        const mixerToggleBtn = document.getElementById("mixerToggleBtn");
+        const closeMixerBtn = document.getElementById("closeMixerBtn");
+        const miniMixerTrigger = document.getElementById("miniMixerTrigger");
+
         const rhMuteBtn = document.getElementById("rhMuteBtn");
         const rhSoloBtn = document.getElementById("rhSoloBtn");
         const rhVolSlider = document.getElementById("rhVolSlider");
+        const rhVolVal = document.getElementById("rhVolVal");
+        const miniRhVol = document.getElementById("miniRhVol");
+
         const lhMuteBtn = document.getElementById("lhMuteBtn");
         const lhSoloBtn = document.getElementById("lhSoloBtn");
         const lhVolSlider = document.getElementById("lhVolSlider");
+        const lhVolVal = document.getElementById("lhVolVal");
+        const miniLhVol = document.getElementById("miniLhVol");
 
-        // Speed Buttons
-        document.querySelectorAll(".speed-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".speed-btn").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                speedMultiplier = parseFloat(btn.dataset.speed);
+        const presetBothBtn = document.getElementById("presetBothBtn");
+        const presetOnlyRHBtn = document.getElementById("presetOnlyRHBtn");
+        const presetOnlyLHBtn = document.getElementById("presetOnlyLHBtn");
+
+        const origAudio = new Audio("dark_dream_audio.mp3");
+        origAudio.preload = "auto";
+        let useOriginalAudio = true;
+
+        const audioModeBtn = document.getElementById("audioModeBtn");
+        if (audioModeBtn) {
+            audioModeBtn.addEventListener("click", () => {
+                useOriginalAudio = !useOriginalAudio;
+                if (useOriginalAudio) {
+                    audioModeBtn.innerText = "🎵 Áudio: Original MuseScore";
+                    audioModeBtn.style.borderColor = "#38bdf8";
+                    audioModeBtn.style.color = "#38bdf8";
+                    if (isPlaying) {
+                        const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
+                        origAudio.currentTime = Math.max(0, sec);
+                        origAudio.play().catch(e => console.log(e));
+                    }
+                } else {
+                    audioModeBtn.innerText = "🎹 Áudio: Samples Steinway";
+                    audioModeBtn.style.borderColor = "#a855f7";
+                    audioModeBtn.style.color = "#a855f7";
+                    origAudio.pause();
+                }
             });
-        });
+        }
 
-        // Hands Mixer Handlers
+        function toggleMixer(forceState) {
+            const isHidden = mixerHUD.classList.contains("hidden");
+            const shouldShow = (forceState !== undefined) ? forceState : isHidden;
+            if (shouldShow) {
+                mixerHUD.classList.remove("hidden");
+                mixerToggleBtn.classList.add("active");
+            } else {
+                mixerHUD.classList.add("hidden");
+                mixerToggleBtn.classList.remove("active");
+            }
+        }
+
+        mixerToggleBtn.addEventListener("click", () => toggleMixer());
+        closeMixerBtn.addEventListener("click", () => toggleMixer(false));
+        miniMixerTrigger.addEventListener("click", () => toggleMixer(true));
+
         rhMuteBtn.addEventListener("click", () => {
             audio.rhMute = !audio.rhMute;
             rhMuteBtn.classList.toggle("active", audio.rhMute);
@@ -1261,6 +1800,8 @@
         });
         rhVolSlider.addEventListener("input", (e) => {
             audio.rhVol = parseInt(e.target.value) / 100.0;
+            rhVolVal.innerText = `${e.target.value}%`;
+            miniRhVol.innerText = `${e.target.value}%`;
             if (audio.rhGain) audio.rhGain.gain.value = audio.rhVol;
         });
 
@@ -1274,10 +1815,47 @@
         });
         lhVolSlider.addEventListener("input", (e) => {
             audio.lhVol = parseInt(e.target.value) / 100.0;
+            lhVolVal.innerText = `${e.target.value}%`;
+            miniLhVol.innerText = `${e.target.value}%`;
             if (audio.lhGain) audio.lhGain.gain.value = audio.lhVol;
         });
 
-        // Loop & Metronome
+        presetBothBtn.addEventListener("click", () => {
+            audio.rhMute = false; audio.rhSolo = false;
+            audio.lhMute = false; audio.lhSolo = false;
+            rhMuteBtn.classList.remove("active");
+            rhSoloBtn.classList.remove("active");
+            lhMuteBtn.classList.remove("active");
+            lhSoloBtn.classList.remove("active");
+        });
+
+        presetOnlyRHBtn.addEventListener("click", () => {
+            audio.rhMute = false; audio.rhSolo = true;
+            audio.lhMute = true; audio.lhSolo = false;
+            rhMuteBtn.classList.remove("active");
+            rhSoloBtn.classList.add("active");
+            lhMuteBtn.classList.add("active");
+            lhSoloBtn.classList.remove("active");
+        });
+
+        presetOnlyLHBtn.addEventListener("click", () => {
+            audio.rhMute = true; audio.rhSolo = false;
+            audio.lhMute = false; audio.lhSolo = true;
+            rhMuteBtn.classList.add("active");
+            rhSoloBtn.classList.remove("active");
+            lhMuteBtn.classList.remove("active");
+            lhSoloBtn.classList.add("active");
+        });
+
+        document.querySelectorAll(".speed-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".speed-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                speedMultiplier = parseFloat(btn.dataset.speed);
+                if (origAudio) origAudio.playbackRate = speedMultiplier;
+            });
+        });
+
         loopBtn.addEventListener("click", () => {
             isLooping = !isLooping;
             loopBtn.classList.toggle("active", isLooping);
@@ -1288,7 +1866,6 @@
             metronomeBtn.classList.toggle("active", isMetronomeOn);
         });
 
-        // Play/Pause/Rewind
         playBtn.addEventListener("click", () => {
             audio.init();
             if (isPlaying) {
@@ -1307,37 +1884,56 @@
             seekToBeat(totalBeats);
         });
 
-        // System row click to seek
-        document.querySelectorAll(".system-row").forEach(row => {
-            row.addEventListener("click", (e) => {
-                const sysIdx = parseInt(row.dataset.system);
-                const def = SYSTEM_DEFINITIONS.find(d => d.sysIdx === sysIdx);
-                if (!def) return;
+        for (let p = 1; p <= 7; p++) {
+            const overlay = document.getElementById(`pageOverlay${p}`);
+            if (overlay) {
+                overlay.addEventListener("click", (e) => {
+                    const rect = overlay.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const clickY = e.clientY - rect.top;
+                    const clickXPct = (clickX / rect.width) * 100.0;
+                    const clickYPct = (clickY / rect.height) * 100.0;
 
-                const rect = row.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const pct = clickX / rect.width;
-                const mInSys = Math.min(def.measures.length - 1, Math.max(0, Math.floor(pct * def.measures.length)));
-                const targetMNum = def.measures[mInSys];
-                seekToBeat((targetMNum - 1) * 4);
-            });
-        });
+                    const matchM = MEASURE_LAYOUT.find(m => {
+                        return m.page === p &&
+                            clickXPct >= (m.left_pct - 1.0) &&
+                            clickXPct <= (m.left_pct + m.width_pct + 1.0) &&
+                            clickYPct >= (m.top_pct - 2.5) &&
+                            clickYPct <= (m.top_pct + m.height_pct + 4.0);
+                    });
 
-        // Keyboard shortcuts
+                    if (matchM) {
+                        seekToBeat((matchM.number - 1) * 4);
+                    }
+                });
+            }
+        }
+
         window.addEventListener("keydown", (e) => {
             if (e.code === "Space") {
-                e.preventDefault();
-                playBtn.click();
+                if (playerView.classList.contains("active-view")) {
+                    e.preventDefault();
+                    playBtn.click();
+                }
             } else if (e.code === "KeyM") {
                 metronomeBtn.click();
             } else if (e.code === "KeyL") {
                 loopBtn.click();
+            } else if (e.code === "KeyX") {
+                toggleMixer();
+            } else if (e.code === "Home" || e.code === "KeyZ") {
+                seekToBeat(0);
             }
         });
 
         function startPlayback() {
             isPlaying = true;
             playBtn.innerText = "⏸";
+            if (useOriginalAudio) {
+                const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
+                origAudio.currentTime = Math.max(0, sec);
+                origAudio.play().catch(e => console.log("Audio autoplay prevented:", e));
+            }
             lastTimestamp = performance.now();
             lastMetroBeatInt = Math.floor(currentBeat);
             playedNotesSet.clear();
@@ -1349,11 +1945,15 @@
         function pausePlayback() {
             isPlaying = false;
             playBtn.innerText = "▶";
+            if (origAudio) origAudio.pause();
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
         }
 
         function seekToBeat(totalBeats) {
-            const mIdx = Math.min(30, Math.floor(totalBeats / 4));
+            if (origAudio) {
+                origAudio.currentTime = Math.max(0, totalBeats * (60.0 / BASE_BPM));
+            }
+            const mIdx = Math.min(TOTAL_MEASURES - 1, Math.max(0, Math.floor(totalBeats / 4)));
             const beatInM = 1.0 + (totalBeats % 4);
 
             currentMeasureIdx = mIdx;
@@ -1362,7 +1962,7 @@
             lastMetroBeatInt = Math.floor(currentBeat);
 
             updateScrubberAndDisplay();
-            updateCursorPosition();
+            updateScorePlayhead();
         }
 
         function playbackLoop(timestamp) {
@@ -1371,13 +1971,12 @@
             const dt = (timestamp - lastTimestamp) / 1000.0;
             lastTimestamp = timestamp;
 
-            const currentBPM = baseBPM * speedMultiplier;
+            const currentBPM = BASE_BPM * speedMultiplier;
             const deltaBeats = (currentBPM / 60.0) * dt;
 
             const prevBeat = currentBeat;
             currentBeat += deltaBeats;
 
-            // Metronome Click Check
             const currentBeatInt = Math.floor(currentBeat);
             if (currentBeatInt !== lastMetroBeatInt && currentBeatInt >= 1 && currentBeatInt <= 4) {
                 lastMetroBeatInt = currentBeatInt;
@@ -1390,17 +1989,16 @@
                 }
             }
 
-            // Boundary
             if (currentBeat >= 5.0) {
                 currentMeasureIdx++;
                 currentBeat = 1.0 + (currentBeat - 5.0);
                 playedNotesSet.clear();
                 lastMetroBeatInt = 1;
 
-                if (isLooping && currentMeasureIdx > 30) {
+                if (isLooping && currentMeasureIdx >= TOTAL_MEASURES) {
                     currentMeasureIdx = 0;
                     currentBeat = 1.0;
-                } else if (currentMeasureIdx >= SCORE_DATA.length) {
+                } else if (currentMeasureIdx >= TOTAL_MEASURES) {
                     pausePlayback();
                     seekToBeat(0);
                     return;
@@ -1412,7 +2010,7 @@
             }
 
             updateScrubberAndDisplay();
-            updateCursorPosition();
+            updateScorePlayhead();
 
             animationFrameId = requestAnimationFrame(playbackLoop);
         }
@@ -1421,35 +2019,37 @@
             const m = SCORE_DATA[mIdx];
             if (!m) return;
 
-            // Treble (Right Hand)
-            m.treble.forEach((n, idx) => {
-                const key = `t-${mIdx}-${idx}-${n.beat}`;
-                if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
-                    playedNotesSet.add(key);
-                    const dur = n.dur === "16th" ? 0.22 : (n.dur === "dottedQuarter" ? 1.0 : 0.55);
-                    audio.playChord(n.chord, dur, n.triplet ? 0.8 : 0.95, true);
-                    flashKeys(n.chord, true, Math.min(dur * 1000, 500));
-                }
-            });
+            if (m.treble) {
+                m.treble.forEach((n, idx) => {
+                    const key = `t-${mIdx}-${idx}-${n.beat}`;
+                    if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
+                        playedNotesSet.add(key);
+                        const dur = n.dur === "16th" ? 0.22 : (n.dur === "dottedQuarter" ? 1.0 : 0.55);
+                        audio.playChord(n.chord, dur, n.triplet ? 0.8 : 0.95, true);
+                        flashKeys(n.chord, true, Math.min(dur * 1000, 500));
+                    }
+                });
+            }
 
-            // Bass (Left Hand)
-            m.bass.forEach((n, idx) => {
-                const key = `b-${mIdx}-${idx}-${n.beat}`;
-                if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
-                    playedNotesSet.add(key);
-                    const dur = n.dur === "16th" ? 0.25 : 0.75;
-                    audio.playChord(n.chord, dur, 0.85, false);
-                    flashKeys(n.chord, false, Math.min(dur * 1000, 600));
-                }
-            });
+            if (m.bass) {
+                m.bass.forEach((n, idx) => {
+                    const key = `b-${mIdx}-${idx}-${n.beat}`;
+                    if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
+                        playedNotesSet.add(key);
+                        const dur = n.dur === "16th" ? 0.25 : 0.75;
+                        audio.playChord(n.chord, dur, 0.85, false);
+                        flashKeys(n.chord, false, Math.min(dur * 1000, 600));
+                    }
+                });
+            }
         }
 
         function updateScrubberAndDisplay() {
             const totalBeats = currentMeasureIdx * 4 + (currentBeat - 1.0);
             timelineSlider.value = totalBeats;
 
-            const totalDurationSec = (124 / (baseBPM * speedMultiplier)) * 60;
-            const elapsedSec = (totalBeats / (baseBPM * speedMultiplier)) * 60;
+            const totalDurationSec = (TOTAL_BEATS / (BASE_BPM * speedMultiplier)) * 60;
+            const elapsedSec = (totalBeats / (BASE_BPM * speedMultiplier)) * 60;
 
             const fmt = (s) => {
                 const min = Math.floor(s / 60);
@@ -1458,57 +2058,57 @@
             };
 
             timeElapsedDisplay.innerText = `${fmt(elapsedSec)} / ${fmt(totalDurationSec)}`;
-            measurePill.innerText = `Compasso ${currentMeasureIdx + 1} / 31`;
+            measurePill.innerText = `Compasso ${currentMeasureIdx + 1} / ${TOTAL_MEASURES}`;
         }
 
-        function updateCursorPosition() {
+        function updateScorePlayhead() {
             const mNum = currentMeasureIdx + 1;
-            const def = SYSTEM_DEFINITIONS.find(d => d.measures.includes(mNum));
-            if (!def) return;
+            const mDef = MEASURE_LAYOUT.find(m => m.number === mNum);
+            if (!mDef) return;
 
-            const sysIdx = def.sysIdx;
-            const mInSys = def.measures.indexOf(mNum);
-            const countInSys = def.measures.length;
-            const leftMargin = def.isFirstInSong ? 86 : 64;
+            const targetPage = mDef.page;
 
-            // Hide inactive cursors
-            for (let s = 0; s <= 16; s++) {
-                const c = document.getElementById(`cursor${s}`);
-                if (!c) continue;
-                if (s === sysIdx && isPlaying) {
-                    c.style.display = "block";
+            for (let p = 1; p <= 7; p++) {
+                const box = document.getElementById(`measureBox${p}`);
+                const cur = document.getElementById(`cursorLine${p}`);
+                if (p === targetPage && isPlaying) {
+                    if (box) box.style.display = "block";
+                    if (cur) cur.style.display = "block";
                 } else {
-                    c.style.display = "none";
+                    if (box) box.style.display = "none";
+                    if (cur) cur.style.display = "none";
                 }
             }
 
-            // Auto-scroll when system changes
-            if (isPlaying && sysIdx !== lastActiveSysIdx) {
-                lastActiveSysIdx = sysIdx;
-                const rowEl = document.getElementById(`sysRow${sysIdx}`);
-                if (rowEl) {
-                    rowEl.scrollIntoView({ behavior: "smooth", block: "center" });
+            if (isPlaying && targetPage !== lastActivePage) {
+                lastActivePage = targetPage;
+                const pageEl = document.getElementById(`sheetPage${targetPage}`);
+                if (pageEl) {
+                    pageEl.scrollIntoView({ behavior: "smooth", block: "center" });
                 }
             }
 
             if (!isPlaying) return;
 
-            const cursor = document.getElementById(`cursor${sysIdx}`);
-            if (!cursor) return;
+            const box = document.getElementById(`measureBox${targetPage}`);
+            const cur = document.getElementById(`cursorLine${targetPage}`);
+            if (!box || !cur) return;
 
-            const W = 1000;
-            const usableWidth = W - leftMargin - 16;
-            const measureWidth = usableWidth / countInSys;
-            const mX = leftMargin + mInSys * measureWidth;
-            const usableMWidth = measureWidth - 36;
-            const startX = mX + 18;
+            const padTop = 1.2;
+            const padH = 2.4;
+            box.style.left = `${mDef.left_pct}%`;
+            box.style.top = `${Math.max(0, mDef.top_pct - padTop)}%`;
+            box.style.width = `${mDef.width_pct}%`;
+            box.style.height = `${mDef.height_pct + padH}%`;
 
-            const beatOffset = (currentBeat - 1.0) / 4.0;
-            const x = startX + beatOffset * usableMWidth;
-
-            const pct = (x / 1000.0) * 100.0;
-            cursor.style.left = `${pct}%`;
+            const beatFrac = (currentBeat - 1.0) / 4.0;
+            const curLeftPct = mDef.left_pct + beatFrac * mDef.width_pct;
+            cur.style.left = `${curLeftPct}%`;
+            cur.style.top = `${Math.max(0, mDef.top_pct - padTop)}%`;
+            cur.style.height = `${mDef.height_pct + padH}%`;
         }
+
+        updateScrubberAndDisplay();
     </script>
 </body>
 </html>

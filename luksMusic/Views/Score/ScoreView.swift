@@ -1,8 +1,9 @@
 // ScoreView.swift
 // luksMusic
 //
-// MuseScore-like sheet music viewer displaying grand staff notation,
-// horizontal measure scrolling, playback cursor, and action buttons.
+// Authentic MuseScore-style vertical sheet music viewer for iOS.
+// Displays full-width vertical grand staff systems, lyrics, pedal lines,
+// smooth teardrop playback cursor, and a floating bottom transport pill.
 
 import SwiftUI
 
@@ -10,134 +11,161 @@ struct ScoreView: View {
     @State var viewModel: ScoreViewModel
     @State private var showPracticeMode: Bool = false
     @State private var showEditorMode: Bool = false
+    @State private var showMixerSheet: Bool = false
     @State private var showExportShare: Bool = false
     @State private var exportURL: URL? = nil
+    @Environment(\.dismiss) private var dismiss
+    
+    // Zoom control
+    @State private var zoomScale: CGFloat = 1.0
+    
+    // Hands volume controls
+    @State private var rhVolume: Double = 0.95
+    @State private var lhVolume: Double = 0.90
+    @State private var rhMuted: Bool = false
+    @State private var lhMuted: Bool = false
     
     init(score: Score) {
         _viewModel = State(initialValue: ScoreViewModel(score: score))
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Score Header
-            scoreHeader()
-                .padding(.horizontal)
-                .padding(.top, 8)
-                .padding(.bottom, 12)
-            
-            Divider()
-            
-            // Sheet Music Area
-            ScrollViewReader { scrollProxy in
-                ScrollView(.horizontal, showsIndicators: true) {
-                    HStack(alignment: .top, spacing: 0) {
-                        // Left Clefs and Key/Time signatures
-                        StaffView(
-                            lineSpacing: 12.0 * viewModel.zoomScale,
-                            keySignatureValue: viewModel.score.keySignatureValue,
-                            timeSignatureTop: viewModel.score.timeSignatureTop,
-                            timeSignatureBottom: viewModel.score.timeSignatureBottom,
-                            showClefsAndSignatures: true
-                        )
-                        .padding(.leading, 16)
-                        
-                        // Measures in sequence
-                        ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
-                            MeasureView(
-                                measure: measure,
-                                isCurrent: index == viewModel.currentMeasureIndex,
-                                currentBeat: viewModel.currentBeat,
-                                lineSpacing: 12.0 * viewModel.zoomScale,
-                                measureWidth: 280.0 * viewModel.zoomScale
-                            )
-                            .id(index)
-                            .onTapGesture {
-                                viewModel.seekToMeasure(index)
+        GeometryReader { geometry in
+            ZStack(alignment: .bottom) {
+                // Background Pure White matching MuseScore paper
+                Color.white.ignoresSafeArea()
+                
+                // Sheet Music Area (Continuous Vertical Flow)
+                ScrollViewReader { scrollProxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 18) {
+                            // Score Title (Clean serif title matching MuseScore app)
+                            VStack(spacing: 4) {
+                                Text(viewModel.score.title.uppercased())
+                                    .font(.system(size: 21, weight: .regular, design: .serif))
+                                    .tracking(0.5)
+                                    .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
+                                
+                                if !viewModel.score.composer.isEmpty {
+                                    Text(viewModel.score.composer)
+                                        .font(.system(size: 11, weight: .regular, design: .serif))
+                                        .foregroundColor(Color.black.opacity(0.6))
+                                }
                             }
+                            .padding(.top, 14)
+                            .padding(.bottom, 4)
+                            
+                            // Vertical Grand Staff Systems (1 Measure per System on iPhone)
+                            ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
+                                let isCurrent = (index == viewModel.currentMeasureIndex)
+                                let isFirstMeasure = (index == 0)
+                                let leftWidth: CGFloat = isFirstMeasure ? 72.0 : 54.0
+                                let systemWidth = max(240.0, geometry.size.width - 24.0)
+                                let measureWidth = systemWidth - leftWidth
+                                let lineSpacing: CGFloat = 8.5 * zoomScale
+                                
+                                HStack(alignment: .top, spacing: 0) {
+                                    // Left Clefs, Signatures & Grand Staff Brace
+                                    StaffView(
+                                        lineSpacing: lineSpacing,
+                                        keySignatureValue: viewModel.score.keySignatureValue,
+                                        timeSignatureTop: viewModel.score.timeSignatureTop,
+                                        timeSignatureBottom: viewModel.score.timeSignatureBottom,
+                                        showClefsAndSignatures: true,
+                                        showTimeSignature: isFirstMeasure
+                                    )
+                                    .frame(width: leftWidth)
+                                    
+                                    // Measure Notes, Triplets, Lyrics, Pedal Line & Cursor
+                                    MeasureView(
+                                        measure: measure,
+                                        isCurrent: isCurrent,
+                                        currentBeat: viewModel.currentBeat,
+                                        lineSpacing: lineSpacing,
+                                        measureWidth: measureWidth,
+                                        showMeasureNumber: true,
+                                        showTempoAndDynamics: isFirstMeasure
+                                    )
+                                }
+                                .id(index)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.seekToMeasure(index)
+                                }
+                            }
+                            
+                            // Bottom padding so last measure is not blocked by floating pill
+                            Spacer().frame(height: 110)
                         }
-                        
-                        Spacer(minLength: 40)
+                        .padding(.horizontal, 12)
                     }
-                    .padding(.vertical, 24)
                     .background(Color.white)
-                }
-                .background(Color.white)
-                .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        scrollProxy.scrollTo(newIndex, anchor: .center)
+                    .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            scrollProxy.scrollTo(newIndex, anchor: .center)
+                        }
                     }
-                }
-            }
-            .background(Color.white)
-            
-            Divider()
-            
-            // Bottom Action Bar: Practice & Edit shortcuts
-            HStack(spacing: 12) {
-                Button {
-                    showPracticeMode = true
-                } label: {
-                    Label("Practice Piano", systemImage: "pianokeys")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .cornerRadius(10)
                 }
                 
+                // Floating MuseScore Bottom Controls Pill
+                floatingMuseScorePill
+                    .padding(.bottom, 10)
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(Color.white, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar) // HIDE TAB BAR TO DEDICATE 90% SCREEN TO SCORE!
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
                 Button {
-                    showEditorMode = true
+                    viewModel.stop()
+                    dismiss()
                 } label: {
-                    Label("Edit", systemImage: "square.and.pencil")
-                        .font(.subheadline)
-                        .frame(width: 80)
-                        .padding(.vertical, 12)
-                        .background(Color(.secondarySystemFill))
-                        .cornerRadius(10)
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.black)
                 }
             }
-            .padding(.horizontal)
-            .padding(.top, 10)
             
-            // Playback Controls
-            PlaybackControlsView(
-                isPlaying: viewModel.isPlaying,
-                tempo: viewModel.score.tempo,
-                currentMeasure: viewModel.currentMeasureIndex + 1,
-                totalMeasures: max(1, viewModel.score.measureCount),
-                onPlayPause: { viewModel.togglePlayback() },
-                onStop: { viewModel.stop() },
-                onPrevious: { viewModel.previousMeasure() },
-                onNext: { viewModel.nextMeasure() },
-                onTempoChange: { newBPM in viewModel.score.tempo = newBPM }
-            )
-            .padding(.bottom, 8)
-        }
-        .navigationTitle(viewModel.score.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
+                    Button {
+                        showPracticeMode = true
+                    } label: {
+                        Label("Practice Piano", systemImage: "pianokeys")
+                    }
+                    
+                    Button {
+                        showEditorMode = true
+                    } label: {
+                        Label("Edit Score", systemImage: "square.and.pencil")
+                    }
+                    
                     Button {
                         exportScore()
                     } label: {
                         Label("Export MusicXML", systemImage: "square.and.arrow.up")
                     }
                     
+                    Divider()
+                    
                     Button {
-                        viewModel.zoomScale = min(1.5, viewModel.zoomScale + 0.15)
+                        zoomScale = min(1.3, zoomScale + 0.1)
                     } label: {
                         Label("Zoom In", systemImage: "plus.magnifyingglass")
                     }
                     
                     Button {
-                        viewModel.zoomScale = max(0.7, viewModel.zoomScale - 0.15)
+                        zoomScale = max(0.7, zoomScale - 0.1)
                     } label: {
                         Label("Zoom Out", systemImage: "minus.magnifyingglass")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.black)
                 }
             }
         }
@@ -147,6 +175,10 @@ struct ScoreView: View {
         .sheet(isPresented: $showEditorMode) {
             EditorView(score: viewModel.score)
         }
+        .sheet(isPresented: $showMixerSheet) {
+            handsMixerSheet
+                .presentationDetents([.fraction(0.38)])
+        }
         .sheet(isPresented: $showExportShare) {
             if let url = exportURL {
                 ShareSheet(items: [url])
@@ -154,38 +186,168 @@ struct ScoreView: View {
         }
     }
     
-    // MARK: - Header
+    // MARK: - Floating MuseScore Transport Pill (Photo 2 Match)
     
     @ViewBuilder
-    private func scoreHeader() -> some View {
-        VStack(spacing: 4) {
-            Text(viewModel.score.title.uppercased())
-                .font(.system(size: 20, weight: .bold, design: .serif))
-                .multilineTextAlignment(.center)
-                .foregroundColor(.primary)
-            
-            Text(viewModel.score.composer)
-                .font(.system(size: 13, weight: .medium, design: .serif))
-                .foregroundColor(.secondary)
-            
-            HStack(spacing: 12) {
-                HStack(spacing: 3) {
-                    Text("♩ =")
-                        .font(.system(size: 13, weight: .bold, design: .serif))
-                    Text("\(viewModel.score.tempo)")
-                        .font(.system(size: 13, weight: .semibold, design: .serif))
-                }
-                Text("•")
-                    .foregroundColor(.secondary)
-                Text("\(viewModel.score.timeSignatureTop)/\(viewModel.score.timeSignatureBottom)")
-                    .font(.system(size: 13, weight: .bold, design: .serif))
-                Text("•")
-                    .foregroundColor(.secondary)
-                Text(viewModel.score.keySignatureName)
-                    .font(.system(size: 13, weight: .medium, design: .serif))
+    private var floatingMuseScorePill: some View {
+        HStack(spacing: 28) {
+            // 1. Loop Button
+            Button {
+                viewModel.isLooping.toggle()
+            } label: {
+                Image(systemName: "repeat")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(viewModel.isLooping ? Color(red: 0.22, green: 0.74, blue: 0.97) : .white)
             }
-            .foregroundColor(.secondary)
-            .padding(.top, 2)
+            
+            // 2. Previous Measure
+            Button {
+                viewModel.previousMeasure()
+            } label: {
+                Image(systemName: "backward.end.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            
+            // 3. Play / Pause Hero Button (White circle, black play icon)
+            Button {
+                viewModel.togglePlayback()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 44, height: 44)
+                        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                    
+                    Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 19, weight: .bold))
+                        .foregroundColor(.black)
+                        .offset(x: viewModel.isPlaying ? 0 : 1.5)
+                }
+            }
+            
+            // 4. Mixer / Tracks Button
+            Button {
+                showMixerSheet = true
+            } label: {
+                Image(systemName: "slider.vertical.3")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            
+            // 5. Fullscreen / Practice Piano Mode
+            Button {
+                showPracticeMode = true
+            } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.vertical, 10)
+        .background(
+            Capsule()
+                .fill(Color(red: 0.16, green: 0.12, blue: 0.26)) // Deep MuseScore purple/navy
+                .shadow(color: .black.opacity(0.4), radius: 12, y: 5)
+        )
+    }
+    
+    // MARK: - Hands Mixer Modal Sheet
+    
+    @ViewBuilder
+    private var handsMixerSheet: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                // Right Hand Channel
+                HStack(spacing: 14) {
+                    Text("𝄞")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.cyan)
+                        .frame(width: 28)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Right Hand (Melody)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Slider(value: $rhVolume, in: 0...1)
+                    }
+                    
+                    Button(rhMuted ? "Muted" : "Mute") {
+                        rhMuted.toggle()
+                    }
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(rhMuted ? Color.red : Color(.tertiarySystemFill))
+                    .foregroundColor(rhMuted ? .white : .primary)
+                    .cornerRadius(6)
+                }
+                .padding(.horizontal)
+                
+                // Left Hand Channel
+                HStack(spacing: 14) {
+                    Text("𝄢")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.green)
+                        .frame(width: 28)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Left Hand (Bass / Chords)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Slider(value: $lhVolume, in: 0...1)
+                    }
+                    
+                    Button(lhMuted ? "Muted" : "Mute") {
+                        lhMuted.toggle()
+                    }
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(lhMuted ? Color.red : Color(.tertiarySystemFill))
+                    .foregroundColor(lhMuted ? .white : .primary)
+                    .cornerRadius(6)
+                }
+                .padding(.horizontal)
+                
+                // Quick Presets
+                HStack(spacing: 10) {
+                    Button("Both Hands") {
+                        rhMuted = false
+                        lhMuted = false
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button("Melody Only") {
+                        rhMuted = false
+                        lhMuted = true
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button("Bass Only") {
+                        rhMuted = true
+                        lhMuted = false
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.top, 4)
+                
+                Spacer()
+            }
+            .padding(.top, 20)
+            .navigationTitle("Hands Mixer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        showMixerSheet = false
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
         }
     }
     

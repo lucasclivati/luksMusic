@@ -10,32 +10,42 @@ struct MeasureView: View {
     let measure: Measure
     var isCurrent: Bool = false
     var currentBeat: Double = 1.0
-    var lineSpacing: CGFloat = 12.0
-    var measureWidth: CGFloat = 280.0
+    var lineSpacing: CGFloat = 8.5
+    var measureWidth: CGFloat = 300.0
+    var showMeasureNumber: Bool = true
+    var showTempoAndDynamics: Bool = false
     
     private var usableWidth: CGFloat {
-        measureWidth - 48.0
+        max(60.0, measureWidth - 36.0)
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Measure number badge
-            Text("\(measure.number)")
-                .font(.system(size: 11, weight: .bold, design: .serif))
-                .foregroundColor(isCurrent ? .accentColor : Color.black.opacity(0.7))
-                .padding(.horizontal, 6)
-                .padding(.vertical, 1)
-                .background(
-                    isCurrent ? Color.accentColor.opacity(0.18) : Color.clear
-                )
-                .cornerRadius(4)
-                .padding(.leading, 6)
+        VStack(alignment: .leading, spacing: 2) {
+            // Measure Header: Tempo marking & measure number
+            HStack(alignment: .bottom) {
+                if showMeasureNumber && measure.number > 1 {
+                    Text("\(measure.number)")
+                        .font(.system(size: 11, weight: .semibold, design: .serif))
+                        .italic()
+                        .foregroundColor(Color.black.opacity(0.75))
+                        .padding(.leading, 2)
+                } else if showTempoAndDynamics {
+                    HStack(spacing: 3) {
+                        Text("♩ = 70")
+                            .font(.system(size: 13, weight: .bold, design: .serif))
+                            .foregroundColor(.black)
+                    }
+                    .padding(.leading, 12)
+                }
+                Spacer()
+            }
+            .frame(height: 16)
             
             ZStack(alignment: .leading) {
                 // Background paper white
                 Rectangle()
                     .fill(Color.white)
-                    .frame(width: measureWidth, height: lineSpacing * 14.0)
+                    .frame(width: measureWidth, height: lineSpacing * 14.5)
                 
                 // Continuous 5-line staff backdrop for both staves
                 VStack(spacing: lineSpacing * 3.5) {
@@ -48,26 +58,62 @@ struct MeasureView: View {
                 staffNotesWithBeams(notes: measure.trebleNotes)
                     .offset(y: -lineSpacing * 3.75)
                 
+                // Dynamic marking (e.g. mp on measure 1)
+                if showTempoAndDynamics {
+                    Text("mp")
+                        .font(.system(size: 12, weight: .bold, design: .serif))
+                        .italic()
+                        .foregroundColor(.black)
+                        .offset(x: 22, y: -lineSpacing * 1.1)
+                }
+                
                 // Bass staff notes and beams (centered on Bass Line 3)
                 staffNotesWithBeams(notes: measure.bassNotes)
                     .offset(y: lineSpacing * 3.75)
                 
-                // Right barline connecting top of treble staff to bottom of bass staff
-                endBarline()
-                    .frame(width: 4, height: lineSpacing * 11.5)
-                    .offset(x: measureWidth - 4)
+                // Piano Sustain Pedal Bracket Line below bass staff
+                Path { path in
+                    let pedY = lineSpacing * 7.5
+                    path.move(to: CGPoint(x: 12, y: pedY - 5))
+                    path.addLine(to: CGPoint(x: 12, y: pedY))
+                    path.addLine(to: CGPoint(x: measureWidth - 4, y: pedY))
+                    path.addLine(to: CGPoint(x: measureWidth - 4, y: pedY - 5))
+                }
+                .stroke(Color.black.opacity(0.85), lineWidth: 1.1)
                 
-                // Smooth Playback Cursor (like MuseScore blue cursor bar)
+                // Right barline connecting top of treble staff to bottom of bass staff continuously
+                Rectangle()
+                    .fill(Color.black.opacity(0.85))
+                    .frame(width: 1.5, height: lineSpacing * 11.0)
+                    .offset(x: measureWidth - 1.5)
+                
+                // Authentic MuseScore Playback Cursor with blue teardrop droplet handle
                 if isCurrent {
                     let beatOffset = max(0.0, min(1.0, (currentBeat - 1.0) / 4.0))
-                    let cursorX = 24.0 + CGFloat(beatOffset) * usableWidth
-                    Rectangle()
-                        .fill(Color.blue.opacity(0.35))
-                        .frame(width: 3.5, height: lineSpacing * 12.0)
-                        .offset(x: cursorX)
+                    let cursorX = 20.0 + CGFloat(beatOffset) * usableWidth
+                    let cursorColor = Color(red: 0.18, green: 0.52, blue: 0.95)
+                    let dropletColor = Color(red: 0.55, green: 0.75, blue: 1.0)
+                    
+                    ZStack(alignment: .top) {
+                        // Vertical cursor line
+                        Rectangle()
+                            .fill(cursorColor)
+                            .frame(width: 2.5, height: lineSpacing * 12.0)
+                        
+                        // Teardrop droplet handle at bottom
+                        Circle()
+                            .fill(dropletColor)
+                            .frame(width: 18, height: 18)
+                            .overlay(
+                                Circle()
+                                    .stroke(cursorColor, lineWidth: 1.5)
+                            )
+                            .offset(y: lineSpacing * 11.2)
+                    }
+                    .offset(x: cursorX)
                 }
             }
-            .frame(width: measureWidth, height: lineSpacing * 14.0)
+            .frame(width: measureWidth, height: lineSpacing * 14.5)
         }
         .frame(width: measureWidth)
         .background(Color.white)
@@ -99,7 +145,7 @@ struct MeasureView: View {
             // 1. Individual Notes
             ForEach(notes) { note in
                 let beatOffset = max(0.0, min(1.0, (note.position.beat - 1.0) / 4.0))
-                let xPos = 24.0 + CGFloat(beatOffset) * usableWidth
+                let xPos = 20.0 + CGFloat(beatOffset) * usableWidth
                 let isNoteActive = isCurrent && abs(note.position.beat - currentBeat) < 0.22
                 let isBeamed = beamedNoteIds.contains(note.id)
                 
@@ -150,8 +196,8 @@ struct MeasureView: View {
         
         let stemUp = (firstNote.staff == .treble && firstNote.isTriplet) ? false : firstNote.stemUp
         let stemXOffset: CGFloat = stemUp ? (lineSpacing * 0.6) : (-lineSpacing * 0.6)
-        let xStart = 24.0 + firstOffset * usableWidth + stemXOffset
-        let xEnd = 24.0 + lastOffset * usableWidth + stemXOffset
+        let xStart = 20.0 + firstOffset * usableWidth + stemXOffset
+        let xEnd = 20.0 + lastOffset * usableWidth + stemXOffset
         let beamWidth = max(8.0, xEnd - xStart)
         
         let positions = group.map { CGFloat($0.staffPosition) }

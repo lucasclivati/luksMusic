@@ -6,25 +6,26 @@
 import SwiftUI
 
 struct StaffView: View {
-    var lineSpacing: CGFloat = 12.0
+    var lineSpacing: CGFloat = 8.5
     var keySignatureValue: Int = -3 // C Minor (3 flats: Bb, Eb, Ab)
     var timeSignatureTop: Int = 4
     var timeSignatureBottom: Int = 4
     var showClefsAndSignatures: Bool = true
+    var showTimeSignature: Bool = true
     
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             // Grand staff left brace / bracket
             if showClefsAndSignatures {
                 grandStaffBrace()
-                    .frame(width: 16)
+                    .frame(width: 12)
                 
                 // Clefs and signatures block
                 VStack(spacing: lineSpacing * 3.5) {
                     clefAndSignatures(staff: .treble)
                     clefAndSignatures(staff: .bass)
                 }
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 4)
             }
             
             // Continuous 5-line staff backdrop
@@ -32,7 +33,7 @@ struct StaffView: View {
                 singleStaffLines()
                 singleStaffLines()
             }
-            .frame(width: 8)
+            .frame(width: 4)
         }
     }
     
@@ -69,14 +70,16 @@ struct StaffView: View {
                 renderKeySignatureAccidentals(staff: staff)
                     .foregroundColor(.black)
                 
-                // Time signature
-                VStack(spacing: -1) {
-                    Text("\(timeSignatureTop)")
-                        .font(.system(size: lineSpacing * 1.5, weight: .bold, design: .serif))
-                    Text("\(timeSignatureBottom)")
-                        .font(.system(size: lineSpacing * 1.5, weight: .bold, design: .serif))
+                // Time signature (shown only on measure 1)
+                if showTimeSignature {
+                    VStack(spacing: -1) {
+                        Text("\(timeSignatureTop)")
+                            .font(.system(size: lineSpacing * 1.5, weight: .bold, design: .serif))
+                        Text("\(timeSignatureBottom)")
+                            .font(.system(size: lineSpacing * 1.5, weight: .bold, design: .serif))
+                    }
+                    .foregroundColor(.black)
                 }
-                .foregroundColor(.black)
             }
         }
         .frame(height: lineSpacing * 4)

@@ -26,3 +26,5 @@ Pods/
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+.firebase/
