@@ -1275,6 +1275,34 @@
             margin-bottom: 6px;
         }
 
+        .header-piano-select {
+            background: #191924;
+            color: #38bdf8;
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .header-piano-select:hover {
+            background: #242436;
+            border-color: #60a5fa;
+        }
+
+        .sidebar-piano-select {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
         .selector-box {
             background: #191924;
             border: 1px solid #282838;
@@ -1911,7 +1939,17 @@
                 <button id="metronomeBtn" class="btn-ctrl" title="Metrônomo (M)">
                     <span id="metroDot" class="metronome-dot"></span> Metrônomo
                 </button>
-                <button id="audioModeBtn" class="btn-ctrl" style="border-color: #38bdf8; color: #38bdf8;" title="Alternar entre o áudio oficial do MuseScore e os samples Steinway">🎵 Áudio: Original MuseScore</button>
+                <button id="audioModeBtn" class="btn-ctrl" style="border-color: #38bdf8; color: #38bdf8;" title="Alternar entre o Áudio Original e instrumentos de piano sintetizados">🎵 Áudio Original</button>
+                <div class="piano-selector-wrapper">
+                    <select id="pianoTypeSelect" class="header-piano-select" title="Escolha o tipo de piano para reprodução">
+                        <option value="original">🎵 Áudio Original</option>
+                        <option value="musescore_grand">🎹 MuseScore Grand</option>
+                        <option value="steinway">🎹 Steinway Model D</option>
+                        <option value="yamaha_cfx">🎹 Yamaha CFX Bright</option>
+                        <option value="upright">🎹 Piano Vertical</option>
+                        <option value="rhodes">🎹 Electric Piano</option>
+                    </select>
+                </div>
                 <button id="mixerToggleBtn" class="btn-ctrl" style="border-color: #a855f7; color: #d8b4fe;" title="Abrir Mixer de Mãos (X)">🎛️ Mixer</button>
             </div>
 
@@ -2067,11 +2105,19 @@
 
                     <!-- Dropdowns -->
                     <div class="sidebar-selectors-row">
-                        <div class="selector-box">
+                        <div class="selector-box" id="sidebarPianoSelectorBox" style="position: relative;">
                             <div class="selector-header">
-                                <span>Piano</span>
+                                <span id="sidebarPianoLabel">Piano</span>
                                 <span class="chevron">▾</span>
                             </div>
+                            <select id="sidebarPianoSelect" class="sidebar-piano-select" title="Selecione o instrumento de piano">
+                                <option value="original">🎵 Áudio Original</option>
+                                <option value="musescore_grand">🎹 MuseScore Grand</option>
+                                <option value="steinway">🎹 Steinway Model D</option>
+                                <option value="yamaha_cfx">🎹 Yamaha CFX Bright</option>
+                                <option value="upright">🎹 Piano Vertical</option>
+                                <option value="rhodes">🎹 Electric Piano</option>
+                            </select>
                         </div>
                         <div class="selector-box">
                             <div class="selector-header">
@@ -2633,7 +2679,23 @@
                 this.lhSolo = false;
                 this.rhVol = 0.95;
                 this.lhVol = 0.90;
+                this.pianoType = 'musescore_grand';
                 this.initialized = false;
+            }
+
+            getPianoName(type) {
+                switch(type) {
+                    case 'musescore_grand': return 'MuseScore Grand';
+                    case 'steinway': return 'Steinway Model D';
+                    case 'yamaha_cfx': return 'Yamaha CFX Bright';
+                    case 'upright': return 'Piano Vertical';
+                    case 'rhodes': return 'Electric Piano';
+                    default: return 'Áudio Original';
+                }
+            }
+
+            setPianoType(type) {
+                this.pianoType = type;
             }
 
             init() {
@@ -2643,7 +2705,7 @@
                     this.ctx = new AudioContext();
 
                     this.masterGain = this.ctx.createGain();
-                    this.masterGain.gain.value = 0.85;
+                    this.masterGain.gain.value = 0.88;
 
                     this.rhGain = this.ctx.createGain();
                     this.rhGain.gain.value = this.rhVol;
@@ -2672,27 +2734,132 @@
 
                 const targetGain = isRH ? this.rhGain : this.lhGain;
                 const now = this.ctx.currentTime;
+                const type = this.pianoType || 'musescore_grand';
 
                 midiList.forEach(midi => {
-                    const osc = this.ctx.createOscillator();
+                    const freq = 440 * Math.pow(2, (midi - 69) / 12);
                     const noteGain = this.ctx.createGain();
 
-                    osc.type = isRH ? "triangle" : "sine";
-                    const freq = 440 * Math.pow(2, (midi - 69) / 12);
-                    osc.frequency.setValueAtTime(freq, now);
+                    // Soundboard Resonant Filter
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = "lowpass";
 
-                    const baseGain = (velocity * 0.18) / Math.max(1, midiList.length * 0.7);
+                    // Acoustic parameters per piano type
+                    let filterFreq = 4200;
+                    let filterQ = 1.0;
+                    let decayMult = 1.8;
+                    let oscType1 = "triangle";
+                    let oscType2 = "sine";
+                    let harmonicRatio = 2.0;
+                    let harmGainVal = 0.35;
+                    let attackTime = 0.004;
+
+                    if (type === 'steinway') {
+                        // Deep resonant concert grand
+                        filterFreq = 3400 + velocity * 2200;
+                        filterQ = 1.4;
+                        decayMult = 2.4;
+                        oscType1 = "triangle";
+                        oscType2 = "sine";
+                        harmonicRatio = 2.0;
+                        harmGainVal = 0.40;
+                        attackTime = 0.005;
+                    } else if (type === 'yamaha_cfx') {
+                        // Bright, crisp, punchy grand
+                        filterFreq = 5800 + velocity * 2800;
+                        filterQ = 0.9;
+                        decayMult = 1.6;
+                        oscType1 = "sawtooth";
+                        oscType2 = "triangle";
+                        harmonicRatio = 2.0;
+                        harmGainVal = 0.28;
+                        attackTime = 0.002;
+                    } else if (type === 'upright') {
+                        // Warm wooden upright with soft felt hammers
+                        filterFreq = 2200 + velocity * 1400;
+                        filterQ = 0.7;
+                        decayMult = 1.3;
+                        oscType1 = "triangle";
+                        oscType2 = "sine";
+                        harmonicRatio = 3.0;
+                        harmGainVal = 0.20;
+                        attackTime = 0.008;
+                    } else if (type === 'rhodes') {
+                        // Bell-like vintage electric piano tine
+                        filterFreq = 4800;
+                        filterQ = 2.0;
+                        decayMult = 2.2;
+                        oscType1 = "sine";
+                        oscType2 = "sine";
+                        harmonicRatio = 7.0;
+                        harmGainVal = 0.25;
+                        attackTime = 0.003;
+                    } else {
+                        // musescore_grand (Concert Grand standard)
+                        filterFreq = 4000 + velocity * 2000;
+                        filterQ = 1.1;
+                        decayMult = 2.0;
+                        oscType1 = "triangle";
+                        oscType2 = "sine";
+                        harmonicRatio = 2.0;
+                        harmGainVal = 0.32;
+                        attackTime = 0.004;
+                    }
+
+                    filter.frequency.setValueAtTime(filterFreq, now);
+                    filter.Q.setValueAtTime(filterQ, now);
+                    filter.frequency.exponentialRampToValueAtTime(Math.max(400, filterFreq * 0.4), now + durationSec * decayMult);
+
+                    // Osc 1: Fundamental
+                    const osc1 = this.ctx.createOscillator();
+                    osc1.type = oscType1;
+                    osc1.frequency.setValueAtTime(freq, now);
+
+                    // Osc 2: Harmonic String Partial with slight acoustic chorus detune (±0.35 Hz)
+                    const osc2 = this.ctx.createOscillator();
+                    osc2.type = oscType2;
+                    osc2.frequency.setValueAtTime(freq * harmonicRatio + (isRH ? 0.35 : -0.35), now);
+
+                    const harmGain = this.ctx.createGain();
+                    harmGain.gain.value = harmGainVal;
+
+                    // Hammer contact percussion click (subtle 3ms burst for tactile piano presence)
+                    const hammerOsc = this.ctx.createOscillator();
+                    const hammerGain = this.ctx.createGain();
+                    hammerOsc.type = "sine";
+                    hammerOsc.frequency.setValueAtTime(Math.min(800, freq * 1.5), now);
+                    hammerGain.gain.setValueAtTime(velocity * 0.08, now);
+                    hammerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.012);
+                    hammerOsc.connect(hammerGain);
+                    hammerGain.connect(filter);
+
+                    // ADSR Amplitude Envelope
+                    const totalDur = Math.max(0.2, durationSec * decayMult);
+                    const baseGain = (velocity * 0.24) / Math.max(1, midiList.length * 0.65);
                     noteGain.gain.setValueAtTime(0.0001, now);
-                    noteGain.gain.exponentialRampToValueAtTime(baseGain, now + 0.015);
-                    noteGain.gain.exponentialRampToValueAtTime(baseGain * 0.5, now + durationSec * 0.3);
-                    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + durationSec);
+                    noteGain.gain.exponentialRampToValueAtTime(baseGain, now + attackTime);
+                    noteGain.gain.exponentialRampToValueAtTime(baseGain * 0.55, now + 0.12);
+                    noteGain.gain.exponentialRampToValueAtTime(0.0001, now + totalDur);
 
-                    osc.connect(noteGain);
+                    osc1.connect(filter);
+                    osc2.connect(harmGain);
+                    harmGain.connect(filter);
+                    filter.connect(noteGain);
                     noteGain.connect(targetGain);
 
-                    osc.start(now);
-                    osc.stop(now + durationSec + 0.05);
+                    osc1.start(now);
+                    osc2.start(now);
+                    hammerOsc.start(now);
+
+                    osc1.stop(now + totalDur + 0.05);
+                    osc2.stop(now + totalDur + 0.05);
+                    hammerOsc.stop(now + 0.02);
                 });
+            }
+
+            audition(type) {
+                this.setPianoType(type);
+                this.playChord([60, 63, 67, 72], 0.8, 0.9, true);
             }
 
             playMetronomeClick(isDownbeat) {
@@ -2852,29 +3019,72 @@
         const presetOnlyRHBtn = document.getElementById("presetOnlyRHBtn");
         const presetOnlyLHBtn = document.getElementById("presetOnlyLHBtn");
 
-        const origAudio = new Audio("dark_dream_audio.mp3");
+        const origAudio = new Audio("dark_dream_audio_clean.mp3");
         origAudio.preload = "auto";
         let useOriginalAudio = true;
+        let currentPianoType = 'original';
 
         const audioModeBtn = document.getElementById("audioModeBtn");
-        if (audioModeBtn) {
-            audioModeBtn.addEventListener("click", () => {
-                useOriginalAudio = !useOriginalAudio;
-                if (useOriginalAudio) {
-                    audioModeBtn.innerText = "🎵 Áudio: Original MuseScore";
+        const pianoTypeSelect = document.getElementById("pianoTypeSelect");
+        const sidebarPianoSelect = document.getElementById("sidebarPianoSelect");
+        const sidebarPianoLabel = document.getElementById("sidebarPianoLabel");
+
+        function applySoundMode(mode, triggerAudition = false) {
+            currentPianoType = mode;
+            if (mode === 'original') {
+                useOriginalAudio = true;
+                if (audioModeBtn) {
+                    audioModeBtn.innerHTML = "🎵 Áudio Original";
                     audioModeBtn.style.borderColor = "#38bdf8";
                     audioModeBtn.style.color = "#38bdf8";
-                    if (isPlaying) {
-                        const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
-                        origAudio.currentTime = Math.max(0, sec);
-                        origAudio.play().catch(e => console.log(e));
-                    }
-                } else {
-                    audioModeBtn.innerText = "🎹 Áudio: Samples Steinway";
-                    audioModeBtn.style.borderColor = "#a855f7";
-                    audioModeBtn.style.color = "#a855f7";
-                    origAudio.pause();
                 }
+                if (sidebarPianoLabel) sidebarPianoLabel.textContent = "Piano: Original";
+                if (isPlaying) {
+                    const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
+                    origAudio.currentTime = Math.max(0, sec);
+                    origAudio.play().catch(e => console.log(e));
+                }
+                showToast("Modo de som: Áudio Original", "🎵");
+            } else {
+                useOriginalAudio = false;
+                origAudio.pause();
+                audio.setPianoType(mode);
+                const pianoName = audio.getPianoName(mode);
+                if (audioModeBtn) {
+                    audioModeBtn.innerHTML = "🎹 " + pianoName;
+                    audioModeBtn.style.borderColor = "#a855f7";
+                    audioModeBtn.style.color = "#d8b4fe";
+                }
+                if (sidebarPianoLabel) sidebarPianoLabel.textContent = "Piano: " + pianoName;
+                showToast("Tipo de piano: " + pianoName, "🎹");
+                if (triggerAudition) {
+                    audio.audition(mode);
+                }
+            }
+
+            if (pianoTypeSelect) pianoTypeSelect.value = mode;
+            if (sidebarPianoSelect) sidebarPianoSelect.value = mode;
+        }
+
+        if (audioModeBtn) {
+            audioModeBtn.addEventListener("click", () => {
+                if (useOriginalAudio) {
+                    applySoundMode('musescore_grand', true);
+                } else {
+                    applySoundMode('original', false);
+                }
+            });
+        }
+
+        if (pianoTypeSelect) {
+            pianoTypeSelect.addEventListener("change", (e) => {
+                applySoundMode(e.target.value, true);
+            });
+        }
+
+        if (sidebarPianoSelect) {
+            sidebarPianoSelect.addEventListener("change", (e) => {
+                applySoundMode(e.target.value, true);
             });
         }
 
@@ -3130,7 +3340,9 @@
                     if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
                         playedNotesSet.add(key);
                         const dur = n.dur === "16th" ? 0.22 : (n.dur === "dottedQuarter" ? 1.0 : 0.55);
-                        audio.playChord(n.chord, dur, n.triplet ? 0.8 : 0.95, true);
+                        if (!useOriginalAudio) {
+                            audio.playChord(n.chord, dur, n.triplet ? 0.8 : 0.95, true);
+                        }
                         flashKeys(n.chord, true, Math.min(dur * 1000, 500));
                     }
                 });
@@ -3142,7 +3354,9 @@
                     if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
                         playedNotesSet.add(key);
                         const dur = n.dur === "16th" ? 0.25 : 0.75;
-                        audio.playChord(n.chord, dur, 0.85, false);
+                        if (!useOriginalAudio) {
+                            audio.playChord(n.chord, dur, 0.85, false);
+                        }
                         flashKeys(n.chord, false, Math.min(dur * 1000, 600));
                     }
                 });
