@@ -994,6 +994,693 @@
 
         .black-key.active-rh { background: #0284c7 !important; box-shadow: 0 0 10px #38bdf8 !important; }
         .black-key.active-lh { background: #15803d !important; box-shadow: 0 0 10px #4ade80 !important; }
+
+        /* =========================================================
+           MUSESCORE RIGHT SIDEBAR & ACTIONS
+           ========================================================= */
+        .player-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            width: 100%;
+        }
+
+        .sidebar-wrapper {
+            position: relative;
+            display: flex;
+            height: 100%;
+            z-index: 25;
+        }
+
+        .sidebar-wrapper.collapsed .sidebar-toggle-btn {
+            left: -32px;
+        }
+
+        .sidebar-toggle-btn {
+            position: absolute;
+            top: 50%;
+            left: -14px;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #191924;
+            border: 1px solid #38384d;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 35;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: #272738;
+            transform: translateY(-50%) scale(1.12);
+            border-color: #7047eb;
+        }
+
+        .musescore-sidebar {
+            width: 370px;
+            height: 100%;
+            overflow-y: auto;
+            background: #14141c;
+            border-left: 1px solid #232332;
+            padding: 24px 20px 70px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease, opacity 0.25s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #2b2b3d #14141c;
+        }
+
+        .musescore-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .musescore-sidebar::-webkit-scrollbar-thumb {
+            background: #2b2b3d;
+            border-radius: 4px;
+        }
+
+        .musescore-sidebar.collapsed {
+            width: 0;
+            padding-left: 0;
+            padding-right: 0;
+            overflow: hidden;
+            border-left: none;
+            opacity: 0;
+        }
+
+        .sidebar-title-row {
+            margin-bottom: 12px;
+        }
+
+        .sidebar-score-title {
+            font-size: 21px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            line-height: 1.25;
+            letter-spacing: -0.3px;
+        }
+
+        .sidebar-author-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .sidebar-author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .sidebar-author-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #00b87c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 184, 124, 0.3);
+        }
+
+        .sidebar-author-name {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .sidebar-btn-follow {
+            background: #262635;
+            border: 1px solid #3b3b50;
+            border-radius: 9999px;
+            color: #ffffff;
+            padding: 6px 18px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-btn-follow:hover {
+            background: #343447;
+            border-color: #52526c;
+        }
+
+        .sidebar-btn-follow.following {
+            background: #20202e;
+            color: #94a3b8;
+            border-color: #2b2b3d;
+        }
+
+        .sidebar-stats-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 4px 16px;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 1px solid #232332;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-stats-row .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidebar-stats-row .stat-icon {
+            font-size: 14px;
+        }
+
+        .sidebar-selectors-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .selector-box {
+            background: #191924;
+            border: 1px solid #282838;
+            border-radius: 8px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .selector-box:hover {
+            border-color: #3e3e56;
+        }
+
+        .selector-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .selector-header .chevron {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        .selector-subtext {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            line-height: 1.3;
+            grid-column: span 2;
+        }
+
+        .sidebar-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar-action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 42px;
+            border-radius: 9999px;
+            background: #232332;
+            border: 1px solid #36364a;
+            color: #ffffff;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-action-btn:hover {
+            background: #2f2f42;
+            border-color: #4f4f6b;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-action-btn.primary {
+            background: #7047eb;
+            border-color: #7047eb;
+            box-shadow: 0 4px 14px rgba(112, 71, 235, 0.35);
+        }
+
+        .sidebar-action-btn.primary:hover {
+            background: #7f57ff;
+            border-color: #7f57ff;
+            box-shadow: 0 6px 18px rgba(112, 71, 235, 0.45);
+        }
+
+        .sidebar-action-btn.saved-active {
+            color: #f43f5e;
+            border-color: #f43f5e;
+            background: rgba(244, 63, 94, 0.12);
+        }
+
+        .sidebar-action-btn.full-width {
+            grid-column: span 2;
+        }
+
+        .sidebar-section {
+            margin-top: 20px;
+        }
+
+        .sidebar-section-title {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidebar-section-title .help-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #2b2b3d;
+            color: #94a3b8;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .sidebar-card {
+            background: #1c1c28;
+            border: 1px solid #28283a;
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-card:hover {
+            background: #242433;
+            border-color: #3b3b52;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-card-cover {
+            width: 58px;
+            height: 72px;
+            border-radius: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+            position: relative;
+            background: #111827;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .piano-book-cover {
+            background: linear-gradient(135deg, #1e1b4b, #4338ca);
+            border: 1px solid #6366f1;
+            flex-direction: column;
+            padding: 4px;
+        }
+
+        .book-badge-free {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: #7047eb;
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .book-title-art {
+            font-size: 10px;
+            font-weight: 900;
+            color: #fbbf24;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .score-preview-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #fff;
+        }
+
+        .sidebar-card-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-card-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-card-sub {
+            font-size: 12px;
+            color: #8b8ba3;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-card-rating {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fbbf24;
+        }
+
+        .sidebar-promo-pill {
+            background: #1c1c28;
+            border: 1px solid #2d2d40;
+            border-radius: 9999px;
+            padding: 11px 16px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-promo-pill:hover {
+            background: #252536;
+            border-color: #7047eb;
+        }
+
+        .sidebar-promo-pill .wave-icon {
+            font-weight: 900;
+            color: #a855f7;
+            letter-spacing: -2px;
+            margin-right: 2px;
+        }
+
+        .promo-badge-beta {
+            background: #7047eb;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 9999px;
+            margin-left: 4px;
+        }
+
+        .sidebar-stars-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .star-rating-item {
+            font-size: 26px;
+            color: #38384d;
+            cursor: pointer;
+            transition: color 0.15s, transform 0.15s;
+        }
+
+        .star-rating-item:hover,
+        .star-rating-item.active {
+            color: #fbbf24;
+            transform: scale(1.1);
+        }
+
+        .sidebar-tags-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-pill {
+            background: #232332;
+            border: 1px solid #343448;
+            border-radius: 9999px;
+            padding: 6px 13px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+        .tag-pill:hover {
+            background: #313145;
+            border-color: #52526e;
+            color: #ffffff;
+        }
+
+        /* EXPORT MODAL */
+        .export-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .export-modal-backdrop.hidden {
+            display: none;
+            opacity: 0;
+        }
+
+        .export-modal-card {
+            background: #181824;
+            border: 1px solid #333347;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 480px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .export-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .export-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .close-modal-btn {
+            background: #262638;
+            border: none;
+            color: #94a3b8;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-modal-btn:hover {
+            background: #383850;
+            color: #ffffff;
+        }
+
+        .export-options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .export-option-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            background: #212130;
+            border: 1px solid #2e2e42;
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-option-item:hover {
+            background: #2b2b3d;
+            border-color: #7047eb;
+            transform: translateY(-1px);
+        }
+
+        .export-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .midi-icon { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        .audio-icon { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .json-icon { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .pdf-icon { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+
+        .export-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .export-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 2px;
+        }
+
+        .export-desc {
+            font-size: 11.5px;
+            color: #8b8ba3;
+            line-height: 1.3;
+        }
+
+        .export-dl-badge {
+            background: #2e2e42;
+            border: 1px solid #42425c;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .export-option-item:hover .export-dl-badge {
+            background: #7047eb;
+            border-color: #7047eb;
+        }
+
+        /* TOAST NOTIFICATION */
+        .toast-notification {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #191924;
+            border: 1px solid #7047eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(112, 71, 235, 0.3);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: toastPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: opacity 0.3s ease;
+        }
+
+        .toast-notification.hidden {
+            display: none;
+            opacity: 0;
+        }
+
+        @keyframes toastPop {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        /* PRINT STYLES */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .player-header, .sidebar-wrapper, .bottom-dock, .mixer-hud, #sidebarToggleBtn, .btn-back-lib, .export-modal-backdrop, .toast-notification {
+                display: none !important;
+            }
+            .player-workspace {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+            .score-scroll-area {
+                background: transparent !important;
+                padding: 0 !important;
+                gap: 0 !important;
+                overflow: visible !important;
+                display: block !important;
+                height: auto !important;
+            }
+            .sheet-paper {
+                box-shadow: none !important;
+                margin: 0 0 20px 0 !important;
+                page-break-after: always;
+                break-after: page;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .page-overlay, .active-measure-box, .playback-cursor-line, .page-badge {
+                display: none !important;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -1136,8 +1823,9 @@
             </div>
         </header>
 
-        <!-- MAIN WORKSPACE: 7 AUTHENTIC MUSESCORE SHEETS -->
-        <div class="score-scroll-area" id="scoreScrollArea">
+        <!-- MAIN WORKSPACE: 7 AUTHENTIC MUSESCORE SHEETS + COLLAPSIBLE SIDEBAR -->
+        <div class="player-workspace" id="playerWorkspace">
+            <div class="score-scroll-area" id="scoreScrollArea">
 
             <!-- PAGE 1 (M1 to M9) -->
             <div class="sheet-paper" id="sheetPage1" data-page="1">
@@ -1221,9 +1909,211 @@
                         <div class="playback-cursor-line" id="cursorLine7"></div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- end sheetPage7 -->
 
+            </div> <!-- end scoreScrollArea -->
+
+            <!-- COLLAPSIBLE MUSESCORE SIDEBAR -->
+            <div class="sidebar-wrapper" id="sidebarWrapper">
+                <button id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Recolher / Expandir barra lateral">
+                    <span id="sidebarToggleIcon">›</span>
+                </button>
+                <aside class="musescore-sidebar" id="musescoreSidebar">
+                    <!-- Title & Header -->
+                    <div class="sidebar-title-row">
+                        <h2 class="sidebar-score-title">Dark Dream – Curley Gao</h2>
+                    </div>
+
+                    <!-- Author Row -->
+                    <div class="sidebar-author-row">
+                        <div class="sidebar-author-info">
+                            <div class="sidebar-author-avatar">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                                </svg>
+                            </div>
+                            <span class="sidebar-author-name">11Minnie11</span>
+                        </div>
+                        <button id="sidebarFollowBtn" class="sidebar-btn-follow" title="Seguir o arranjador">Unfollow</button>
+                    </div>
+
+                    <!-- Engagement Stats -->
+                    <div class="sidebar-stats-row">
+                        <div class="stat-item"><span class="stat-icon">👁</span> <span>7.1K</span></div>
+                        <div class="stat-item"><span class="stat-icon" id="statHeartIcon">❤️</span> <span id="statLikesCount">167</span></div>
+                        <div class="stat-item"><span class="stat-icon">💬</span> <span>8</span></div>
+                        <div class="stat-item"><span class="stat-icon">⭐</span> <span>5 (39)</span></div>
+                    </div>
+
+                    <!-- Dropdowns -->
+                    <div class="sidebar-selectors-row">
+                        <div class="selector-box">
+                            <div class="selector-header">
+                                <span>Piano</span>
+                                <span class="chevron">▾</span>
+                            </div>
+                        </div>
+                        <div class="selector-box">
+                            <div class="selector-header">
+                                <span>Advanced</span>
+                                <span class="chevron">▾</span>
+                            </div>
+                        </div>
+                        <div class="selector-subtext">No other options available for this score</div>
+                    </div>
+
+                    <!-- Main Action Buttons -->
+                    <div class="sidebar-actions-grid">
+                        <button id="sidebarDownloadBtn" class="sidebar-action-btn primary" title="Exportar partitura (PDF, MIDI, MP3, MusicXML)">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                        <button id="sidebarPrintBtn" class="sidebar-action-btn" title="Imprimir partitura completa">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
+                            <span>Print</span>
+                        </button>
+                        <button id="sidebarSaveBtn" class="sidebar-action-btn saved-active" title="Salvar nos favoritos">
+                            <span id="sidebarHeartIcon">❤️</span>
+                            <span id="sidebarSaveText">Saved</span>
+                        </button>
+                        <button id="sidebarShareBtn" class="sidebar-action-btn" title="Compartilhar partitura">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            <span>Share</span>
+                        </button>
+                        <button id="sidebarAddToSetBtn" class="sidebar-action-btn full-width" title="Adicionar à lista / set">
+                            <span style="font-size: 18px; line-height: 1;">+</span>
+                            <span>Add to Set</span>
+                        </button>
+                    </div>
+
+                    <!-- Learn Piano Card -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">Learn piano</div>
+                        <div class="sidebar-card">
+                            <div class="sidebar-card-cover piano-book-cover">
+                                <div class="book-badge-free">Free</div>
+                                <div class="book-title-art">PIANO</div>
+                            </div>
+                            <div class="sidebar-card-content">
+                                <div class="sidebar-card-title">All About Piano book</div>
+                                <div class="sidebar-card-sub">by Mark Harrison</div>
+                                <div class="sidebar-card-rating">⭐ 5</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other versions of this score -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">Other versions of this score</div>
+                        <div class="sidebar-card">
+                            <div class="sidebar-card-cover score-preview-cover">
+                                <img src="score_page_1.svg" alt="Miniatura">
+                            </div>
+                            <div class="sidebar-card-content">
+                                <div class="sidebar-card-title">Dark Dream – Curley Gao</div>
+                                <div class="sidebar-card-sub">Solo Piano</div>
+                                <div class="sidebar-card-rating">⭐ 5</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Audio to MSCZ Promo Capsule -->
+                    <div class="sidebar-promo-pill" id="promoAudioConvert">
+                        <span class="wave-icon">|||</span>
+                        <span>Convert your audio to MSCZ</span>
+                        <span class="promo-badge-beta">Beta</span>
+                    </div>
+
+                    <!-- Please rate this score -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">
+                            <span>Please rate this score</span>
+                            <span class="help-circle" title="Avalie a fidelidade da partitura">?</span>
+                        </div>
+                        <div class="sidebar-stars-row" id="sidebarStarRating">
+                            <span class="star-rating-item" data-val="1">★</span>
+                            <span class="star-rating-item" data-val="2">★</span>
+                            <span class="star-rating-item" data-val="3">★</span>
+                            <span class="star-rating-item" data-val="4">★</span>
+                            <span class="star-rating-item" data-val="5">★</span>
+                        </div>
+                    </div>
+
+                    <!-- Tags -->
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">Tags</div>
+                        <div class="sidebar-tags-cloud">
+                            <span class="tag-pill">Advanced</span>
+                            <span class="tag-pill">Soundtrack</span>
+                            <span class="tag-pill">Solo Piano</span>
+                            <span class="tag-pill">Piano</span>
+                            <span class="tag-pill">Piano for Advanced</span>
+                        </div>
+                    </div>
+                </aside>
+            </div> <!-- end sidebarWrapper -->
+        </div> <!-- end playerWorkspace -->
+
+        <!-- EXPORT MODAL -->
+        <div id="exportModal" class="export-modal-backdrop hidden">
+            <div class="export-modal-card">
+                <div class="export-modal-header">
+                    <h3>Exportar e Baixar Partitura</h3>
+                    <button id="closeExportModalBtn" class="close-modal-btn">✕</button>
+                </div>
+                <div class="export-options-list">
+                    <a href="dark_dream_official.mid" download="Dark_Dream_Curley_Gao.mid" class="export-option-item">
+                        <div class="export-icon midi-icon">🎹</div>
+                        <div class="export-info">
+                            <div class="export-title">Arquivo MIDI (.mid)</div>
+                            <div class="export-desc">Todas as 56 medidas, canais independentes de mão direita e esquerda.</div>
+                        </div>
+                        <span class="export-dl-badge">Baixar</span>
+                    </a>
+                    <a href="dark_dream_audio_clean.mp3" download="Dark_Dream_Curley_Gao.mp3" class="export-option-item">
+                        <div class="export-icon audio-icon">🎵</div>
+                        <div class="export-info">
+                            <div class="export-title">Áudio Master (.mp3 320 kbps)</div>
+                            <div class="export-desc">Gravação completa sem ruídos ou chiados.</div>
+                        </div>
+                        <span class="export-dl-badge">Baixar</span>
+                    </a>
+                    <a href="dark_dream_score.json" download="Dark_Dream_Curley_Gao_Score.json" class="export-option-item">
+                        <div class="export-icon json-icon">🎼</div>
+                        <div class="export-info">
+                            <div class="export-title">Dados da Partitura (.json)</div>
+                            <div class="export-desc">Estrutura vetorial compatível com sintetizadores e sequenciadores.</div>
+                        </div>
+                        <span class="export-dl-badge">Baixar</span>
+                    </a>
+                    <button id="exportPdfBtn" class="export-option-item" style="border: none; text-align: left; width: 100%; font-family: inherit;">
+                        <div class="export-icon pdf-icon">📄</div>
+                        <div class="export-info">
+                            <div class="export-title">Partitura em PDF / Impressão</div>
+                            <div class="export-desc">Visualização em alta resolução pronta para salvar em PDF ou imprimir.</div>
+                        </div>
+                        <span class="export-dl-badge">Salvar PDF</span>
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <!-- TOAST NOTIFICATION -->
+        <div id="toastNotification" class="toast-notification hidden"></div>
 
         <!-- FLOATING HANDS MIXER HUD -->
         <div id="mixerHUD" class="mixer-hud hidden">
@@ -1961,6 +2851,7 @@
             playedNotesSet.clear();
             lastMetroBeatInt = Math.floor(currentBeat);
 
+    
             updateScrubberAndDisplay();
             updateScorePlayhead();
         }
@@ -2106,6 +2997,182 @@
             cur.style.left = `${curLeftPct}%`;
             cur.style.top = `${Math.max(0, mDef.top_pct - padTop)}%`;
             cur.style.height = `${mDef.height_pct + padH}%`;
+        }
+
+        // -------------------------------------------------------------
+        // MUSESCORE SIDEBAR & ACTIONS INTERACTIVITY
+        // -------------------------------------------------------------
+        const musescoreSidebar = document.getElementById('musescoreSidebar');
+        const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+        const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+        const sidebarFollowBtn = document.getElementById('sidebarFollowBtn');
+        const sidebarSaveBtn = document.getElementById('sidebarSaveBtn');
+        const sidebarHeartIcon = document.getElementById('sidebarHeartIcon');
+        const sidebarSaveText = document.getElementById('sidebarSaveText');
+        const statHeartIcon = document.getElementById('statHeartIcon');
+        const statLikesCount = document.getElementById('statLikesCount');
+        const sidebarShareBtn = document.getElementById('sidebarShareBtn');
+        const sidebarPrintBtn = document.getElementById('sidebarPrintBtn');
+        const sidebarDownloadBtn = document.getElementById('sidebarDownloadBtn');
+        const sidebarAddToSetBtn = document.getElementById('sidebarAddToSetBtn');
+        const exportModal = document.getElementById('exportModal');
+        const closeExportModalBtn = document.getElementById('closeExportModalBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const toastNotification = document.getElementById('toastNotification');
+        const promoAudioConvert = document.getElementById('promoAudioConvert');
+
+        let isSidebarCollapsed = false;
+        let isFollowing = true;
+        let isSaved = true;
+        let likesCount = 167;
+        let toastTimer = null;
+
+        function showToast(message, icon = '✓') {
+            if (!toastNotification) return;
+            if (toastTimer) clearTimeout(toastTimer);
+            toastNotification.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            toastNotification.classList.remove('hidden');
+            toastTimer = setTimeout(() => {
+                toastNotification.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Toggle Sidebar Collapse
+        if (sidebarToggleBtn && musescoreSidebar) {
+            sidebarToggleBtn.addEventListener('click', () => {
+                isSidebarCollapsed = !isSidebarCollapsed;
+                if (isSidebarCollapsed) {
+                    musescoreSidebar.classList.add('collapsed');
+                    sidebarWrapper.classList.add('collapsed');
+                    sidebarToggleIcon.textContent = '‹';
+                    sidebarToggleBtn.title = 'Expandir barra lateral';
+                } else {
+                    musescoreSidebar.classList.remove('collapsed');
+                    sidebarWrapper.classList.remove('collapsed');
+                    sidebarToggleIcon.textContent = '›';
+                    sidebarToggleBtn.title = 'Recolher barra lateral';
+                }
+            });
+        }
+
+        // Follow / Unfollow Author
+        if (sidebarFollowBtn) {
+            sidebarFollowBtn.addEventListener('click', () => {
+                isFollowing = !isFollowing;
+                if (isFollowing) {
+                    sidebarFollowBtn.textContent = 'Unfollow';
+                    sidebarFollowBtn.classList.remove('following');
+                    showToast('Você está seguindo 11Minnie11!', '👤');
+                } else {
+                    sidebarFollowBtn.textContent = 'Follow';
+                    sidebarFollowBtn.classList.add('following');
+                    showToast('Você deixou de seguir 11Minnie11.', '👤');
+                }
+            });
+        }
+
+        // Save / Favorite
+        if (sidebarSaveBtn) {
+            sidebarSaveBtn.addEventListener('click', () => {
+                isSaved = !isSaved;
+                if (isSaved) {
+                    likesCount++;
+                    sidebarHeartIcon.textContent = '❤️';
+                    sidebarSaveText.textContent = 'Saved';
+                    sidebarSaveBtn.classList.add('saved-active');
+                    if (statHeartIcon) statHeartIcon.textContent = '❤️';
+                    showToast('Música salva nos seus favoritos!', '❤️');
+                } else {
+                    likesCount = Math.max(0, likesCount - 1);
+                    sidebarHeartIcon.textContent = '🤍';
+                    sidebarSaveText.textContent = 'Save';
+                    sidebarSaveBtn.classList.remove('saved-active');
+                    if (statHeartIcon) statHeartIcon.textContent = '🤍';
+                    showToast('Removido dos favoritos.', '🤍');
+                }
+                if (statLikesCount) statLikesCount.textContent = likesCount;
+            });
+        }
+
+        // Share
+        if (sidebarShareBtn) {
+            sidebarShareBtn.addEventListener('click', async () => {
+                const url = window.location.href;
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showToast('Link da partitura copiado!', '🔗');
+                } catch (e) {
+                    showToast('Compartilhe: ' + url, '🔗');
+                }
+            });
+        }
+
+        // Print
+        if (sidebarPrintBtn) {
+            sidebarPrintBtn.addEventListener('click', () => {
+                window.print();
+            });
+        }
+
+        // Download / Export Modal
+        if (sidebarDownloadBtn && exportModal) {
+            sidebarDownloadBtn.addEventListener('click', () => {
+                exportModal.classList.remove('hidden');
+            });
+        }
+
+        if (closeExportModalBtn && exportModal) {
+            closeExportModalBtn.addEventListener('click', () => {
+                exportModal.classList.add('hidden');
+            });
+        }
+
+        if (exportModal) {
+            exportModal.addEventListener('click', (e) => {
+                if (e.target === exportModal) {
+                    exportModal.classList.add('hidden');
+                }
+            });
+        }
+
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', () => {
+                if (exportModal) exportModal.classList.add('hidden');
+                setTimeout(() => {
+                    window.print();
+                }, 300);
+            });
+        }
+
+        // Add to Set
+        if (sidebarAddToSetBtn) {
+            sidebarAddToSetBtn.addEventListener('click', () => {
+                showToast('Partitura adicionada ao repertório de estudo!', '📁');
+            });
+        }
+
+        // Star Rating
+        const starItems = document.querySelectorAll('.star-rating-item');
+        starItems.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.getAttribute('data-val') || '5', 10);
+                starItems.forEach(s => {
+                    const sVal = parseInt(s.getAttribute('data-val') || '0', 10);
+                    if (sVal <= val) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+                showToast(`Obrigado por avaliar com ${val} estrelas!`, '⭐');
+            });
+        });
+
+        // MSCZ Beta Promo
+        if (promoAudioConvert) {
+            promoAudioConvert.addEventListener('click', () => {
+                showToast('Conversão de Áudio para MSCZ ativada!', '✨');
+            });
         }
 
         updateScrubberAndDisplay();
