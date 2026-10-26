@@ -31,7 +31,7 @@ final class ScoreStorageService {
         if !existingScores.isEmpty {
             if let existingDarkDream = existingScores.first(where: { $0.title.contains("Dark Dream") }) {
                 let hasLyrics = existingDarkDream.measures.first?.notes.contains(where: { $0.lyric != nil }) ?? false
-                if !hasLyrics || existingDarkDream.measures.count < 56 || !existingDarkDream.composer.contains("11Minnie11") {
+                if !hasLyrics || existingDarkDream.measures.count < 56 || !existingDarkDream.composer.contains("lukscli") {
                     modelContext.delete(existingDarkDream)
                     let newDarkDream = createDarkDream()
                     newDarkDream.dateCreated = Date().addingTimeInterval(3600)
@@ -124,7 +124,7 @@ final class ScoreStorageService {
     
     // MARK: - Sample Music Generators
     
-    /// Curley Gao: Dark Dream (Lord of Mysteries ED) - Arr. 11Minnie11
+    /// Curley Gao: Dark Dream (Lord of Mysteries ED) - Arr. lukscli
     /// Complete official 56-measure transcription matching MuseScore 1:1.
     /// Key of C Minor / Eb Major (3 flats: Bb, Eb, Ab), 70 BPM, 4/4 time signature.
     func createDarkDream() -> Score {
@@ -2276,7 +2276,7 @@ final class ScoreStorageService {
 
         return Score(
             title: "Dark Dream (Lord of Mysteries ED)",
-            composer: "Curley Gao (Arr. 11Minnie11)",
+            composer: "Curley Gao (Arr. lukscli)",
             difficulty: .intermediate,
             source: .imported,
             tempo: 70,

@@ -803,12 +803,151 @@
         #playerView.score-fullscreen-mode header.player-header {
             display: none !important;
         }
-        #playerView.score-fullscreen-mode .bottom-dock {
+        #playerView.score-fullscreen-mode .bottom-dock:not(.force-show) {
             display: none !important;
         }
         #playerView.score-fullscreen-mode .score-floating-hud {
-            bottom: 18px;
-            right: 18px;
+            bottom: 18px !important;
+            right: 18px !important;
+            z-index: 140 !important;
+        }
+
+        /* FULLSCREEN TOP BAR & RESTORE PIANO CONTROLS */
+        .fullscreen-top-bar {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            border-radius: 9999px;
+            padding: 6px 12px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.75), 0 0 20px rgba(56, 189, 248, 0.25);
+            animation: slideDownFade 0.25s ease-out;
+            max-width: 95vw;
+        }
+
+        @keyframes slideDownFade {
+            from { transform: translate(-50%, -20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        .btn-exit-fs {
+            background: #dc2626;
+            color: #ffffff;
+            border: none;
+            border-radius: 9999px;
+            padding: 7px 14px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn-exit-fs:hover,
+        .btn-exit-fs:active {
+            background: #b91c1c;
+            transform: scale(1.04);
+        }
+
+        .btn-fs-restore-piano {
+            background: #1e293b;
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 9999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .btn-fs-restore-piano:hover,
+        .btn-fs-restore-piano:active {
+            background: #334155;
+            border-color: #38bdf8;
+            color: #ffffff;
+        }
+
+        .btn-fs-play {
+            background: #0284c7;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-fs-play:hover,
+        .btn-fs-play:active {
+            background: #0369a1;
+            transform: scale(1.08);
+        }
+
+        .floating-restore-piano-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 140;
+            background: rgba(15, 23, 42, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #38bdf8;
+            border: 1.5px solid #38bdf8;
+            border-radius: 9999px;
+            padding: 8px 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.3);
+            transition: all 0.2s ease;
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 10px rgba(56, 189, 248, 0.3); }
+            50% { box-shadow: 0 8px 30px rgba(0,0,0,0.7), 0 0 20px rgba(56, 189, 248, 0.6); }
+        }
+
+        .floating-restore-piano-btn:hover,
+        .floating-restore-piano-btn:active {
+            background: #0284c7;
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .score-floating-hud .hud-btn.hud-btn-fs.exit-active {
+            background: #dc2626 !important;
+            color: #ffffff !important;
+            border: 1px solid #f87171 !important;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.6) !important;
+            padding: 5px 12px !important;
+            font-weight: 800 !important;
         }
 
         .page-badge {
@@ -1450,6 +1589,20 @@
             border-color: #2b2b3d;
         }
 
+        .author-badge-pill {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            color: #38bdf8;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 9999px;
+            margin-left: 6px;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+        }
+
         .sidebar-stats-row {
             display: flex;
             align-items: center;
@@ -1466,6 +1619,24 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .sidebar-stats-row .stat-item.clickable {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.18s ease;
+            user-select: none;
+        }
+
+        .sidebar-stats-row .stat-item.clickable:hover {
+            background: #252536;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-stats-row .stat-item.clickable:active {
+            transform: translateY(0);
         }
 
         .sidebar-stats-row .stat-icon {
@@ -1975,6 +2146,212 @@
             to { transform: translate(-50%, 0); opacity: 1; }
         }
 
+        /* COMMENTS MODAL */
+        .comments-modal-card {
+            max-width: 540px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comment-form-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: #12121b;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #28283a;
+        }
+
+        .comment-input {
+            width: 100%;
+            background: #1a1a26;
+            border: 1px solid #333348;
+            border-radius: 8px;
+            color: #ffffff;
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 13.5px;
+            resize: vertical;
+            min-height: 60px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .comment-input:focus {
+            border-color: #38bdf8;
+        }
+
+        .comment-form-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .comment-char-counter {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .btn-submit-comment {
+            background: #2563eb;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+
+        .btn-submit-comment:hover {
+            background: #1d4ed8;
+        }
+
+        .comments-list-container {
+            overflow-y: auto;
+            max-height: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 4px;
+        }
+
+        .comment-item {
+            background: #13131c;
+            border: 1px solid #232332;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .comment-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .comment-user-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #38bdf8;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comment-author-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .comment-date {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .comment-delete-btn {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            opacity: 0.8;
+            transition: all 0.15s;
+        }
+
+        .comment-delete-btn:hover {
+            opacity: 1;
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .comment-body {
+            font-size: 13.5px;
+            color: #cbd5e1;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .no-comments-msg {
+            text-align: center;
+            color: #64748b;
+            padding: 30px 10px;
+            font-size: 13px;
+        }
+
+        /* RATING MODAL */
+        .rating-modal-card {
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .rating-modal-body {
+            padding: 10px 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rating-big-score {
+            font-size: 42px;
+            font-weight: 800;
+            color: #fbbf24;
+            line-height: 1;
+        }
+
+        .rating-stars-interactive {
+            display: flex;
+            gap: 8px;
+            font-size: 34px;
+            cursor: pointer;
+        }
+
+        .rating-star-btn {
+            color: #475569;
+            transition: transform 0.15s, color 0.15s;
+            user-select: none;
+        }
+
+        .rating-star-btn:hover,
+        .rating-star-btn.hovered,
+        .rating-star-btn.active {
+            color: #fbbf24;
+            transform: scale(1.15);
+        }
+
+        .rating-modal-subtext {
+            font-size: 13.5px;
+            color: #94a3b8;
+        }
+
+        .rating-modal-count {
+            font-size: 12px;
+            color: #64748b;
+        }
+
         /* PRINT STYLES */
         @media print {
             body {
@@ -2216,7 +2593,7 @@
                     <div class="song-card-header">
                         <div>
                             <h3 class="song-card-title">DARK DREAM (LOTM ED)</h3>
-                            <p class="song-card-meta">Curley Gao • Arr. 11Minnie11 • Lord of the Mysteries</p>
+                            <p class="song-card-meta">Curley Gao • Arr. lukscli • Lord of the Mysteries</p>
                         </div>
                         <div class="privacy-control-box">
                             <span id="lotmAccessBadge" class="badge-access private">🔒 Privada</span>
@@ -2266,7 +2643,7 @@
                 <span class="brand-badge">luksMusic</span>
                 <div class="song-info">
                     <h1>DARK DREAM (LOTM ED)</h1>
-                    <p>Curley Gao • Arr. 11Minnie11 • 70 BPM • 56 Compassos (Completo)</p>
+                    <p>Curley Gao • Arr. lukscli • 70 BPM • 56 Compassos (Completo)</p>
                 </div>
             </div>
 
@@ -2402,8 +2779,29 @@
                 <button id="zoomInBtn" class="hud-btn" title="Aumentar Zoom (+)">🔍+</button>
                 <span class="hud-sep"></span>
                 <button id="togglePianoDockBtn" class="hud-btn" title="Ocultar/Exibir Teclado do Piano (P)">🎹</button>
-                <button id="fullscreenScoreBtn" class="hud-btn" title="Ver em Tela Cheia (F)">⛶</button>
+                <button id="fullscreenScoreBtn" class="hud-btn hud-btn-fs" title="Ver em Tela Cheia (F)">⛶</button>
             </div>
+
+            <!-- FULLSCREEN TOP BAR (Explicit, visible button to exit fullscreen on mobile & desktop) -->
+            <div id="fullscreenTopBar" class="fullscreen-top-bar" style="display: none;">
+                <button id="exitFullscreenTopBtn" class="btn-exit-fs" title="Sair do modo tela cheia e restaurar o piano e cabeçalho">
+                    <span style="font-weight: 900; font-size: 14px;">✕</span>
+                    <span>Sair da Tela Cheia</span>
+                </button>
+                <button id="fsRestorePianoBtn" class="btn-fs-restore-piano" title="Exibir o piano inferior">
+                    <span>🎹</span>
+                    <span>Mostrar Piano</span>
+                </button>
+                <button id="fsPlayBtn" class="btn-fs-play" title="Tocar / Pausar">
+                    <span id="fsPlayIcon">▶</span>
+                </button>
+            </div>
+
+            <!-- FLOATING RESTORE PIANO BUTTON (Always visible whenever piano dock is hidden) -->
+            <button id="floatingRestorePianoBtn" class="floating-restore-piano-btn" style="display: none;" title="Restaurar o teclado do piano inferior">
+                <span>🎹</span>
+                <span>Exibir Piano Inferior</span>
+            </button>
 
             <!-- COLLAPSIBLE MUSESCORE SIDEBAR -->
             <div class="sidebar-wrapper" id="sidebarWrapper">
@@ -2424,9 +2822,10 @@
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                                 </svg>
                             </div>
-                            <span class="sidebar-author-name">11Minnie11</span>
+                            <span class="sidebar-author-name">lukscli</span>
+                            <span id="sidebarAuthorBadge" class="author-badge-pill" style="display: none;">Autor (Você)</span>
                         </div>
-                        <button id="sidebarFollowBtn" class="sidebar-btn-follow" title="Seguir o arranjador">Unfollow</button>
+                        <button id="sidebarFollowBtn" class="sidebar-btn-follow" title="Seguir o arranjador">+ Seguir</button>
                     </div>
 
                     <!-- Score Visibility / Privacy Banner in Sidebar -->
@@ -2445,10 +2844,10 @@
 
                     <!-- Engagement Stats -->
                     <div class="sidebar-stats-row">
-                        <div class="stat-item"><span class="stat-icon">👁</span> <span>7.1K</span></div>
-                        <div class="stat-item"><span class="stat-icon" id="statHeartIcon">❤️</span> <span id="statLikesCount">167</span></div>
-                        <div class="stat-item"><span class="stat-icon">💬</span> <span>8</span></div>
-                        <div class="stat-item"><span class="stat-icon">⭐</span> <span>5 (39)</span></div>
+                        <div class="stat-item" id="statViewsItem" title="Visualizações totais da partitura"><span class="stat-icon">👁</span> <span id="statViewsCount">1</span></div>
+                        <div class="stat-item clickable" id="statLikesItem" title="Curtir partitura"><span class="stat-icon" id="statHeartIcon">🤍</span> <span id="statLikesCount">0</span></div>
+                        <div class="stat-item clickable" id="statCommentsItem" title="Ver comentários e feedback"><span class="stat-icon">💬</span> <span id="statCommentsCount">0</span></div>
+                        <div class="stat-item clickable" id="statRatingItem" title="Ver e avaliar com estrelas"><span class="stat-icon">⭐</span> <span id="statRatingValue">5.0 (1)</span></div>
                     </div>
 
                     <!-- Dropdowns -->
@@ -2494,9 +2893,9 @@
                             </svg>
                             <span>Print</span>
                         </button>
-                        <button id="sidebarSaveBtn" class="sidebar-action-btn saved-active" title="Salvar nos favoritos">
-                            <span id="sidebarHeartIcon">❤️</span>
-                            <span id="sidebarSaveText">Saved</span>
+                        <button id="sidebarSaveBtn" class="sidebar-action-btn" title="Salvar nos favoritos">
+                            <span id="sidebarHeartIcon">☆</span>
+                            <span id="sidebarSaveText">Salvar nos Favoritos</span>
                         </button>
                         <button id="sidebarShareBtn" class="sidebar-action-btn" title="Compartilhar partitura">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2622,6 +3021,53 @@
                         </div>
                         <span class="export-dl-badge">Salvar PDF</span>
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMENTS MODAL -->
+        <div id="commentsModal" class="export-modal-backdrop hidden">
+            <div class="export-modal-card comments-modal-card">
+                <div class="export-modal-header">
+                    <h3>💬 Comentários (<span id="modalCommentsCountHeader">0</span>)</h3>
+                    <button id="closeCommentsModalBtn" class="close-modal-btn" title="Fechar comentários">✕</button>
+                </div>
+                
+                <!-- Novo Comentário -->
+                <form id="commentForm" class="comment-form-box">
+                    <textarea id="commentTextInput" class="comment-input" rows="3" placeholder="Escreva seu comentário ou dúvida sobre este arranjo..." maxlength="500" required></textarea>
+                    <div class="comment-form-footer">
+                        <span class="comment-char-counter"><span id="commentCharCount">0</span>/500</span>
+                        <button type="submit" id="submitCommentBtn" class="btn-submit-comment">Publicar Comentário</button>
+                    </div>
+                </form>
+
+                <!-- Lista de Comentários -->
+                <div id="commentsList" class="comments-list-container">
+                    <!-- Gerado dinamicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RATING MODAL -->
+        <div id="ratingModal" class="export-modal-backdrop hidden">
+            <div class="export-modal-card rating-modal-card">
+                <div class="export-modal-header">
+                    <h3>⭐ Avaliar Partitura</h3>
+                    <button id="closeRatingModalBtn" class="close-modal-btn" title="Fechar avaliação">✕</button>
+                </div>
+                
+                <div class="rating-modal-body">
+                    <div class="rating-big-score" id="ratingModalScore">5.0</div>
+                    <div class="rating-stars-interactive" id="ratingModalStars">
+                        <span class="rating-star-btn" data-val="1">★</span>
+                        <span class="rating-star-btn" data-val="2">★</span>
+                        <span class="rating-star-btn" data-val="3">★</span>
+                        <span class="rating-star-btn" data-val="4">★</span>
+                        <span class="rating-star-btn" data-val="5">★</span>
+                    </div>
+                    <div class="rating-modal-subtext" id="ratingModalSubtext">Clique em uma estrela para avaliar</div>
+                    <div class="rating-modal-count" id="ratingModalCount">Baseado em 1 avaliação</div>
                 </div>
             </div>
         </div>
@@ -2879,6 +3325,7 @@
             scorePrivacy = (scorePrivacy === 'public') ? 'private' : 'public';
             localStorage.setItem('luksmusic_score_privacy_lotm', scorePrivacy);
             updateScorePrivacyUI();
+            if (typeof updateEngagementUI === 'function') updateEngagementUI();
 
             if (scorePrivacy === 'public') {
                 showToast('Partitura definida como PÚBLICA! Qualquer pessoa agora pode acessar.', '🌐');
@@ -2912,6 +3359,7 @@
             }
 
             updateScorePrivacyUI();
+            if (typeof updateEngagementUI === 'function') updateEngagementUI();
 
             const isAuthorizedForLOTM = (scorePrivacy === 'public') || (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
             // Navigate to library if not already in player
@@ -3008,6 +3456,8 @@
             }
             showView(playerView);
             window.scrollTo(0, 0);
+            if (typeof recordScoreView === 'function') recordScoreView();
+            if (typeof updateEngagementUI === 'function') updateEngagementUI();
         });
 
         // Back to Library button in Player
@@ -3767,6 +4217,8 @@
         function startPlayback() {
             isPlaying = true;
             playBtn.innerHTML = "⏸";
+            const fsPlayIcon = document.getElementById("fsPlayIcon");
+            if (fsPlayIcon) fsPlayIcon.textContent = "⏸";
             if (useOriginalAudio) {
                 const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
                 origAudio.currentTime = Math.max(0, sec);
@@ -3783,6 +4235,8 @@
         function pausePlayback() {
             isPlaying = false;
             playBtn.innerHTML = '<span style="display:inline-block; margin-left:2px;">▶</span>';
+            const fsPlayIcon = document.getElementById("fsPlayIcon");
+            if (fsPlayIcon) fsPlayIcon.textContent = "▶";
             if (origAudio) origAudio.pause();
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
         }
@@ -3968,17 +4422,25 @@
         }
 
         // -------------------------------------------------------------
-        // MUSESCORE SIDEBAR & ACTIONS INTERACTIVITY
+        // MUSESCORE SIDEBAR & REAL ENGAGEMENT METRICS
         // -------------------------------------------------------------
         const musescoreSidebar = document.getElementById('musescoreSidebar');
         const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
         const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+        const sidebarAuthorBadge = document.getElementById('sidebarAuthorBadge');
         const sidebarFollowBtn = document.getElementById('sidebarFollowBtn');
+        const statViewsItem = document.getElementById('statViewsItem');
+        const statViewsCount = document.getElementById('statViewsCount');
+        const statLikesItem = document.getElementById('statLikesItem');
+        const statHeartIcon = document.getElementById('statHeartIcon');
+        const statLikesCount = document.getElementById('statLikesCount');
+        const statCommentsItem = document.getElementById('statCommentsItem');
+        const statCommentsCount = document.getElementById('statCommentsCount');
+        const statRatingItem = document.getElementById('statRatingItem');
+        const statRatingValue = document.getElementById('statRatingValue');
         const sidebarSaveBtn = document.getElementById('sidebarSaveBtn');
         const sidebarHeartIcon = document.getElementById('sidebarHeartIcon');
         const sidebarSaveText = document.getElementById('sidebarSaveText');
-        const statHeartIcon = document.getElementById('statHeartIcon');
-        const statLikesCount = document.getElementById('statLikesCount');
         const sidebarShareBtn = document.getElementById('sidebarShareBtn');
         const sidebarPrintBtn = document.getElementById('sidebarPrintBtn');
         const sidebarDownloadBtn = document.getElementById('sidebarDownloadBtn');
@@ -3986,13 +4448,22 @@
         const exportModal = document.getElementById('exportModal');
         const closeExportModalBtn = document.getElementById('closeExportModalBtn');
         const exportPdfBtn = document.getElementById('exportPdfBtn');
+        const commentsModal = document.getElementById('commentsModal');
+        const closeCommentsModalBtn = document.getElementById('closeCommentsModalBtn');
+        const modalCommentsCountHeader = document.getElementById('modalCommentsCountHeader');
+        const commentForm = document.getElementById('commentForm');
+        const commentTextInput = document.getElementById('commentTextInput');
+        const commentCharCount = document.getElementById('commentCharCount');
+        const commentsList = document.getElementById('commentsList');
+        const ratingModal = document.getElementById('ratingModal');
+        const closeRatingModalBtn = document.getElementById('closeRatingModalBtn');
+        const ratingModalScore = document.getElementById('ratingModalScore');
+        const ratingModalSubtext = document.getElementById('ratingModalSubtext');
+        const ratingModalCount = document.getElementById('ratingModalCount');
         const toastNotification = document.getElementById('toastNotification');
         const promoAudioConvert = document.getElementById('promoAudioConvert');
 
         let isSidebarCollapsed = false;
-        let isFollowing = true;
-        let isSaved = true;
-        let likesCount = 167;
         let toastTimer = null;
 
         function showToast(message, icon = '✓') {
@@ -4003,6 +4474,365 @@
             toastTimer = setTimeout(() => {
                 toastNotification.classList.add('hidden');
             }, 3000);
+        }
+
+        // =============================================================
+        // REAL ENGAGEMENT DATA & STORE
+        // =============================================================
+        const ENGAGEMENT_STORAGE_KEY = 'luksmusic_score_lotm_engagement_v2';
+
+        function getEngagementData() {
+            try {
+                const raw = localStorage.getItem(ENGAGEMENT_STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                        if (!Array.isArray(parsed.likes)) parsed.likes = [];
+                        if (!Array.isArray(parsed.favorites)) parsed.favorites = [];
+                        if (!Array.isArray(parsed.comments)) parsed.comments = [];
+                        if (!parsed.ratings || typeof parsed.ratings !== 'object') parsed.ratings = {};
+                        if (!Array.isArray(parsed.following)) parsed.following = [];
+                        if (typeof parsed.views !== 'number') parsed.views = 1;
+                        return parsed;
+                    }
+                }
+            } catch(e) {
+                console.error("Erro ao ler engajamento:", e);
+            }
+            const initialData = {
+                views: 1,
+                likes: ["lukscli@gmail.com"],
+                favorites: ["lukscli@gmail.com"],
+                ratings: { "lukscli@gmail.com": 5 },
+                comments: [
+                    {
+                        id: "c_init_luks",
+                        authorEmail: "lukscli@gmail.com",
+                        authorName: "lukscli",
+                        text: "Arranjo oficial para piano solo de Dark Dream (LOTM ED). 56 compassos com canais independentes de mão direita e esquerda. Bom treino a todos!",
+                        timestamp: 1729900000000
+                    }
+                ],
+                following: []
+            };
+            saveEngagementData(initialData);
+            return initialData;
+        }
+
+        function saveEngagementData(data) {
+            try {
+                localStorage.setItem(ENGAGEMENT_STORAGE_KEY, JSON.stringify(data));
+            } catch(e) {
+                console.error("Erro ao salvar engajamento:", e);
+            }
+        }
+
+        function getUserIdentity() {
+            if (currentUser && currentUser.email) {
+                const email = currentUser.email.toLowerCase().trim();
+                const name = (currentUser.displayName || email.split('@')[0] || 'Usuário').trim();
+                return { email, name, isAuth: true };
+            }
+            return { email: 'visitante@luksmusic.local', name: 'Visitante', isAuth: false };
+        }
+
+        function recordScoreView() {
+            try {
+                if (!sessionStorage.getItem('luksmusic_score_lotm_viewed')) {
+                    sessionStorage.setItem('luksmusic_score_lotm_viewed', '1');
+                    const data = getEngagementData();
+                    data.views = (data.views || 0) + 1;
+                    saveEngagementData(data);
+                }
+            } catch(e) {}
+        }
+
+        function updateStarVisuals(val) {
+            const sidebarStars = document.querySelectorAll('#sidebarStarRating .star-rating-item');
+            sidebarStars.forEach(s => {
+                const sVal = parseInt(s.getAttribute('data-val') || '0', 10);
+                s.classList.toggle('active', sVal <= val);
+            });
+
+            const modalStars = document.querySelectorAll('#ratingModalStars .rating-star-btn');
+            modalStars.forEach(s => {
+                const sVal = parseInt(s.getAttribute('data-val') || '0', 10);
+                s.classList.toggle('active', sVal <= val);
+            });
+        }
+
+        function escapeCommentHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderCommentsList(data) {
+            if (!commentsList) return;
+            const ident = getUserIdentity();
+            const comments = data.comments || [];
+
+            if (modalCommentsCountHeader) {
+                modalCommentsCountHeader.textContent = comments.length;
+            }
+
+            if (comments.length === 0) {
+                commentsList.innerHTML = `<div class="no-comments-msg">Nenhum comentário ainda. Seja o primeiro a comentar sobre este arranjo!</div>`;
+                return;
+            }
+
+            const sorted = [...comments].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            commentsList.innerHTML = sorted.map(c => {
+                const isAuthorOfSong = (c.authorEmail.toLowerCase() === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+                const canDelete = ident.isAuth && (c.authorEmail.toLowerCase() === ident.email);
+                const initial = (c.authorName || c.authorEmail || 'U').charAt(0).toUpperCase();
+
+                const dateObj = new Date(c.timestamp || Date.now());
+                const dateStr = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) + 
+                                ' às ' + dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="comment-item" id="comment_${c.id}">
+                        <div class="comment-item-header">
+                            <div class="comment-user-box">
+                                <div class="comment-avatar">${initial}</div>
+                                <div>
+                                    <div class="comment-author-name">
+                                        <span>${escapeCommentHtml(c.authorName || c.authorEmail)}</span>
+                                        ${isAuthorOfSong ? '<span class="author-badge-pill">Autor</span>' : ''}
+                                    </div>
+                                    <div class="comment-date">${dateStr}</div>
+                                </div>
+                            </div>
+                            ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${c.id}" title="Excluir seu comentário">🗑️ Excluir</button>` : ''}
+                        </div>
+                        <div class="comment-body">${escapeCommentHtml(c.text)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            commentsList.querySelectorAll('.comment-delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const commentId = btn.getAttribute('data-comment-id');
+                    deleteComment(commentId);
+                });
+            });
+        }
+
+        function updateEngagementUI() {
+            const data = getEngagementData();
+            const ident = getUserIdentity();
+            const userEmail = ident.email;
+            const isOwner = (userEmail === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+
+            // 1. Author Row & Follow Button
+            if (sidebarAuthorBadge) {
+                sidebarAuthorBadge.style.display = isOwner ? 'inline-flex' : 'none';
+            }
+            if (sidebarFollowBtn) {
+                if (isOwner) {
+                    sidebarFollowBtn.style.display = 'none';
+                } else {
+                    sidebarFollowBtn.style.display = 'inline-block';
+                    const isFollowing = data.following && data.following.includes(userEmail);
+                    if (isFollowing) {
+                        sidebarFollowBtn.textContent = 'Seguindo';
+                        sidebarFollowBtn.classList.add('following');
+                    } else {
+                        sidebarFollowBtn.textContent = '+ Seguir';
+                        sidebarFollowBtn.classList.remove('following');
+                    }
+                }
+            }
+
+            // 2. Views
+            if (statViewsCount) {
+                statViewsCount.textContent = (data.views >= 1000) ? (data.views / 1000).toFixed(1) + 'K' : data.views;
+            }
+
+            // 3. Likes
+            const hasLiked = data.likes && data.likes.includes(userEmail);
+            const likesTotal = (data.likes || []).length;
+            if (statLikesCount) {
+                statLikesCount.textContent = likesTotal;
+            }
+            if (statHeartIcon) {
+                statHeartIcon.textContent = hasLiked ? '❤️' : '🤍';
+            }
+            if (statLikesItem) {
+                statLikesItem.classList.toggle('active', hasLiked);
+                statLikesItem.title = hasLiked ? 'Você curtiu esta partitura (clique para remover curtida)' : 'Curtir partitura';
+            }
+
+            // 4. Favorites (Salvar nos Favoritos)
+            const hasFavorited = data.favorites && data.favorites.includes(userEmail);
+            if (sidebarSaveBtn) {
+                sidebarSaveBtn.classList.toggle('saved-active', hasFavorited);
+                if (sidebarHeartIcon) {
+                    sidebarHeartIcon.textContent = hasFavorited ? '★' : '☆';
+                }
+                if (sidebarSaveText) {
+                    sidebarSaveText.textContent = hasFavorited ? 'Salva nos Favoritos' : 'Salvar nos Favoritos';
+                }
+            }
+
+            // 5. Comments Count
+            const commentsTotal = (data.comments || []).length;
+            if (statCommentsCount) {
+                statCommentsCount.textContent = commentsTotal;
+            }
+
+            // 6. Ratings
+            const ratingsObj = data.ratings || {};
+            const ratingValues = Object.values(ratingsObj);
+            let avg = 0;
+            if (ratingValues.length > 0) {
+                const sum = ratingValues.reduce((a, b) => a + b, 0);
+                avg = (sum / ratingValues.length).toFixed(1);
+            }
+            const count = ratingValues.length;
+            if (statRatingValue) {
+                statRatingValue.textContent = count > 0 ? `${avg} (${count})` : 'Sem avaliações';
+            }
+            if (ratingModalScore) {
+                ratingModalScore.textContent = count > 0 ? avg : '—';
+            }
+            if (ratingModalCount) {
+                ratingModalCount.textContent = count > 0 ? `Baseado em ${count} avaliação${count > 1 ? 'ões' : ''}` : 'Nenhuma avaliação ainda';
+            }
+
+            const userRating = ratingsObj[userEmail] || 0;
+            if (ratingModalSubtext) {
+                ratingModalSubtext.textContent = userRating > 0 ? `Sua avaliação: ${userRating} estrela${userRating > 1 ? 's' : ''}` : 'Clique em uma estrela para avaliar';
+            }
+
+            updateStarVisuals(userRating || Math.round(Number(avg)) || 0);
+
+            if (commentsModal && !commentsModal.classList.contains('hidden')) {
+                renderCommentsList(data);
+            }
+        }
+
+        function toggleLike() {
+            const ident = getUserIdentity();
+            if (!ident.isAuth) {
+                showToast('Faça login com o Google para curtir!', '🔒');
+                return;
+            }
+            const data = getEngagementData();
+            const idx = data.likes.indexOf(ident.email);
+            if (idx >= 0) {
+                data.likes.splice(idx, 1);
+                showToast('Curtida removida.', '🤍');
+            } else {
+                data.likes.push(ident.email);
+                showToast('Você curtiu esta partitura!', '❤️');
+            }
+            saveEngagementData(data);
+            updateEngagementUI();
+        }
+
+        function toggleFavorite() {
+            const ident = getUserIdentity();
+            if (!ident.isAuth) {
+                showToast('Faça login com o Google para salvar nos favoritos!', '🔒');
+                return;
+            }
+            const data = getEngagementData();
+            const idx = data.favorites.indexOf(ident.email);
+            if (idx >= 0) {
+                data.favorites.splice(idx, 1);
+                showToast('Partitura removida dos seus favoritos.', '☆');
+            } else {
+                data.favorites.push(ident.email);
+                showToast('Partitura salva nos seus favoritos!', '★');
+            }
+            saveEngagementData(data);
+            updateEngagementUI();
+        }
+
+        function toggleFollow() {
+            const ident = getUserIdentity();
+            if (!ident.isAuth) {
+                showToast('Faça login com o Google para seguir o autor!', '🔒');
+                return;
+            }
+            if (ident.email === AUTHORIZED_LOTM_EMAIL.toLowerCase()) {
+                showToast('Você é o autor deste arranjo!', '👤');
+                return;
+            }
+            const data = getEngagementData();
+            const idx = data.following.indexOf(ident.email);
+            if (idx >= 0) {
+                data.following.splice(idx, 1);
+                showToast('Você deixou de seguir lukscli.', '👤');
+            } else {
+                data.following.push(ident.email);
+                showToast('Você agora está seguindo lukscli!', '👤');
+            }
+            saveEngagementData(data);
+            updateEngagementUI();
+        }
+
+        function addComment(text) {
+            const ident = getUserIdentity();
+            if (!ident.isAuth) {
+                showToast('Faça login com o Google para comentar!', '🔒');
+                return;
+            }
+            const cleanText = (text || '').trim();
+            if (!cleanText) return;
+
+            const data = getEngagementData();
+            const newComment = {
+                id: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                authorEmail: ident.email,
+                authorName: ident.name,
+                text: cleanText,
+                timestamp: Date.now()
+            };
+            data.comments.unshift(newComment);
+            saveEngagementData(data);
+            updateEngagementUI();
+            renderCommentsList(data);
+            showToast('Comentário publicado!', '💬');
+        }
+
+        function deleteComment(commentId) {
+            const ident = getUserIdentity();
+            if (!ident.isAuth) return;
+            const data = getEngagementData();
+            const comment = data.comments.find(c => c.id === commentId);
+            if (!comment) return;
+            if (comment.authorEmail.toLowerCase() !== ident.email) {
+                showToast('Você só pode excluir seus próprios comentários!', '⚠️');
+                return;
+            }
+            data.comments = data.comments.filter(c => c.id !== commentId);
+            saveEngagementData(data);
+            updateEngagementUI();
+            renderCommentsList(data);
+            showToast('Comentário removido.', '🗑️');
+        }
+
+        function rateScore(stars) {
+            const ident = getUserIdentity();
+            if (!ident.isAuth) {
+                showToast('Faça login com o Google para avaliar!', '🔒');
+                return;
+            }
+            const val = Math.max(1, Math.min(5, parseInt(stars, 10)));
+            const data = getEngagementData();
+            data.ratings[ident.email] = val;
+            saveEngagementData(data);
+            updateEngagementUI();
+            showToast(`Obrigado por avaliar com ${val} estrelas!`, '⭐');
         }
 
         // =============================================================
@@ -4075,9 +4905,53 @@
         if (zoomOutBtn) zoomOutBtn.addEventListener("click", zoomOut);
         if (zoomResetBtn) zoomResetBtn.addEventListener("click", toggleFitOrZoom);
 
-        // Fullscreen Toggle
+        // Elements for Fullscreen Top Bar & Restore Piano
+        const fullscreenTopBar = document.getElementById("fullscreenTopBar");
+        const exitFullscreenTopBtn = document.getElementById("exitFullscreenTopBtn");
+        const fsRestorePianoBtn = document.getElementById("fsRestorePianoBtn");
+        const fsPlayBtn = document.getElementById("fsPlayBtn");
+        const floatingRestorePianoBtn = document.getElementById("floatingRestorePianoBtn");
+
+        // Fullscreen Exit Handler (Restores Piano, Controls and Header)
+        function exitFullscreenScore() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+            playerView.classList.remove("score-fullscreen-mode");
+            if (fullscreenTopBar) fullscreenTopBar.style.display = "none";
+            if (floatingRestorePianoBtn) floatingRestorePianoBtn.style.display = "none";
+
+            // Restore piano dock
+            if (bottomDock) {
+                bottomDock.classList.remove("dock-hidden", "force-show");
+                const savedH = parseInt(localStorage.getItem("luksmusic_dock_height") || "142", 10);
+                if (typeof applyDockHeight === 'function') {
+                    applyDockHeight(savedH || 142, false);
+                }
+            }
+
+            if (fullscreenScoreBtn) {
+                fullscreenScoreBtn.innerHTML = "⛶";
+                fullscreenScoreBtn.classList.remove("active", "exit-active");
+                fullscreenScoreBtn.title = "Ver em Tela Cheia (F)";
+            }
+            if (togglePianoDockBtn) {
+                togglePianoDockBtn.classList.remove("active");
+                togglePianoDockBtn.title = "Ocultar/Exibir Teclado do Piano (P)";
+            }
+            showToast("Tela normal restaurada com Piano!", "🎹");
+            setTimeout(() => {
+                if (isFitWidth) setSheetWidth(getFitWidth());
+            }, 120);
+        }
+
+        // Fullscreen Toggle (In-app + HTML5 Fullscreen)
         function toggleFullscreen() {
-            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+            const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || playerView.classList.contains("score-fullscreen-mode"));
             if (!isFs) {
                 const target = playerView || document.documentElement;
                 if (target.requestFullscreen) {
@@ -4086,37 +4960,65 @@
                     target.webkitRequestFullscreen();
                 }
                 playerView.classList.add("score-fullscreen-mode");
+                if (fullscreenTopBar) fullscreenTopBar.style.display = "flex";
+                if (floatingRestorePianoBtn) floatingRestorePianoBtn.style.display = "inline-flex";
+
                 if (fullscreenScoreBtn) {
-                    fullscreenScoreBtn.innerHTML = "🗗";
-                    fullscreenScoreBtn.classList.add("active");
-                    fullscreenScoreBtn.title = "Sair da Tela Cheia (F)";
+                    fullscreenScoreBtn.innerHTML = "✕ Sair";
+                    fullscreenScoreBtn.classList.add("active", "exit-active");
+                    fullscreenScoreBtn.title = "Sair da Tela Cheia e Restaurar Piano";
                 }
-                showToast("Tela Cheia: Partitura Expandida", "⛶");
+                showToast("Tela Cheia ativada! Toque em '✕ Sair' para voltar.", "⛶");
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-                playerView.classList.remove("score-fullscreen-mode");
-                if (fullscreenScoreBtn) {
-                    fullscreenScoreBtn.innerHTML = "⛶";
-                    fullscreenScoreBtn.classList.remove("active");
-                    fullscreenScoreBtn.title = "Ver em Tela Cheia (F)";
-                }
-                showToast("Tela Cheia Desativada", "🗗");
+                exitFullscreenScore();
             }
         }
 
         if (fullscreenScoreBtn) fullscreenScoreBtn.addEventListener("click", toggleFullscreen);
+        if (exitFullscreenTopBtn) exitFullscreenTopBtn.addEventListener("click", exitFullscreenScore);
+        
+        if (fsRestorePianoBtn) {
+            fsRestorePianoBtn.addEventListener("click", () => {
+                if (bottomDock) {
+                    bottomDock.classList.add("force-show");
+                    bottomDock.classList.remove("dock-hidden");
+                    const savedH = parseInt(localStorage.getItem("luksmusic_dock_height") || "142", 10);
+                    if (typeof applyDockHeight === 'function') {
+                        applyDockHeight(savedH || 142, false);
+                    }
+                }
+                if (floatingRestorePianoBtn) floatingRestorePianoBtn.style.display = "none";
+                showToast("Piano reexibido na tela!", "🎹");
+            });
+        }
 
-        document.addEventListener("fullscreenchange", () => {
-            const isFs = !!document.fullscreenElement;
-            playerView.classList.toggle("score-fullscreen-mode", isFs);
-            if (fullscreenScoreBtn) {
-                fullscreenScoreBtn.innerHTML = isFs ? "🗗" : "⛶";
-                fullscreenScoreBtn.classList.toggle("active", isFs);
-            }
+        if (fsPlayBtn) {
+            fsPlayBtn.addEventListener("click", () => {
+                playBtn.click();
+            });
+        }
+
+        if (floatingRestorePianoBtn) {
+            floatingRestorePianoBtn.addEventListener("click", () => {
+                exitFullscreenScore();
+            });
+        }
+
+        ["fullscreenchange", "webkitfullscreenchange"].forEach(evtName => {
+            document.addEventListener(evtName, () => {
+                const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+                if (!isFs) {
+                    exitFullscreenScore();
+                } else {
+                    playerView.classList.add("score-fullscreen-mode");
+                    if (fullscreenTopBar) fullscreenTopBar.style.display = "flex";
+                    if (floatingRestorePianoBtn) floatingRestorePianoBtn.style.display = "inline-flex";
+                    if (fullscreenScoreBtn) {
+                        fullscreenScoreBtn.innerHTML = "✕ Sair";
+                        fullscreenScoreBtn.classList.add("active", "exit-active");
+                    }
+                }
+            });
         });
 
         // Toggle Piano Dock (Show/Hide)
@@ -4125,11 +5027,15 @@
             const isHidden = bottomDock.classList.contains("dock-hidden");
             const shouldHide = forceState !== undefined ? !forceState : !isHidden;
             bottomDock.classList.toggle("dock-hidden", shouldHide);
+            
+            if (floatingRestorePianoBtn) {
+                floatingRestorePianoBtn.style.display = shouldHide ? "inline-flex" : "none";
+            }
             if (togglePianoDockBtn) {
                 togglePianoDockBtn.classList.toggle("active", shouldHide);
                 togglePianoDockBtn.title = shouldHide ? "Mostrar Teclado do Piano" : "Ocultar Teclado (Mais espaço)";
             }
-            showToast(shouldHide ? "Teclado oculto (Mais espaço para a partitura)" : "Teclado exibido", "🎹");
+            showToast(shouldHide ? "Teclado oculto. Toque em '🎹 Exibir Piano' para restaurar." : "Teclado exibido!", "🎹");
             setTimeout(() => {
                 if (isFitWidth) setSheetWidth(getFitWidth());
             }, 120);
@@ -4233,42 +5139,106 @@
 
         // Follow / Unfollow Author
         if (sidebarFollowBtn) {
-            sidebarFollowBtn.addEventListener('click', () => {
-                isFollowing = !isFollowing;
-                if (isFollowing) {
-                    sidebarFollowBtn.textContent = 'Unfollow';
-                    sidebarFollowBtn.classList.remove('following');
-                    showToast('Você está seguindo 11Minnie11!', '👤');
-                } else {
-                    sidebarFollowBtn.textContent = 'Follow';
-                    sidebarFollowBtn.classList.add('following');
-                    showToast('Você deixou de seguir 11Minnie11.', '👤');
-                }
-            });
+            sidebarFollowBtn.addEventListener('click', toggleFollow);
+        }
+
+        // Like Score (via stats item)
+        if (statLikesItem) {
+            statLikesItem.addEventListener('click', toggleLike);
         }
 
         // Save / Favorite
         if (sidebarSaveBtn) {
-            sidebarSaveBtn.addEventListener('click', () => {
-                isSaved = !isSaved;
-                if (isSaved) {
-                    likesCount++;
-                    sidebarHeartIcon.textContent = '❤️';
-                    sidebarSaveText.textContent = 'Saved';
-                    sidebarSaveBtn.classList.add('saved-active');
-                    if (statHeartIcon) statHeartIcon.textContent = '❤️';
-                    showToast('Música salva nos seus favoritos!', '❤️');
-                } else {
-                    likesCount = Math.max(0, likesCount - 1);
-                    sidebarHeartIcon.textContent = '🤍';
-                    sidebarSaveText.textContent = 'Save';
-                    sidebarSaveBtn.classList.remove('saved-active');
-                    if (statHeartIcon) statHeartIcon.textContent = '🤍';
-                    showToast('Removido dos favoritos.', '🤍');
-                }
-                if (statLikesCount) statLikesCount.textContent = likesCount;
+            sidebarSaveBtn.addEventListener('click', toggleFavorite);
+        }
+
+        // Comments Modal Interactivity
+        if (statCommentsItem && commentsModal) {
+            statCommentsItem.addEventListener('click', () => {
+                commentsModal.classList.remove('hidden');
+                renderCommentsList(getEngagementData());
             });
         }
+
+        if (closeCommentsModalBtn && commentsModal) {
+            closeCommentsModalBtn.addEventListener('click', () => {
+                commentsModal.classList.add('hidden');
+            });
+        }
+
+        if (commentsModal) {
+            commentsModal.addEventListener('click', (e) => {
+                if (e.target === commentsModal) {
+                    commentsModal.classList.add('hidden');
+                }
+            });
+        }
+
+        if (commentTextInput && commentCharCount) {
+            commentTextInput.addEventListener('input', () => {
+                commentCharCount.textContent = commentTextInput.value.length;
+            });
+        }
+
+        if (commentForm) {
+            commentForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (commentTextInput) {
+                    addComment(commentTextInput.value);
+                    commentTextInput.value = '';
+                    if (commentCharCount) commentCharCount.textContent = '0';
+                }
+            });
+        }
+
+        // Rating Modal & Stars Interactivity
+        if (statRatingItem && ratingModal) {
+            statRatingItem.addEventListener('click', () => {
+                ratingModal.classList.remove('hidden');
+                updateEngagementUI();
+            });
+        }
+
+        if (closeRatingModalBtn && ratingModal) {
+            closeRatingModalBtn.addEventListener('click', () => {
+                ratingModal.classList.add('hidden');
+            });
+        }
+
+        if (ratingModal) {
+            ratingModal.addEventListener('click', (e) => {
+                if (e.target === ratingModal) {
+                    ratingModal.classList.add('hidden');
+                }
+            });
+        }
+
+        const ratingModalStars = document.querySelectorAll('#ratingModalStars .rating-star-btn');
+        ratingModalStars.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.getAttribute('data-val') || '5', 10);
+                rateScore(val);
+            });
+            star.addEventListener('mouseenter', () => {
+                const val = parseInt(star.getAttribute('data-val') || '5', 10);
+                ratingModalStars.forEach(s => {
+                    const sVal = parseInt(s.getAttribute('data-val') || '0', 10);
+                    s.classList.toggle('hovered', sVal <= val);
+                });
+            });
+            star.addEventListener('mouseleave', () => {
+                ratingModalStars.forEach(s => s.classList.remove('hovered'));
+            });
+        });
+
+        // Sidebar inline Star Rating
+        const starItems = document.querySelectorAll('#sidebarStarRating .star-rating-item');
+        starItems.forEach(star => {
+            star.addEventListener('click', () => {
+                const val = parseInt(star.getAttribute('data-val') || '5', 10);
+                rateScore(val);
+            });
+        });
 
         // Share
         if (sidebarShareBtn) {
@@ -4327,23 +5297,6 @@
             });
         }
 
-        // Star Rating
-        const starItems = document.querySelectorAll('.star-rating-item');
-        starItems.forEach(star => {
-            star.addEventListener('click', () => {
-                const val = parseInt(star.getAttribute('data-val') || '5', 10);
-                starItems.forEach(s => {
-                    const sVal = parseInt(s.getAttribute('data-val') || '0', 10);
-                    if (sVal <= val) {
-                        s.classList.add('active');
-                    } else {
-                        s.classList.remove('active');
-                    }
-                });
-                showToast(`Obrigado por avaliar com ${val} estrelas!`, '⭐');
-            });
-        });
-
         // MSCZ Beta Promo
         if (promoAudioConvert) {
             promoAudioConvert.addEventListener('click', () => {
@@ -4369,6 +5322,7 @@
         }
 
         updateScrubberAndDisplay();
+        updateEngagementUI();
     </script>
 </body>
 </html>
