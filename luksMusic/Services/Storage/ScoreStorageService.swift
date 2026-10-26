@@ -2278,11 +2278,11 @@ final class ScoreStorageService {
             title: "Dark Dream (Lord of Mysteries ED)",
             composer: "Curley Gao (Arr. 11Minnie11)",
             difficulty: .intermediate,
-            source: .bundled,
+            source: .imported,
             tempo: 70,
+            keySignatureValue: -3,
             timeSignatureTop: 4,
             timeSignatureBottom: 4,
-            keySignatureValue: -3,
             measures: measures
         )
     }
