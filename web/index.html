@@ -330,6 +330,104 @@
             white-space: nowrap;
         }
 
+                .badge-access.public {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
+
+        .privacy-control-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-privacy-toggle {
+            background: #252538;
+            border: 1px solid #3d3d57;
+            color: #e2e8f0;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-privacy-toggle:hover {
+            background: #363650;
+            border-color: #7047eb;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .sidebar-privacy-card {
+            background: #1c1c28;
+            border: 1px solid #2d2d42;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            transition: all 0.25s ease;
+        }
+
+        .sidebar-privacy-card.public {
+            border-color: rgba(34, 197, 94, 0.35);
+            background: rgba(34, 197, 94, 0.08);
+        }
+
+        .sidebar-privacy-card.private {
+            border-color: rgba(168, 85, 247, 0.35);
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .sidebar-privacy-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-privacy-info .privacy-icon {
+            font-size: 18px;
+        }
+
+        .sidebar-privacy-info .privacy-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .sidebar-privacy-info .privacy-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            line-height: 1.25;
+        }
+
+        .sidebar-privacy-btn {
+            background: #2b2b3d;
+            border: 1px solid #44445e;
+            border-radius: 9999px;
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 5px 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-privacy-btn:hover {
+            background: #7047eb;
+            border-color: #7047eb;
+            transform: translateY(-1px);
+        }
+
         .badge-access.private {
             background: rgba(56, 189, 248, 0.15);
             color: #38bdf8;
@@ -1754,7 +1852,12 @@
                             <h3 class="song-card-title">DARK DREAM (LOTM ED)</h3>
                             <p class="song-card-meta">Curley Gao • Arr. 11Minnie11 • Lord of the Mysteries</p>
                         </div>
-                        <span id="lotmAccessBadge" class="badge-access private">🔒 lukscli@gmail.com</span>
+                        <div class="privacy-control-box">
+                            <span id="lotmAccessBadge" class="badge-access private">🔒 Privada</span>
+                            <button id="cardPrivacyToggleBtn" class="btn-privacy-toggle" title="Alterar visibilidade da partitura (Pública / Privada)">
+                                <span id="cardPrivacyToggleIcon">🌐</span> <span id="cardPrivacyToggleText">Tornar Pública</span>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="song-card-details">
@@ -1766,6 +1869,9 @@
                         </div>
                         <div class="song-detail-item">
                             <span>📄</span> <span>7 Páginas (Oficial MuseScore)</span>
+                        </div>
+                        <div class="song-detail-item">
+                            <span id="lotmPrivacyDetailIcon">🔒</span> <span id="lotmPrivacyDetailText">Visibilidade: Privada</span>
                         </div>
                     </div>
 
@@ -1935,6 +2041,20 @@
                             <span class="sidebar-author-name">11Minnie11</span>
                         </div>
                         <button id="sidebarFollowBtn" class="sidebar-btn-follow" title="Seguir o arranjador">Unfollow</button>
+                    </div>
+
+                    <!-- Score Visibility / Privacy Banner in Sidebar -->
+                    <div class="sidebar-privacy-card private" id="sidebarPrivacyCard">
+                        <div class="sidebar-privacy-info">
+                            <span id="sidebarPrivacyIcon" class="privacy-icon">🔒</span>
+                            <div>
+                                <div class="privacy-title" id="sidebarPrivacyTitle">Partitura Privada</div>
+                                <div class="privacy-sub" id="sidebarPrivacySub">Acessível exclusivamente por você (lukscli@gmail.com)</div>
+                            </div>
+                        </div>
+                        <button id="sidebarPrivacyToggleBtn" class="sidebar-privacy-btn" title="Alterar privacidade da partitura">
+                            <span id="sidebarPrivacyBtnText">Tornar Pública</span>
+                        </button>
                     </div>
 
                     <!-- Engagement Stats -->
@@ -2250,6 +2370,119 @@
             viewElement.classList.add("active-view");
         }
 
+        // -------------------------------------------------------------
+        // SCORE PRIVACY: PUBLIC VS PRIVATE MANAGEMENT
+        // -------------------------------------------------------------
+        let scorePrivacy = localStorage.getItem('luksmusic_score_privacy_lotm') || 'private';
+
+        function updateScorePrivacyUI() {
+            const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
+            const isOwner = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+            const isPublic = (scorePrivacy === 'public');
+
+            // Card Elements
+            const cardPrivacyToggleBtn = document.getElementById('cardPrivacyToggleBtn');
+            const cardPrivacyToggleIcon = document.getElementById('cardPrivacyToggleIcon');
+            const cardPrivacyToggleText = document.getElementById('cardPrivacyToggleText');
+            const lotmPrivacyDetailIcon = document.getElementById('lotmPrivacyDetailIcon');
+            const lotmPrivacyDetailText = document.getElementById('lotmPrivacyDetailText');
+
+            if (cardPrivacyToggleBtn) {
+                cardPrivacyToggleBtn.style.display = isOwner ? 'inline-flex' : 'none';
+                if (cardPrivacyToggleIcon) cardPrivacyToggleIcon.textContent = isPublic ? '🔒' : '🌐';
+                if (cardPrivacyToggleText) cardPrivacyToggleText.textContent = isPublic ? 'Tornar Privada' : 'Tornar Pública';
+            }
+
+            if (lotmPrivacyDetailIcon) lotmPrivacyDetailIcon.textContent = isPublic ? '🌐' : '🔒';
+            if (lotmPrivacyDetailText) lotmPrivacyDetailText.textContent = isPublic ? 'Visibilidade: Pública (Todos)' : 'Visibilidade: Privada (Autor)';
+
+            if (isPublic) {
+                // Anyone can access
+                lotmSongCard.classList.remove("locked");
+                lotmAccessBadge.className = "badge-access public";
+                lotmAccessBadge.innerHTML = "🌐 Pública";
+                lotmAccessNotice.style.display = "none";
+                openLotmBtn.classList.remove("disabled");
+                openLotmBtn.disabled = false;
+                openLotmBtn.innerHTML = "<span>▶</span> <span>Abrir Partitura Interativa</span>";
+            } else {
+                // Private score
+                if (isOwner) {
+                    lotmSongCard.classList.remove("locked");
+                    lotmAccessBadge.className = "badge-access private";
+                    lotmAccessBadge.innerHTML = "🔒 Privada (Sua Conta)";
+                    lotmAccessNotice.style.display = "none";
+                    openLotmBtn.classList.remove("disabled");
+                    openLotmBtn.disabled = false;
+                    openLotmBtn.innerHTML = "<span>▶</span> <span>Abrir Partitura Interativa</span>";
+                } else {
+                    lotmSongCard.classList.add("locked");
+                    lotmAccessBadge.className = "badge-access locked";
+                    lotmAccessBadge.innerHTML = "🔒 Privada";
+                    lotmAccessNotice.style.display = "block";
+                    lotmAccessNotice.innerHTML = "⚠️ Acesso restrito: Esta partitura está configurada como <b>Privada</b> pelo autor (lukscli@gmail.com).";
+                    openLotmBtn.classList.add("disabled");
+                    openLotmBtn.disabled = true;
+                    openLotmBtn.innerHTML = "<span>🔒</span> <span>Acesso Restrito ao Autor</span>";
+                }
+            }
+
+            // Player Sidebar Elements
+            const sidebarPrivacyCard = document.getElementById('sidebarPrivacyCard');
+            const sidebarPrivacyIcon = document.getElementById('sidebarPrivacyIcon');
+            const sidebarPrivacyTitle = document.getElementById('sidebarPrivacyTitle');
+            const sidebarPrivacySub = document.getElementById('sidebarPrivacySub');
+            const sidebarPrivacyToggleBtn = document.getElementById('sidebarPrivacyToggleBtn');
+            const sidebarPrivacyBtnText = document.getElementById('sidebarPrivacyBtnText');
+
+            if (sidebarPrivacyCard) {
+                sidebarPrivacyCard.className = isPublic ? 'sidebar-privacy-card public' : 'sidebar-privacy-card private';
+            }
+            if (sidebarPrivacyIcon) {
+                sidebarPrivacyIcon.textContent = isPublic ? '🌐' : '🔒';
+            }
+            if (sidebarPrivacyTitle) {
+                sidebarPrivacyTitle.textContent = isPublic ? 'Partitura Pública' : 'Partitura Privada';
+            }
+            if (sidebarPrivacySub) {
+                sidebarPrivacySub.textContent = isPublic 
+                    ? 'Qualquer usuário com acesso à biblioteca pode visualizar e tocar.'
+                    : (isOwner ? 'Acessível exclusivamente por você (lukscli@gmail.com).' : 'Acesso restrito ao proprietário.');
+            }
+            if (sidebarPrivacyToggleBtn) {
+                sidebarPrivacyToggleBtn.style.display = isOwner ? 'inline-block' : 'none';
+            }
+            if (sidebarPrivacyBtnText) {
+                sidebarPrivacyBtnText.textContent = isPublic ? 'Tornar Privada' : 'Tornar Pública';
+            }
+
+            // Guard active player view if privacy changed to private while unauthorized
+            if (playerView.classList.contains("active-view") && !isPublic && !isOwner) {
+                pausePlayback();
+                showView(libraryView);
+                showToast('A partitura foi definida como privada pelo autor.', '🔒');
+            }
+        }
+
+        function toggleScorePrivacy() {
+            const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
+            const isOwner = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+            if (!isOwner) {
+                showToast('Apenas o autor (lukscli@gmail.com) pode alterar a privacidade!', '⚠️');
+                return;
+            }
+
+            scorePrivacy = (scorePrivacy === 'public') ? 'private' : 'public';
+            localStorage.setItem('luksmusic_score_privacy_lotm', scorePrivacy);
+            updateScorePrivacyUI();
+
+            if (scorePrivacy === 'public') {
+                showToast('Partitura definida como PÚBLICA! Qualquer pessoa agora pode acessar.', '🌐');
+            } else {
+                showToast('Partitura definida como PRIVADA! Acesso restrito apenas à sua conta.', '🔒');
+            }
+        }
+
         function updateAuthState(user) {
             currentUser = user;
             if (!user) {
@@ -2274,28 +2507,9 @@
                 userAvatarFallback.innerText = (email.charAt(0) || "U").toUpperCase();
             }
 
-            // Check permissions for LOTM
-            const isAuthorizedForLOTM = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+            updateScorePrivacyUI();
 
-            if (isAuthorizedForLOTM) {
-                lotmSongCard.classList.remove("locked");
-                lotmAccessBadge.className = "badge-access private";
-                lotmAccessBadge.innerText = "🔒 Exclusivo (Sua Conta)";
-                lotmAccessNotice.style.display = "none";
-                openLotmBtn.classList.remove("disabled");
-                openLotmBtn.disabled = false;
-                openLotmBtn.innerHTML = "<span>▶</span> <span>Abrir Partitura Interativa</span>";
-            } else {
-                // Unauthorized user
-                lotmSongCard.classList.add("locked");
-                lotmAccessBadge.className = "badge-access locked";
-                lotmAccessBadge.innerText = "🔒 Restrito";
-                lotmAccessNotice.style.display = "block";
-                openLotmBtn.classList.add("disabled");
-                openLotmBtn.disabled = true;
-                openLotmBtn.innerHTML = "<span>🔒</span> <span>Acesso Restrito a lukscli@gmail.com</span>";
-            }
-
+            const isAuthorizedForLOTM = (scorePrivacy === 'public') || (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
             // Navigate to library if not already in player
             if (!playerView.classList.contains("active-view")) {
                 showView(libraryView);
@@ -3172,6 +3386,23 @@
         if (promoAudioConvert) {
             promoAudioConvert.addEventListener('click', () => {
                 showToast('Conversão de Áudio para MSCZ ativada!', '✨');
+            });
+        }
+
+
+        const cardPrivacyToggleBtn = document.getElementById('cardPrivacyToggleBtn');
+        if (cardPrivacyToggleBtn) {
+            cardPrivacyToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleScorePrivacy();
+            });
+        }
+
+        const sidebarPrivacyToggleBtn = document.getElementById('sidebarPrivacyToggleBtn');
+        if (sidebarPrivacyToggleBtn) {
+            sidebarPrivacyToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleScorePrivacy();
             });
         }
 

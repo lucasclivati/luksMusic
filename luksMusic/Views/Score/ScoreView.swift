@@ -149,6 +149,12 @@ struct ScoreView: View {
                         Label("Export MusicXML", systemImage: "square.and.arrow.up")
                     }
                     
+                    Button {
+                        viewModel.score.isPublic.toggle()
+                    } label: {
+                        Label(viewModel.score.isPublic ? "Definir como Privada" : "Definir como Pública", systemImage: viewModel.score.isPublic ? "lock.fill" : "globe")
+                    }
+                    
                     Divider()
                     
                     Button {

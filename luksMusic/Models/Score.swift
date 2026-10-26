@@ -66,6 +66,7 @@ final class Score {
     var difficulty: Difficulty
     var source: ScoreSource
     var isFavorite: Bool
+    var isPublic: Bool = false
     var dateCreated: Date
     var lastModified: Date
     var lastPracticed: Date?
@@ -93,6 +94,7 @@ final class Score {
         difficulty: Difficulty = .beginner,
         source: ScoreSource = .manual,
         isFavorite: Bool = false,
+        isPublic: Bool = false,
         tempo: Int = 120,
         keySignatureValue: Int = 0,
         timeSignatureTop: Int = 4,
@@ -106,6 +108,7 @@ final class Score {
         self.difficulty = difficulty
         self.source = source
         self.isFavorite = isFavorite
+        self.isPublic = isPublic
         self.dateCreated = Date()
         self.lastModified = Date()
         self.lastPracticed = nil
