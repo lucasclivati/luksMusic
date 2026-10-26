@@ -2755,7 +2755,6 @@
         const userAvatarFallback = document.getElementById("userAvatarFallback");
         const logoutBtn = document.getElementById("logoutBtn");
         const googleSignInBtn = document.getElementById("googleSignInBtn");
-        const quickDevAuthBtn = document.getElementById("quickDevAuthBtn");
         const loginStatusMsg = document.getElementById("loginStatusMsg");
 
         const lotmSongCard = document.getElementById("lotmSongCard");
@@ -2928,21 +2927,7 @@
         // Firebase Auth State Listener & Redirect Handling
         if (auth) {
             auth.onAuthStateChanged(user => {
-                if (user) {
-                    updateAuthState(user);
-                } else {
-                    // Check local session
-                    const savedMock = localStorage.getItem("luksMusic_auth_user");
-                    if (savedMock) {
-                        try {
-                            updateAuthState(JSON.parse(savedMock));
-                        } catch(e) {
-                            updateAuthState(null);
-                        }
-                    } else {
-                        updateAuthState(null);
-                    }
-                }
+                updateAuthState(user);
             });
 
             auth.getRedirectResult()
@@ -2997,23 +2982,8 @@
             }
         });
 
-        // Quick Auth / Dev verification for lukscli@gmail.com (if present)
-        if (quickDevAuthBtn) {
-            quickDevAuthBtn.addEventListener("click", () => {
-                const mockUser = {
-                    uid: "dev-lukscli-uid",
-                    email: "lukscli@gmail.com",
-                    displayName: "Lucas (lukscli)",
-                    photoURL: ""
-                };
-                localStorage.setItem("luksMusic_auth_user", JSON.stringify(mockUser));
-                updateAuthState(mockUser);
-            });
-        }
-
         // Logout
         logoutBtn.addEventListener("click", () => {
-            localStorage.removeItem("luksMusic_auth_user");
             pausePlayback();
             if (auth) {
                 auth.signOut().then(() => updateAuthState(null));
