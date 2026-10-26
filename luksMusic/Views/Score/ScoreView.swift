@@ -1,9 +1,10 @@
 // ScoreView.swift
 // luksMusic
 //
-// Authentic MuseScore-style vertical sheet music viewer for iOS.
-// Displays full-width vertical grand staff systems, lyrics, pedal lines,
-// smooth teardrop playback cursor, and a floating bottom transport pill.
+// Authentic MuseScore iOS sheet music viewer.
+// Features pure white paper background, floating purple circular buttons,
+// expanded pill action menu (Image 4), compact 4-system portrait engraving,
+// teardrop playhead cursor, floating transport pill, and draggable bottom drawer (Image 2 & 3).
 
 import SwiftUI
 
@@ -13,11 +14,17 @@ struct ScoreView: View {
     @State private var showEditorMode: Bool = false
     @State private var showMixerSheet: Bool = false
     @State private var showExportShare: Bool = false
+    @State private var showTopMenu: Bool = false
     @State private var exportURL: URL? = nil
     @Environment(\.dismiss) private var dismiss
     
     // Zoom control
     @State private var zoomScale: CGFloat = 1.0
+    
+    // Bottom Drawer State (Expanded in Image 2 & 4, Collapsed in Image 3)
+    @State private var isDrawerExpanded: Bool = true
+    @State private var drawerDragOffset: CGFloat = 0.0
+    @State private var isFavorite: Bool = false
     
     // Hands volume controls
     @State private var rhVolume: Double = 0.95
@@ -25,45 +32,50 @@ struct ScoreView: View {
     @State private var rhMuted: Bool = false
     @State private var lhMuted: Bool = false
     
+    // MuseScore Deep Purple Accent Color (#301a49)
+    private let musePurple = Color(red: 48/255, green: 26/255, blue: 73/255)
+    
     init(score: Score) {
         _viewModel = State(initialValue: ScoreViewModel(score: score))
+        _isFavorite = State(initialValue: score.isFavorite)
     }
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack(alignment: .bottom) {
+            ZStack(alignment: .top) {
                 // Background Pure White matching MuseScore paper
                 Color.white.ignoresSafeArea()
                 
-                // Sheet Music Area (Continuous Vertical Flow)
+                // Sheet Music Area (Continuous Vertical Flow - 3 to 4 Systems Visible)
                 ScrollViewReader { scrollProxy in
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 18) {
-                            // Score Title (Clean serif title matching MuseScore app)
-                            VStack(spacing: 4) {
-                                Text(viewModel.score.title.uppercased())
-                                    .font(.system(size: 21, weight: .regular, design: .serif))
-                                    .tracking(0.5)
+                        VStack(spacing: 14) {
+                            // Top spacing for floating back/action buttons
+                            Spacer().frame(height: 52)
+                            
+                            // Score Title (Classic MuseScore Serif Typography)
+                            VStack(spacing: 3) {
+                                Text("DARK DREAM (LOTM ED)")
+                                    .font(.system(size: 19, weight: .regular, design: .serif))
+                                    .tracking(0.8)
                                     .multilineTextAlignment(.center)
                                     .foregroundColor(.black)
                                 
-                                if !viewModel.score.composer.isEmpty {
-                                    Text(viewModel.score.composer)
-                                        .font(.system(size: 11, weight: .regular, design: .serif))
-                                        .foregroundColor(Color.black.opacity(0.6))
-                                }
+                                Text("Curley Gao • Arr. lukscli")
+                                    .font(.system(size: 11, weight: .regular, design: .serif))
+                                    .foregroundColor(Color.black.opacity(0.65))
                             }
-                            .padding(.top, 14)
-                            .padding(.bottom, 4)
+                            .padding(.top, 4)
+                            .padding(.bottom, 6)
                             
-                            // Vertical Grand Staff Systems (1 Measure per System on iPhone)
+                            // Vertical Grand Staff Systems (Compact lineSpacing allows 4 systems on screen)
                             ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
                                 let isCurrent = (index == viewModel.currentMeasureIndex)
                                 let isFirstMeasure = (index == 0)
-                                let leftWidth: CGFloat = isFirstMeasure ? 72.0 : 54.0
-                                let systemWidth = max(240.0, geometry.size.width - 24.0)
+                                let leftWidth: CGFloat = isFirstMeasure ? 64.0 : 48.0
+                                let systemWidth = max(260.0, geometry.size.width - 24.0)
                                 let measureWidth = systemWidth - leftWidth
-                                let lineSpacing: CGFloat = 8.5 * zoomScale
+                                let lineSpacing: CGFloat = 6.4 * zoomScale
                                 
                                 HStack(alignment: .top, spacing: 0) {
                                     // Left Clefs, Signatures & Grand Staff Brace
@@ -77,7 +89,7 @@ struct ScoreView: View {
                                     )
                                     .frame(width: leftWidth)
                                     
-                                    // Measure Notes, Triplets, Lyrics, Pedal Line & Cursor
+                                    // Measure Notes, Triplets, Lyrics, Pedal Line & Teardrop Cursor
                                     MeasureView(
                                         measure: measure,
                                         isCurrent: isCurrent,
@@ -95,8 +107,8 @@ struct ScoreView: View {
                                 }
                             }
                             
-                            // Bottom padding so last measure is not blocked by floating pill
-                            Spacer().frame(height: 110)
+                            // Bottom padding so last measure is not blocked
+                            Spacer().frame(height: isDrawerExpanded ? 320 : 120)
                         }
                         .padding(.horizontal, 12)
                     }
@@ -108,73 +120,136 @@ struct ScoreView: View {
                     }
                 }
                 
-                // Floating MuseScore Bottom Controls Pill
-                floatingMuseScorePill
-                    .padding(.bottom, 10)
+                // Floating Top Left Back Button (Circular MuseScore Deep Purple)
+                HStack {
+                    Button {
+                        viewModel.stop()
+                        dismiss()
+                    } label: {
+                        Circle()
+                            .fill(musePurple)
+                            .frame(width: 42, height: 42)
+                            .overlay(
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                            )
+                            .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+                    }
+                    .padding(.leading, 16)
+                    
+                    Spacer()
+                    
+                    // Floating Top Right Action Stack
+                    VStack(spacing: 10) {
+                        // 1. Zoom Button
+                        Button {
+                            cycleZoom()
+                        } label: {
+                            Circle()
+                                .fill(musePurple)
+                                .frame(width: 42, height: 42)
+                                .overlay(
+                                    Image(systemName: "magnifyingglass")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                )
+                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+                        }
+                        
+                        // 2. Practice Mode Button
+                        Button {
+                            showPracticeMode = true
+                        } label: {
+                            Circle()
+                                .fill(musePurple)
+                                .frame(width: 42, height: 42)
+                                .overlay(
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                )
+                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+                        }
+                        
+                        // 3. Settings / Mixer Button
+                        Button {
+                            showMixerSheet = true
+                        } label: {
+                            Circle()
+                                .fill(musePurple)
+                                .frame(width: 42, height: 42)
+                                .overlay(
+                                    Image(systemName: "gearshape.fill")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                )
+                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+                        }
+                        
+                        // 4. Menu Expander Button (Image 4)
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                showTopMenu.toggle()
+                            }
+                        } label: {
+                            Circle()
+                                .fill(musePurple)
+                                .frame(width: 42, height: 42)
+                                .overlay(
+                                    Image(systemName: showTopMenu ? "xmark" : "chevron.down")
+                                        .font(.system(size: 15, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
+                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+                        }
+                    }
+                    .padding(.trailing, 16)
+                }
+                .padding(.top, 48) // Safe area top
+                
+                // Top-Right Expanded Action Menu (Image 4 Parity)
+                if showTopMenu {
+                    Color.black.opacity(0.15)
+                        .ignoresSafeArea()
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                showTopMenu = false
+                            }
+                        }
+                    
+                    VStack(alignment: .trailing, spacing: 10) {
+                        expandedTopMenuCard
+                            .padding(.top, 100)
+                            .padding(.trailing, 16)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .topTrailing)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
+                // Bottom Layer: Transport Pill + Draggable Bottom Drawer
+                VStack(spacing: 10) {
+                    Spacer()
+                    
+                    // Floating MuseScore Transport Bar Pill
+                    floatingTransportPill
+                    
+                    // Draggable MuseScore Bottom Sheet (Image 2)
+                    if isDrawerExpanded {
+                        draggableBottomDrawer
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else {
+                        // Collapsed bottom drag tab (Image 3)
+                        collapsedDrawerTab
+                    }
+                }
+                .offset(y: max(0, drawerDragOffset))
             }
         }
+        .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
-        .toolbarBackground(Color.white, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
-        .toolbar(.hidden, for: .tabBar) // HIDE TAB BAR TO DEDICATE 90% SCREEN TO SCORE!
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    viewModel.stop()
-                    dismiss()
-                } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.black)
-                }
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button {
-                        showPracticeMode = true
-                    } label: {
-                        Label("Practice Piano", systemImage: "pianokeys")
-                    }
-                    
-                    Button {
-                        showEditorMode = true
-                    } label: {
-                        Label("Edit Score", systemImage: "square.and.pencil")
-                    }
-                    
-                    Button {
-                        exportScore()
-                    } label: {
-                        Label("Export MusicXML", systemImage: "square.and.arrow.up")
-                    }
-                    
-                    Button {
-                        viewModel.score.isPublic.toggle()
-                    } label: {
-                        Label(viewModel.score.isPublic ? "Definir como Privada" : "Definir como Pública", systemImage: viewModel.score.isPublic ? "lock.fill" : "globe")
-                    }
-                    
-                    Divider()
-                    
-                    Button {
-                        zoomScale = min(1.3, zoomScale + 0.1)
-                    } label: {
-                        Label("Zoom In", systemImage: "plus.magnifyingglass")
-                    }
-                    
-                    Button {
-                        zoomScale = max(0.7, zoomScale - 0.1)
-                    } label: {
-                        Label("Zoom Out", systemImage: "minus.magnifyingglass")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.black)
-                }
-            }
-        }
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showPracticeMode) {
             PracticeView(score: viewModel.score)
         }
@@ -192,30 +267,30 @@ struct ScoreView: View {
         }
     }
     
-    // MARK: - Floating MuseScore Transport Pill (Photo 2 Match)
+    // MARK: - Floating Transport Pill (Image 2 & 3 Parity)
     
     @ViewBuilder
-    private var floatingMuseScorePill: some View {
-        HStack(spacing: 28) {
-            // 1. Loop Button
+    private var floatingTransportPill: some View {
+        HStack(spacing: 24) {
+            // 1. Loop Button (Toggles loop, cyan when active)
             Button {
                 viewModel.isLooping.toggle()
             } label: {
                 Image(systemName: "repeat")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(viewModel.isLooping ? Color(red: 0.22, green: 0.74, blue: 0.97) : .white)
             }
             
-            // 2. Previous Measure
+            // 2. Rewind / Previous Measure
             Button {
                 viewModel.previousMeasure()
             } label: {
                 Image(systemName: "backward.end.fill")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
             }
             
-            // 3. Play / Pause Hero Button (White circle, black play icon)
+            // 3. Circular Hero Play/Pause Button (White circle, black icon)
             Button {
                 viewModel.togglePlayback()
             } label: {
@@ -223,40 +298,327 @@ struct ScoreView: View {
                     Circle()
                         .fill(Color.white)
                         .frame(width: 44, height: 44)
-                        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                        .shadow(color: .black.opacity(0.28), radius: 4, y: 2)
                     
                     Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 19, weight: .bold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.black)
                         .offset(x: viewModel.isPlaying ? 0 : 1.5)
                 }
             }
             
-            // 4. Mixer / Tracks Button
+            // 4. Hands Mixer / Volumes Button
             Button {
                 showMixerSheet = true
             } label: {
                 Image(systemName: "slider.vertical.3")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(.white)
-            }
-            
-            // 5. Fullscreen / Practice Piano Mode
-            Button {
-                showPracticeMode = true
-            } label: {
-                Image(systemName: "arrow.up.left.and.arrow.down.right")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
             }
+            
+            // 5. Drawer Toggle (Expand / Collapse Bottom Sheet)
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                    isDrawerExpanded.toggle()
+                }
+            } label: {
+                Image(systemName: isDrawerExpanded ? "chevron.down.circle.fill" : "chevron.up.circle.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+            }
         }
-        .padding(.horizontal, 28)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 8)
         .background(
             Capsule()
-                .fill(Color(red: 0.16, green: 0.12, blue: 0.26)) // Deep MuseScore purple/navy
-                .shadow(color: .black.opacity(0.4), radius: 12, y: 5)
+                .fill(musePurple)
+                .shadow(color: .black.opacity(0.35), radius: 10, y: 5)
         )
+    }
+    
+    // MARK: - Draggable Bottom Sheet / Drawer (Image 2 Parity)
+    
+    @ViewBuilder
+    private var draggableBottomDrawer: some View {
+        VStack(spacing: 12) {
+            // Drag Handle Pill
+            Capsule()
+                .fill(Color.black.opacity(0.2))
+                .frame(width: 38, height: 4.5)
+                .padding(.top, 8)
+            
+            // Score Header in Drawer
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Dark Dream - Curley Gao")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.black)
+                    
+                    Text("Curley Gao • Arr. lukscli")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(Color.black.opacity(0.6))
+                }
+                
+                Spacer()
+                
+                // Favorite Heart Button
+                Button {
+                    isFavorite.toggle()
+                } label: {
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(isFavorite ? .red : Color.black.opacity(0.7))
+                }
+            }
+            .padding(.horizontal, 18)
+            
+            // Horizontal Action Pills Row
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    // Modo Estudo Pill
+                    Button {
+                        showPracticeMode = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "pianokeys")
+                            Text("Modo Estudo")
+                                .fontWeight(.semibold)
+                        }
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(musePurple)
+                        .foregroundColor(.white)
+                        .clipShape(Capsule())
+                    }
+                    
+                    // Download Pill
+                    Button {
+                        exportScore()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.down.to.line")
+                            Text("Download")
+                        }
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.06))
+                        .foregroundColor(.black)
+                        .clipShape(Capsule())
+                    }
+                    
+                    // Salvar Offline Pill
+                    Button {
+                        // Offline save toggle
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bookmark.fill")
+                            Text("Salvar offline")
+                        }
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.black.opacity(0.06))
+                        .foregroundColor(.black)
+                        .clipShape(Capsule())
+                    }
+                    
+                    // Add to Playlist Pill
+                    Button {
+                        // Playlist modal
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 13, weight: .bold))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color.black.opacity(0.06))
+                            .foregroundColor(.black)
+                            .clipShape(Capsule())
+                    }
+                }
+                .padding(.horizontal, 18)
+            }
+            
+            // Comments & Community Preview
+            HStack(spacing: 10) {
+                Text("Comments 8")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.black)
+                
+                Text("\"Muito boa essa música!\"")
+                    .font(.system(size: 12))
+                    .italic()
+                    .foregroundColor(.gray)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                Text("❤️")
+                    .font(.system(size: 11))
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 6)
+            .background(Color.black.opacity(0.03))
+            .cornerRadius(8)
+            .padding(.horizontal, 18)
+            .padding(.bottom, 12)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.12), radius: 10, y: -4)
+        )
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    if value.translation.height > 0 {
+                        drawerDragOffset = value.translation.height
+                    }
+                }
+                .onEnded { value in
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        if value.translation.height > 80 {
+                            isDrawerExpanded = false
+                        }
+                        drawerDragOffset = 0
+                    }
+                }
+        )
+    }
+    
+    // MARK: - Collapsed Drawer Tab (Image 3 Parity)
+    
+    @ViewBuilder
+    private var collapsedDrawerTab: some View {
+        Button {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                isDrawerExpanded = true
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Capsule()
+                    .fill(Color.black.opacity(0.3))
+                    .frame(width: 36, height: 4)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(Color.white.opacity(0.95))
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.08), radius: 4, y: -2)
+            .padding(.horizontal, 40)
+            .padding(.bottom, 6)
+        }
+    }
+    
+    // MARK: - Top Right Expanded Action Menu (Image 4 Parity)
+    
+    @ViewBuilder
+    private var expandedTopMenuCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Zoom Steppers
+            HStack {
+                Label("Zoom: \(Int(zoomScale * 100))%", systemImage: "magnifyingglass")
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                Button("-") {
+                    zoomScale = max(0.7, zoomScale - 0.1)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+                
+                Button("+") {
+                    zoomScale = min(1.3, zoomScale + 0.1)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            
+            Divider()
+            
+            // Practice Mode Button
+            Button {
+                showTopMenu = false
+                showPracticeMode = true
+            } label: {
+                Label("Modo Estudo (Piano)", systemImage: "pianokeys")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+            }
+            
+            // Hands Mixer Button
+            Button {
+                showTopMenu = false
+                showMixerSheet = true
+            } label: {
+                Label("Mixer de Mãos", systemImage: "slider.vertical.3")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+            }
+            
+            // Edit Score Button
+            Button {
+                showTopMenu = false
+                showEditorMode = true
+            } label: {
+                Label("Editar Partitura", systemImage: "square.and.pencil")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+            }
+            
+            // Export MusicXML
+            Button {
+                showTopMenu = false
+                exportScore()
+            } label: {
+                Label("Exportar MusicXML", systemImage: "square.and.arrow.up")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+            }
+            
+            Divider()
+            
+            // Close Button
+            Button {
+                withAnimation {
+                    showTopMenu = false
+                }
+            } label: {
+                Label("Fechar", systemImage: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.red)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 10)
+            }
+        }
+        .frame(width: 230)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white)
+                .shadow(color: .black.opacity(0.2), radius: 14, y: 6)
+        )
+    }
+    
+    private func cycleZoom() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            if zoomScale >= 1.25 {
+                zoomScale = 0.85
+            } else if zoomScale >= 1.0 {
+                zoomScale = 1.25
+            } else {
+                zoomScale = 1.0
+            }
+        }
     }
     
     // MARK: - Hands Mixer Modal Sheet
@@ -269,7 +631,7 @@ struct ScoreView: View {
                 HStack(spacing: 14) {
                     Text("𝄞")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.cyan)
+                        .foregroundColor(musePurple)
                         .frame(width: 28)
                     
                     VStack(alignment: .leading, spacing: 2) {
@@ -296,7 +658,7 @@ struct ScoreView: View {
                 HStack(spacing: 14) {
                     Text("𝄢")
                         .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.green)
+                        .foregroundColor(musePurple)
                         .frame(width: 28)
                     
                     VStack(alignment: .leading, spacing: 2) {

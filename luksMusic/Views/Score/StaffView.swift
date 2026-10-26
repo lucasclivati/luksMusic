@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct StaffView: View {
-    var lineSpacing: CGFloat = 8.5
+    var lineSpacing: CGFloat = 6.4
     var keySignatureValue: Int = -3 // C Minor (3 flats: Bb, Eb, Ab)
     var timeSignatureTop: Int = 4
     var timeSignatureBottom: Int = 4
@@ -18,14 +18,14 @@ struct StaffView: View {
             // Grand staff left brace / bracket
             if showClefsAndSignatures {
                 grandStaffBrace()
-                    .frame(width: 12)
+                    .frame(width: 10)
                 
                 // Clefs and signatures block
                 VStack(spacing: lineSpacing * 3.5) {
                     clefAndSignatures(staff: .treble)
                     clefAndSignatures(staff: .bass)
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 2)
             }
             
             // Continuous 5-line staff backdrop
@@ -33,7 +33,7 @@ struct StaffView: View {
                 singleStaffLines()
                 singleStaffLines()
             }
-            .frame(width: 4)
+            .frame(width: 3)
         }
     }
     
@@ -45,7 +45,7 @@ struct StaffView: View {
             ForEach(0..<5) { _ in
                 Rectangle()
                     .fill(Color.black.opacity(0.85))
-                    .frame(height: 1.2)
+                    .frame(height: 1.1)
             }
         }
         .frame(height: lineSpacing * 4)
@@ -59,12 +59,12 @@ struct StaffView: View {
             // Background staff lines behind clef
             singleStaffLines()
             
-            HStack(spacing: 8) {
+            HStack(spacing: 5) {
                 // Clef symbol
                 Text(staff == .treble ? "𝄞" : "𝄢")
-                    .font(.system(size: staff == .treble ? lineSpacing * 3.8 : lineSpacing * 2.8))
+                    .font(.system(size: staff == .treble ? lineSpacing * 3.6 : lineSpacing * 2.7))
                     .foregroundColor(.black)
-                    .offset(y: staff == .treble ? -lineSpacing * 0.25 : -lineSpacing * 0.1)
+                    .offset(y: staff == .treble ? -lineSpacing * 0.22 : -lineSpacing * 0.1)
                 
                 // Key signature accidentals placed on authentic staff lines/spaces
                 renderKeySignatureAccidentals(staff: staff)
@@ -89,22 +89,22 @@ struct StaffView: View {
     
     @ViewBuilder
     private func renderKeySignatureAccidentals(staff: Staff) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 2) {
             if keySignatureValue == -3 || keySignatureValue == -2 {
                 // 1st flat: B♭
                 Text("♭")
-                    .font(.system(size: lineSpacing * 1.5, weight: .bold))
+                    .font(.system(size: lineSpacing * 1.45, weight: .bold))
                     .offset(y: staff == .treble ? 0 : lineSpacing * 1.0) // Line 3 for treble, Line 2 for bass
                 
                 // 2nd flat: E♭
                 Text("♭")
-                    .font(.system(size: lineSpacing * 1.5, weight: .bold))
+                    .font(.system(size: lineSpacing * 1.45, weight: .bold))
                     .offset(y: staff == .treble ? -lineSpacing * 1.5 : -lineSpacing * 0.5) // Space 4 for treble, Space 3 for bass
                 
                 if keySignatureValue == -3 {
                     // 3rd flat: A♭
                     Text("♭")
-                        .font(.system(size: lineSpacing * 1.5, weight: .bold))
+                        .font(.system(size: lineSpacing * 1.45, weight: .bold))
                         .offset(y: staff == .treble ? lineSpacing * 0.5 : lineSpacing * 2.0) // Space 2 for treble, Line 1 for bass
                 }
             } else if keySignatureValue != 0 {
@@ -137,16 +137,16 @@ struct StaffView: View {
                 path.move(to: CGPoint(x: w - 2, y: 0))
                 path.addCurve(
                     to: CGPoint(x: 2, y: midY),
-                    control1: CGPoint(x: 6, y: h * 0.15),
+                    control1: CGPoint(x: 5, y: h * 0.15),
                     control2: CGPoint(x: 2, y: h * 0.35)
                 )
                 path.addCurve(
                     to: CGPoint(x: w - 2, y: h),
                     control1: CGPoint(x: 2, y: h * 0.65),
-                    control2: CGPoint(x: 6, y: h * 0.85)
+                    control2: CGPoint(x: 5, y: h * 0.85)
                 )
             }
-            .stroke(Color.black, lineWidth: 2)
+            .stroke(Color.black, lineWidth: 1.8)
         }
     }
 }

@@ -6,17 +6,53 @@
 
 import SwiftUI
 
+/// Authentic MuseScore teardrop droplet handle pointing upward to cursor line
+struct TeardropDropletShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let w = rect.width
+        let h = rect.height
+        let midX = rect.midX
+        let radius = w / 2.0
+        
+        // Start at top sharp apex point
+        path.move(to: CGPoint(x: midX, y: 0))
+        // Curve down to right rounded bulb
+        path.addCurve(
+            to: CGPoint(x: w, y: h - radius),
+            control1: CGPoint(x: midX + w * 0.25, y: h * 0.35),
+            control2: CGPoint(x: w, y: h * 0.6)
+        )
+        // Arc around the bottom bulb
+        path.addArc(
+            center: CGPoint(x: midX, y: h - radius),
+            radius: radius,
+            startAngle: .degrees(0),
+            endAngle: .degrees(180),
+            clockwise: false
+        )
+        // Curve back up to top apex point
+        path.addCurve(
+            to: CGPoint(x: midX, y: 0),
+            control1: CGPoint(x: 0, y: h * 0.6),
+            control2: CGPoint(x: midX - w * 0.25, y: h * 0.35)
+        )
+        path.closeSubpath()
+        return path
+    }
+}
+
 struct MeasureView: View {
     let measure: Measure
     var isCurrent: Bool = false
     var currentBeat: Double = 1.0
-    var lineSpacing: CGFloat = 8.5
+    var lineSpacing: CGFloat = 6.4
     var measureWidth: CGFloat = 300.0
     var showMeasureNumber: Bool = true
     var showTempoAndDynamics: Bool = false
     
     private var usableWidth: CGFloat {
-        max(60.0, measureWidth - 36.0)
+        max(50.0, measureWidth - 28.0)
     }
     
     var body: some View {
@@ -25,21 +61,21 @@ struct MeasureView: View {
             HStack(alignment: .bottom) {
                 if showMeasureNumber && measure.number > 1 {
                     Text("\(measure.number)")
-                        .font(.system(size: 11, weight: .semibold, design: .serif))
+                        .font(.system(size: 10, weight: .semibold, design: .serif))
                         .italic()
                         .foregroundColor(Color.black.opacity(0.75))
                         .padding(.leading, 2)
                 } else if showTempoAndDynamics {
                     HStack(spacing: 3) {
                         Text("♩ = 70")
-                            .font(.system(size: 13, weight: .bold, design: .serif))
+                            .font(.system(size: 12, weight: .bold, design: .serif))
                             .foregroundColor(.black)
                     }
-                    .padding(.leading, 12)
+                    .padding(.leading, 8)
                 }
                 Spacer()
             }
-            .frame(height: 16)
+            .frame(height: 14)
             
             ZStack(alignment: .leading) {
                 // Background paper white
@@ -61,10 +97,10 @@ struct MeasureView: View {
                 // Dynamic marking (e.g. mp on measure 1)
                 if showTempoAndDynamics {
                     Text("mp")
-                        .font(.system(size: 12, weight: .bold, design: .serif))
+                        .font(.system(size: 11, weight: .bold, design: .serif))
                         .italic()
                         .foregroundColor(.black)
-                        .offset(x: 22, y: -lineSpacing * 1.1)
+                        .offset(x: 16, y: -lineSpacing * 1.1)
                 }
                 
                 // Bass staff notes and beams (centered on Bass Line 3)
@@ -73,13 +109,13 @@ struct MeasureView: View {
                 
                 // Piano Sustain Pedal Bracket Line below bass staff
                 Path { path in
-                    let pedY = lineSpacing * 7.5
-                    path.move(to: CGPoint(x: 12, y: pedY - 5))
-                    path.addLine(to: CGPoint(x: 12, y: pedY))
+                    let pedY = lineSpacing * 7.4
+                    path.move(to: CGPoint(x: 8, y: pedY - 4))
+                    path.addLine(to: CGPoint(x: 8, y: pedY))
                     path.addLine(to: CGPoint(x: measureWidth - 4, y: pedY))
-                    path.addLine(to: CGPoint(x: measureWidth - 4, y: pedY - 5))
+                    path.addLine(to: CGPoint(x: measureWidth - 4, y: pedY - 4))
                 }
-                .stroke(Color.black.opacity(0.85), lineWidth: 1.1)
+                .stroke(Color.black.opacity(0.85), lineWidth: 1.0)
                 
                 // Right barline connecting top of treble staff to bottom of bass staff continuously
                 Rectangle()
@@ -90,25 +126,25 @@ struct MeasureView: View {
                 // Authentic MuseScore Playback Cursor with blue teardrop droplet handle
                 if isCurrent {
                     let beatOffset = max(0.0, min(1.0, (currentBeat - 1.0) / 4.0))
-                    let cursorX = 20.0 + CGFloat(beatOffset) * usableWidth
-                    let cursorColor = Color(red: 0.18, green: 0.52, blue: 0.95)
-                    let dropletColor = Color(red: 0.55, green: 0.75, blue: 1.0)
+                    let cursorX = 14.0 + CGFloat(beatOffset) * usableWidth
+                    let cursorColor = Color(red: 0.15, green: 0.55, blue: 0.98)
+                    let dropletColor = Color(red: 0.56, green: 0.77, blue: 0.99)
                     
                     ZStack(alignment: .top) {
-                        // Vertical cursor line
+                        // Vertical cursor line spanning top of treble to bottom of bass
                         Rectangle()
                             .fill(cursorColor)
-                            .frame(width: 2.5, height: lineSpacing * 12.0)
+                            .frame(width: 2.2, height: lineSpacing * 11.6)
                         
                         // Teardrop droplet handle at bottom
-                        Circle()
+                        TeardropDropletShape()
                             .fill(dropletColor)
-                            .frame(width: 18, height: 18)
                             .overlay(
-                                Circle()
-                                    .stroke(cursorColor, lineWidth: 1.5)
+                                TeardropDropletShape()
+                                    .stroke(cursorColor, lineWidth: 1.4)
                             )
-                            .offset(y: lineSpacing * 11.2)
+                            .frame(width: 15, height: 21)
+                            .offset(x: -6.4, y: lineSpacing * 11.4)
                     }
                     .offset(x: cursorX)
                 }
@@ -127,7 +163,7 @@ struct MeasureView: View {
             ForEach(0..<5) { _ in
                 Rectangle()
                     .fill(Color.black.opacity(0.85))
-                    .frame(height: 1.2)
+                    .frame(height: 1.1)
             }
         }
         .frame(height: lineSpacing * 4)
@@ -145,7 +181,7 @@ struct MeasureView: View {
             // 1. Individual Notes
             ForEach(notes) { note in
                 let beatOffset = max(0.0, min(1.0, (note.position.beat - 1.0) / 4.0))
-                let xPos = 20.0 + CGFloat(beatOffset) * usableWidth
+                let xPos = 14.0 + CGFloat(beatOffset) * usableWidth
                 let isNoteActive = isCurrent && abs(note.position.beat - currentBeat) < 0.22
                 let isBeamed = beamedNoteIds.contains(note.id)
                 
@@ -196,8 +232,8 @@ struct MeasureView: View {
         
         let stemUp = (firstNote.staff == .treble && firstNote.isTriplet) ? false : firstNote.stemUp
         let stemXOffset: CGFloat = stemUp ? (lineSpacing * 0.6) : (-lineSpacing * 0.6)
-        let xStart = 20.0 + firstOffset * usableWidth + stemXOffset
-        let xEnd = 20.0 + lastOffset * usableWidth + stemXOffset
+        let xStart = 14.0 + firstOffset * usableWidth + stemXOffset
+        let xEnd = 14.0 + lastOffset * usableWidth + stemXOffset
         let beamWidth = max(8.0, xEnd - xStart)
         
         let positions = group.map { CGFloat($0.staffPosition) }
@@ -209,10 +245,10 @@ struct MeasureView: View {
         let labelY: CGFloat
         if stemUp {
             beamY = -maxPos * (lineSpacing * 0.5) - stemHeight
-            labelY = beamY - 13.0
+            labelY = beamY - 11.0
         } else {
             beamY = -minPos * (lineSpacing * 0.5) + stemHeight
-            labelY = beamY + 4.0
+            labelY = beamY + 3.0
         }
         
         let labelX = (xStart + xEnd) * 0.5 - 4.0
@@ -235,13 +271,13 @@ struct MeasureView: View {
                 // Horizontal black beam bar connecting stems
                 Rectangle()
                     .fill(Color.black)
-                    .frame(width: geom.beamWidth, height: 3.5)
+                    .frame(width: geom.beamWidth, height: 3.0)
                     .offset(x: geom.xStart, y: geom.beamY)
                 
                 // Triplet "3" notation above or below the beam
                 if geom.showTriplet {
                     Text("3")
-                        .font(.system(size: 11, weight: .bold, design: .serif))
+                        .font(.system(size: 10, weight: .bold, design: .serif))
                         .italic()
                         .foregroundColor(Color.black)
                         .offset(x: geom.labelX, y: geom.labelY)

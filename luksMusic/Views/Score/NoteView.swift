@@ -8,7 +8,7 @@ import SwiftUI
 struct NoteView: View {
     let note: Note
     var playbackState: NotePlaybackState = .upcoming
-    var lineSpacing: CGFloat = 8.5
+    var lineSpacing: CGFloat = 6.4
     var useBeatColors: Bool = false
     var isBeamed: Bool = false
     
