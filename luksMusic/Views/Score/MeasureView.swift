@@ -50,9 +50,22 @@ struct MeasureView: View {
     var measureWidth: CGFloat = 300.0
     var showMeasureNumber: Bool = true
     var showTempoAndDynamics: Bool = false
+    var tempo: Int = 70
     
     private var usableWidth: CGFloat {
         max(50.0, measureWidth - 28.0)
+    }
+    
+    /// Notes under the cursor, matching what the keyboard dock highlights.
+    private var activeNoteIds: Set<UUID> {
+        guard isCurrent else { return [] }
+        return Set(measure.soundingNotes(at: measure.cursorBeat(at: currentBeat)).map(\.id))
+    }
+    
+    /// Beat under a horizontal position inside the measure (inverse of the note layout).
+    static func beat(atX x: CGFloat, measureWidth: CGFloat) -> Double {
+        let usable = max(50.0, measureWidth - 28.0)
+        return 1.0 + Double(max(0.0, min(1.0, (x - 14.0) / usable))) * 4.0
     }
     
     var body: some View {
@@ -67,7 +80,7 @@ struct MeasureView: View {
                         .padding(.leading, 2)
                 } else if showTempoAndDynamics {
                     HStack(spacing: 3) {
-                        Text("♩ = 70")
+                        Text("♩ = \(tempo)")
                             .font(.system(size: 12, weight: .bold, design: .serif))
                             .foregroundColor(.black)
                     }
@@ -125,7 +138,7 @@ struct MeasureView: View {
                 
                 // Authentic MuseScore Playback Cursor with blue teardrop droplet handle
                 if isCurrent {
-                    let beatOffset = max(0.0, min(1.0, (currentBeat - 1.0) / 4.0))
+                    let beatOffset = max(0.0, min(1.0, (measure.cursorBeat(at: currentBeat) - 1.0) / 4.0))
                     let cursorX = 14.0 + CGFloat(beatOffset) * usableWidth
                     let cursorColor = Color(red: 0.15, green: 0.55, blue: 0.98)
                     let dropletColor = Color(red: 0.56, green: 0.77, blue: 0.99)
@@ -144,8 +157,10 @@ struct MeasureView: View {
                                     .stroke(cursorColor, lineWidth: 1.4)
                             )
                             .frame(width: 15, height: 21)
-                            .offset(x: -6.4, y: lineSpacing * 11.4)
+                            .offset(y: lineSpacing * 11.4)
                     }
+                    // Zero-width frame centers the line on cursorX, like the noteheads
+                    .frame(width: 0)
                     .offset(x: cursorX)
                 }
             }
@@ -176,13 +191,14 @@ struct MeasureView: View {
         // Group notes that should be beamed together by beat
         let beamedGroups = findBeamedGroups(in: notes)
         let beamedNoteIds = Set(beamedGroups.flatMap { $0.map(\.id) })
+        let activeIds = activeNoteIds
         
         ZStack(alignment: .leading) {
             // 1. Individual Notes
             ForEach(notes) { note in
                 let beatOffset = max(0.0, min(1.0, (note.position.beat - 1.0) / 4.0))
                 let xPos = 14.0 + CGFloat(beatOffset) * usableWidth
-                let isNoteActive = isCurrent && abs(note.position.beat - currentBeat) < 0.22
+                let isNoteActive = activeIds.contains(note.id)
                 let isBeamed = beamedNoteIds.contains(note.id)
                 
                 NoteView(
@@ -192,6 +208,8 @@ struct MeasureView: View {
                     useBeatColors: false,
                     isBeamed: isBeamed
                 )
+                // Zero-width frame centers the notehead on xPos regardless of lyric/accidental width
+                .frame(width: 0)
                 .offset(x: xPos)
             }
             

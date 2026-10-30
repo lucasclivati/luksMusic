@@ -197,8 +197,11 @@ struct ScoreView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
-        .onChange(of: viewModel.activeMidiNotes) { _, activeMidi in
+        .onChange(of: viewModel.activeMidiNotes, initial: true) { _, activeMidi in
             keyboardViewModel.midiActiveKeys = activeMidi
+        }
+        .onChange(of: viewModel.transpositionSemitones) { _, _ in
+            viewModel.refreshActiveNotes()
         }
         .sheet(isPresented: $showPracticeMode) {
             PracticeView(score: viewModel.score)
@@ -239,13 +242,13 @@ struct ScoreView: View {
                     
                     // Score Title (Classic MuseScore Serif Typography)
                     VStack(spacing: 3) {
-                        Text("DARK DREAM (LOTM ED)")
+                        Text(viewModel.score.title.uppercased())
                             .font(.system(size: 19, weight: .regular, design: .serif))
                             .tracking(0.8)
                             .multilineTextAlignment(.center)
                             .foregroundColor(.black)
                         
-                        Text("Curley Gao • Arr. lukscli")
+                        Text(viewModel.score.composer)
                             .font(.system(size: 11, weight: .regular, design: .serif))
                             .foregroundColor(Color.black.opacity(0.65))
                     }
@@ -281,13 +284,15 @@ struct ScoreView: View {
                                 lineSpacing: lineSpacing,
                                 measureWidth: measureWidth,
                                 showMeasureNumber: true,
-                                showTempoAndDynamics: isFirstMeasure
+                                showTempoAndDynamics: isFirstMeasure,
+                                tempo: viewModel.score.tempo
                             )
                         }
                         .id(index)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            viewModel.seekToMeasure(index)
+                        .onTapGesture { location in
+                            let beat = MeasureView.beat(atX: location.x - leftWidth, measureWidth: measureWidth)
+                            viewModel.seek(toMeasure: index, beat: beat)
                         }
                     }
                     
@@ -315,11 +320,11 @@ struct ScoreView: View {
                 
                 // Score Title
                 VStack(spacing: 2) {
-                    Text("DARK DREAM (LOTM ED)")
+                    Text(viewModel.score.title.uppercased())
                         .font(.system(size: 17, weight: .regular, design: .serif))
                         .tracking(0.6)
                         .foregroundColor(.black)
-                    Text("Curley Gao • Arr. lukscli")
+                    Text(viewModel.score.composer)
                         .font(.system(size: 11, design: .serif))
                         .foregroundColor(.gray)
                 }
@@ -352,13 +357,15 @@ struct ScoreView: View {
                                     lineSpacing: lineSpacing,
                                     measureWidth: measureWidth,
                                     showMeasureNumber: true,
-                                    showTempoAndDynamics: isFirstMeasure
+                                    showTempoAndDynamics: isFirstMeasure,
+                                    tempo: viewModel.score.tempo
                                 )
                             }
                             .id(index)
                             .contentShape(Rectangle())
-                            .onTapGesture {
-                                viewModel.seekToMeasure(index)
+                            .onTapGesture { location in
+                                let beat = MeasureView.beat(atX: location.x - leftWidth, measureWidth: measureWidth)
+                                viewModel.seek(toMeasure: index, beat: beat)
                             }
                         }
                     }
@@ -502,11 +509,11 @@ struct ScoreView: View {
             // Score Header in Drawer
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Dark Dream - Curley Gao")
+                    Text(viewModel.score.title)
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.black)
                     
-                    Text("Curley Gao • Arr. lukscli")
+                    Text(viewModel.score.composer)
                         .font(.system(size: 12, weight: .regular))
                         .foregroundColor(Color.black.opacity(0.6))
                 }

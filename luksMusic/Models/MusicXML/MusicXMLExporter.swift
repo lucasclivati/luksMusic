@@ -1,7 +1,7 @@
 // MusicXMLExporter.swift
 // luksMusic
 //
-// Generates standard MusicXML 3.0/3.1 files from Score models for export to MuseScore.
+// Generates standard MusicXML 3.0/3.1 files from Score models for export to notation apps.
 
 import Foundation
 
@@ -20,7 +20,7 @@ final class MusicXMLExporter {
           <identification>
             <creator type="composer">\(escapeXML(score.composer))</creator>
             <encoding>
-              <software>luksMusic iOS (MuseScore Piano Companion)</software>
+              <software>luksMusic iOS</software>
               <encoding-date>\(ISO8601DateFormatter().string(from: Date()))</encoding-date>
             </encoding>
           </identification>

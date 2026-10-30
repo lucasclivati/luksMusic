@@ -114,4 +114,53 @@ final class CloudSyncService {
         request.httpBody = try? JSONSerialization.data(withJSONObject: firestoreFields)
         let (_, _) = try await URLSession.shared.data(for: request)
     }
+    
+    // MARK: - Account Deletion
+    
+    /// Deletes every score the user synced to Firestore, then the user document itself.
+    func deleteRemoteData(userId: String, idToken: String) async throws {
+        let documentsURL = "https://firestore.googleapis.com/v1/projects/\(FirebaseConfig.projectId)/databases/(default)/documents"
+        var pageToken: String? = nil
+        repeat {
+            guard var components = URLComponents(string: "\(documentsURL)/users/\(userId)/scores") else { return }
+            components.queryItems = [URLQueryItem(name: "pageSize", value: "300"), URLQueryItem(name: "mask.fieldPaths", value: "title")]
+            if let pageToken {
+                components.queryItems?.append(URLQueryItem(name: "pageToken", value: pageToken))
+            }
+            guard let listURL = components.url else { return }
+            
+            let page = try await firestoreRequest(listURL, method: "GET", idToken: idToken)
+            for document in page["documents"] as? [[String: Any]] ?? [] {
+                if let name = document["name"] as? String, let url = URL(string: "https://firestore.googleapis.com/v1/\(name)") {
+                    try await firestoreRequest(url, method: "DELETE", idToken: idToken)
+                }
+            }
+            pageToken = page["nextPageToken"] as? String
+        } while pageToken != nil
+        
+        if let userURL = URL(string: "\(documentsURL)/users/\(userId)") {
+            try await firestoreRequest(userURL, method: "DELETE", idToken: idToken)
+        }
+    }
+    
+    func resetSyncState() {
+        lastSyncDate = nil
+        uploadedCount = 0
+        syncError = nil
+        UserDefaults.standard.removeObject(forKey: "luksMusic_lastSync")
+    }
+    
+    @discardableResult
+    private func firestoreRequest(_ url: URL, method: String, idToken: String) async throws -> [String: Any] {
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            let errorText = String(data: data, encoding: .utf8) ?? "Erro desconhecido"
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Falha ao apagar dados na nuvem: \(errorText)"])
+        }
+        return (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+    }
 }

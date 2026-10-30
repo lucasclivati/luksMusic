@@ -4,10 +4,11 @@
 // Modern authentication screen allowing login with Google, Firebase Email/Password, Apple, or Guest mode.
 
 import SwiftUI
+import AuthenticationServices
 
 struct LoginView: View {
     @State private var authService = AuthService.shared
-    @State private var emailInput: String = "lukscli@gmail.com"
+    @State private var emailInput: String = ""
     @State private var passwordInput: String = ""
     @State private var showEmailForm: Bool = false
     
@@ -72,6 +73,19 @@ struct LoginView: View {
                     
                     // Action Buttons
                     VStack(spacing: 14) {
+                        // Sign in with Apple
+                        SignInWithAppleButton(.signIn) { request in
+                            authService.prepareAppleRequest(request)
+                        } onCompletion: { result in
+                            Task {
+                                await authService.signInWithApple(result)
+                            }
+                        }
+                        .signInWithAppleButtonStyle(.white)
+                        .frame(height: 50)
+                        .cornerRadius(12)
+                        .disabled(authService.isAuthenticating)
+
                         // Google Sign-In Button
                         Button {
                             Task {
@@ -106,7 +120,7 @@ struct LoginView: View {
                         VStack(spacing: 10) {
                             if showEmailForm {
                                 VStack(spacing: 10) {
-                                    TextField("E-mail (Firebase)", text: $emailInput)
+                                    TextField("E-mail", text: $emailInput)
                                         .textContentType(.emailAddress)
                                         .keyboardType(.emailAddress)
                                         .autocapitalization(.none)
@@ -125,7 +139,7 @@ struct LoginView: View {
                                             await authService.signInWithEmail(email: emailInput, password: passwordInput)
                                         }
                                     } label: {
-                                        Text("Entrar / Criar Conta no Firebase")
+                                        Text("Entrar / Criar Conta")
                                             .font(.subheadline)
                                             .fontWeight(.bold)
                                             .foregroundColor(.white)
@@ -148,33 +162,13 @@ struct LoginView: View {
                                     HStack {
                                         Image(systemName: "envelope.fill")
                                             .font(.subheadline)
-                                        Text("Entrar com E-mail (lukscli@gmail.com)")
+                                        Text("Entrar com E-mail")
                                             .font(.subheadline)
                                     }
                                     .foregroundColor(.secondary)
                                 }
                             }
                         }
-                        
-                        // Apple Sign-In Button
-                        Button {
-                            Task {
-                                await authService.signInWithApple()
-                            }
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "apple.logo")
-                                    .font(.headline)
-                                Text("Sign in with Apple")
-                                    .font(.headline)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(12)
-                        }
-                        .disabled(authService.isAuthenticating)
                         
                         // Continue as Guest
                         Button {

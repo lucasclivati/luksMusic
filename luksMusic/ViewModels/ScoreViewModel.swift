@@ -21,8 +21,8 @@ final class ScoreViewModel {
     
     // Transposition in semitones (0 = original key)
     var transpositionSemitones: Int = 0
-    
-    // Active MIDI note numbers for interactive keyboard visualization
+
+    // Keys under the playback cursor for the interactive keyboard (kept while paused)
     var activeMidiNotes: Set<Int> = []
     
     // Looping
@@ -38,49 +38,29 @@ final class ScoreViewModel {
     
     // MARK: - Transposition Helpers
     
+    // Indexed by the major tonic's pitch class (0 = C)
+    private static let fifthsByTonic = [0, -5, 2, -3, 4, -1, -6, 1, -4, 3, -2, 5]
+    private static let keyTextByTonic = ["C, a", "D♭, b♭", "D, b", "E♭, c", "E, c♯", "F, d", "F♯, d♯", "G, e", "A♭, f", "A, f♯", "B♭, g", "B, g♯"]
+
+    private var transposedTonic: Int {
+        let tonic = (score.keySignatureValue * 7 % 12 + 12) % 12
+        return ((tonic + transpositionSemitones) % 12 + 12) % 12
+    }
+
     var currentKeySignatureValue: Int {
-        let norm = (transpositionSemitones % 12 + 12) % 12
-        switch norm {
-        case 0: return -3 // Eb major / c minor (3 flats)
-        case 1: return 4  // E major / c# minor (4 sharps)
-        case 2: return -1 // F major / d minor (1 flat)
-        case 3: return -6 // Gb major / eb minor (6 flats)
-        case 4: return 1  // G major / e minor (1 sharp)
-        case 5: return -4 // Ab major / f minor (4 flats)
-        case 6: return 3  // A major / f# minor (3 sharps)
-        case 7: return -2 // Bb major / g minor (2 flats)
-        case 8: return 5  // B major / g# minor (5 sharps)
-        case 9: return 0  // C major / a minor (0)
-        case 10: return -5 // Db major / bb minor (5 flats)
-        case 11: return 2  // D major / b minor (2 sharps)
-        default: return -3
-        }
+        Self.fifthsByTonic[transposedTonic]
     }
-    
+
     var transpositionKeyText: String {
-        let norm = (transpositionSemitones % 12 + 12) % 12
-        switch norm {
-        case 0: return "E♭, c"
-        case 1: return "E, c♯"
-        case 2: return "F, d"
-        case 3: return "F♯, d♯"
-        case 4: return "G, e"
-        case 5: return "A♭, f"
-        case 6: return "A, f♯"
-        case 7: return "B♭, g"
-        case 8: return "B, g♯"
-        case 9: return "C, a"
-        case 10: return "D♭, b♭"
-        case 11: return "D, b"
-        default: return "E♭, c"
-        }
+        Self.keyTextByTonic[transposedTonic]
     }
-    
+
     // MARK: - Initialization
-    
+
     init(score: Score) {
         self.score = score
         self.loopEndMeasure = max(1, score.measureCount)
+        refreshActiveNotes()
     }
     
     // MARK: - Playback Controls
@@ -113,24 +93,44 @@ final class ScoreViewModel {
         playbackTimer?.invalidate()
         playbackTimer = nil
         playedNoteIds.removeAll()
-        activeMidiNotes.removeAll()
         audioEngine.stopAllNotes()
     }
-    
+
     func stop() {
         pause()
         currentMeasureIndex = isLooping ? (loopStartMeasure - 1) : 0
         currentBeat = 1.0
         playedNoteIds.removeAll()
-        activeMidiNotes.removeAll()
+        refreshActiveNotes()
     }
-    
+
     func seekToMeasure(_ index: Int) {
+        seek(toMeasure: index, beat: 1.0)
+    }
+
+    /// Moves the cursor to the note closest to `beat` in the given measure.
+    func seek(toMeasure index: Int, beat: Double) {
         guard index >= 0 && index < score.measureCount else { return }
         currentMeasureIndex = index
-        currentBeat = 1.0
+        currentBeat = score.measures[index].nearestOnset(to: beat)
         playedNoteIds.removeAll()
-        triggerNotes(around: 1.0)
+        triggerNotes(around: currentBeat)
+        refreshActiveNotes()
+    }
+
+    /// Recomputes the keys under the cursor; call after anything that moves the cursor or changes transposition.
+    func refreshActiveNotes() {
+        let measures = score.measures
+        guard currentMeasureIndex < measures.count else {
+            activeMidiNotes = []
+            return
+        }
+        let measure = measures[currentMeasureIndex]
+        let notes = measure.soundingNotes(at: measure.cursorBeat(at: currentBeat))
+        let midi = Set(notes.map { Int($0.midiNote) + transpositionSemitones })
+        if midi != activeMidiNotes {
+            activeMidiNotes = midi
+        }
     }
     
     func nextMeasure() {
@@ -178,6 +178,7 @@ final class ScoreViewModel {
             currentBeat = newBeat
             triggerNotesBetween(startBeat: prevBeat, endBeat: newBeat)
         }
+        refreshActiveNotes()
     }
     
     private func triggerNotesBetween(startBeat: Double, endBeat: Double) {
@@ -197,12 +198,6 @@ final class ScoreViewModel {
                         velocity: UInt8(note.velocity),
                         duration: durationSeconds
                     )
-                    
-                    let midiInt = Int(transposedMidi)
-                    activeMidiNotes.insert(midiInt)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + durationSeconds) { [weak self] in
-                        self?.activeMidiNotes.remove(midiInt)
-                    }
                 }
             }
         }
@@ -225,12 +220,6 @@ final class ScoreViewModel {
                         velocity: UInt8(note.velocity),
                         duration: durationSeconds
                     )
-                    
-                    let midiInt = Int(transposedMidi)
-                    activeMidiNotes.insert(midiInt)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + durationSeconds) { [weak self] in
-                        self?.activeMidiNotes.remove(midiInt)
-                    }
                 }
             }
         }

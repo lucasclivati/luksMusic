@@ -2,11 +2,12 @@
 // luksMusic
 //
 // Real Firebase Authentication service supporting Google Sign-In via OAuth 2.0,
-// Firebase Email/Password Auth, Sign in with Apple, and Guest mode.
+// Firebase Email/Password Auth, Sign in with Apple, Guest mode, and account deletion.
 
 import Foundation
 import Observation
 import AuthenticationServices
+import CryptoKit
 import UIKit
 
 /// User profile information stored during active session.
@@ -181,8 +182,8 @@ final class AuthService {
         }
         
         let localId = json["localId"] as? String ?? UUID().uuidString
-        let email = json["email"] as? String ?? "lukscli@gmail.com"
-        let displayName = json["displayName"] as? String ?? "Lucas Clivati"
+        let email = json["email"] as? String ?? ""
+        let displayName = json["displayName"] as? String ?? email.components(separatedBy: "@").first?.capitalized ?? "Pianista"
         let photoURLStr = json["photoUrl"] as? String
         let idToken = json["idToken"] as? String
         let refreshToken = json["refreshToken"] as? String
@@ -293,28 +294,87 @@ final class AuthService {
     }
     
     // MARK: - Sign in with Apple
-    
-    func signInWithApple() async {
-        isAuthenticating = true
+
+    /// Raw nonce for the pending Apple request; Apple receives its SHA-256 and Firebase checks the raw value.
+    private var currentAppleNonce: String?
+
+    /// Configures a `SignInWithAppleButton` request (used for sign-in and for confirming account deletion).
+    func prepareAppleRequest(_ request: ASAuthorizationAppleIDRequest) {
+        let nonce = Self.randomNonce()
+        currentAppleNonce = nonce
+        request.requestedScopes = [.fullName, .email]
+        request.nonce = Self.sha256(nonce)
+    }
+
+    func signInWithApple(_ result: Result<ASAuthorization, Error>) async {
         authError = nil
-        
-        do {
-            try await Task.sleep(nanoseconds: 500_000_000)
-            let profile = UserProfile(
-                id: "apple_user_\(UUID().uuidString.prefix(8))",
-                email: "user@privaterelay.appleid.com",
-                displayName: "Lucas (Apple ID)",
-                photoURL: nil,
-                authProvider: .apple
-            )
-            saveUser(profile)
-            isAuthenticating = false
-        } catch {
-            authError = "Falha no Apple Sign-In: \(error.localizedDescription)"
+        switch result {
+        case .failure(let error):
+            if (error as? ASAuthorizationError)?.code != .canceled {
+                authError = "Falha no Sign in with Apple: \(error.localizedDescription)"
+            }
+        case .success(let authorization):
+            isAuthenticating = true
+            do {
+                let profile = try await exchangeAppleAuthorizationWithFirebase(authorization)
+                saveUser(profile)
+            } catch {
+                authError = "Falha no Sign in with Apple: \(error.localizedDescription)"
+            }
             isAuthenticating = false
         }
     }
-    
+
+    private func exchangeAppleAuthorizationWithFirebase(_ authorization: ASAuthorization) async throws -> UserProfile {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let tokenData = credential.identityToken,
+              let appleIdToken = String(data: tokenData, encoding: .utf8),
+              let nonce = currentAppleNonce else {
+            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credencial da Apple inválida"])
+        }
+
+        let json = try await postIdentityToolkit("v1/accounts:signInWithIdp", body: [
+            "postBody": "id_token=\(appleIdToken)&providerId=apple.com&nonce=\(nonce)",
+            "requestUri": "http://localhost",
+            "returnSecureToken": true
+        ])
+        guard let localId = json["localId"] as? String else {
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Resposta inválida do Firebase"])
+        }
+
+        // Apple only sends the name on the first authorization, so keep it on the Firebase profile.
+        let appleName = [credential.fullName?.givenName, credential.fullName?.familyName]
+            .compactMap { $0 }
+            .joined(separator: " ")
+        let email = json["email"] as? String ?? credential.email ?? ""
+        let idToken = json["idToken"] as? String
+        var displayName = json["displayName"] as? String
+        if displayName == nil, !appleName.isEmpty, let idToken {
+            _ = try? await postIdentityToolkit("v1/accounts:update", body: ["idToken": idToken, "displayName": appleName])
+            displayName = appleName
+        }
+
+        return UserProfile(
+            id: localId,
+            email: email,
+            displayName: displayName ?? email.components(separatedBy: "@").first?.capitalized ?? "Pianista",
+            photoURL: nil,
+            authProvider: .apple,
+            idToken: idToken,
+            refreshToken: json["refreshToken"] as? String
+        )
+    }
+
+    private static func randomNonce(length: Int = 32) -> String {
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz")
+        var generator = SystemRandomNumberGenerator()
+        return String((0..<length).map { _ in charset.randomElement(using: &generator)! })
+    }
+
+    private static func sha256(_ input: String) -> String {
+        SHA256.hash(data: Data(input.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
     // MARK: - Guest Mode
     
     func continueAsGuest() {
@@ -328,6 +388,105 @@ final class AuthService {
         saveUser(profile)
     }
     
+    // MARK: - Account Deletion
+
+    /// How the user confirms their identity before deletion; Firebase only deletes accounts with a recent sign-in.
+    enum Reauthentication {
+        case password(String)
+        case google
+        case apple(ASAuthorization)
+    }
+
+    /// Deletes the user's cloud data and Firebase account, then signs out. Returns false and sets `authError` on failure.
+    func deleteAccount(_ reauthentication: Reauthentication) async -> Bool {
+        guard let user = currentUser else { return false }
+        isAuthenticating = true
+        authError = nil
+        defer { isAuthenticating = false }
+
+        do {
+            let confirmed: UserProfile
+            var appleAuthorizationCode: String?
+            switch reauthentication {
+            case .password(let password):
+                confirmed = try await signInWithPassword(email: user.email, password: password)
+            case .google:
+                let authCode = try await startGoogleOAuthFlow()
+                let (googleIdToken, _) = try await exchangeGoogleAuthCode(authCode)
+                confirmed = try await exchangeGoogleTokenWithFirebase(googleIdToken: googleIdToken)
+            case .apple(let authorization):
+                confirmed = try await exchangeAppleAuthorizationWithFirebase(authorization)
+                appleAuthorizationCode = (authorization.credential as? ASAuthorizationAppleIDCredential)?
+                    .authorizationCode
+                    .flatMap { String(data: $0, encoding: .utf8) }
+            }
+
+            guard confirmed.id == user.id, let idToken = confirmed.idToken else {
+                throw NSError(domain: "luksMusic", code: 403, userInfo: [NSLocalizedDescriptionKey: "Confirme com a mesma conta que está conectada."])
+            }
+
+            try await CloudSyncService.shared.deleteRemoteData(userId: user.id, idToken: idToken)
+            if let appleAuthorizationCode {
+                await revokeAppleToken(authorizationCode: appleAuthorizationCode, idToken: idToken)
+            }
+            try await postIdentityToolkit("v1/accounts:delete", body: ["idToken": idToken])
+
+            CloudSyncService.shared.resetSyncState()
+            signOut()
+            return true
+        } catch {
+            authError = "Não foi possível excluir a conta: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    private func signInWithPassword(email: String, password: String) async throws -> UserProfile {
+        let json = try await postIdentityToolkit("v1/accounts:signInWithPassword", body: [
+            "email": email,
+            "password": password,
+            "returnSecureToken": true
+        ])
+        return UserProfile(
+            id: json["localId"] as? String ?? "",
+            email: email,
+            displayName: json["displayName"] as? String ?? email,
+            photoURL: nil,
+            authProvider: .email,
+            idToken: json["idToken"] as? String,
+            refreshToken: json["refreshToken"] as? String
+        )
+    }
+
+    /// Asks Firebase to revoke the Apple tokens (Apple requires it when an account is deleted).
+    /// Only works once the Apple provider's key is configured in Firebase, so a failure doesn't block deletion.
+    private func revokeAppleToken(authorizationCode: String, idToken: String) async {
+        _ = try? await postIdentityToolkit("v2/accounts:revokeToken", body: [
+            "providerId": "apple.com",
+            "tokenType": "CODE",
+            "token": authorizationCode,
+            "idToken": idToken
+        ])
+    }
+
+    @discardableResult
+    private func postIdentityToolkit(_ path: String, body: [String: Any]) async throws -> [String: Any] {
+        guard let url = URL(string: "https://identitytoolkit.googleapis.com/\(path)?key=\(FirebaseConfig.apiKey)") else {
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            let message = (json["error"] as? [String: Any])?["message"] as? String ?? "Erro desconhecido"
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: message])
+        }
+        return json
+    }
+
     // MARK: - Sign Out
     
     func signOut() {
@@ -352,8 +511,8 @@ final class AuthService {
             return
         }
         
-        // Migrate / Purge old mock user if found
-        if user.email == "pianist@gmail.com" {
+        // Purge old mock users (including the placeholder Apple login from early builds)
+        if user.email == "pianist@gmail.com" || user.id.hasPrefix("apple_user_") {
             UserDefaults.standard.removeObject(forKey: userDefaultsKey)
             self.currentUser = nil
             self.isAuthenticated = false

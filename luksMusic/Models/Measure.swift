@@ -130,6 +130,24 @@ struct Measure: Identifiable, Codable, Hashable {
             .sorted { $0.position.beat < $1.position.beat }
     }
 
+    /// Onset of the latest note or rest at or before `beat`, so the playback cursor always rests on a notehead.
+    func cursorBeat(at beat: Double) -> Double {
+        notes.map(\.position.beat).filter { $0 <= beat + 0.001 }.max() ?? 1.0
+    }
+
+    /// Onset of the note or rest closest to `beat`.
+    func nearestOnset(to beat: Double) -> Double {
+        notes.map(\.position.beat).min { abs($0 - beat) < abs($1 - beat) } ?? 1.0
+    }
+
+    /// Notes (excluding rests) held down at `beat`, including ones that started earlier and are still ringing.
+    func soundingNotes(at beat: Double) -> [Note] {
+        notes.filter { note in
+            let length = note.duration.beats * (note.isTriplet ? 2.0 / 3.0 : 1.0)
+            return !note.isRest && note.position.beat <= beat + 0.001 && beat < note.position.beat + length - 0.001
+        }
+    }
+
     init(
         id: UUID = UUID(),
         number: Int,

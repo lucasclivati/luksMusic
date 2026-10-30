@@ -76,9 +76,10 @@ jobs:
           cp -r build/luksMusic.xcarchive/Products/Applications/luksMusic.app build/ipa/Payload/
           cp embedded.mobileprovision build/ipa/Payload/luksMusic.app/embedded.mobileprovision
           
-          # Explicitly set CFBundleVersion to 10
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 10" build/ipa/Payload/luksMusic.app/Info.plist || \
-          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string 10" build/ipa/Payload/luksMusic.app/Info.plist
+          # Build number comes from CURRENT_PROJECT_VERSION in project.yml
+          BUILD_NUMBER=$(grep 'CURRENT_PROJECT_VERSION:' project.yml | grep -o '[0-9]\+')
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" build/ipa/Payload/luksMusic.app/Info.plist || \
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" build/ipa/Payload/luksMusic.app/Info.plist
           echo "Verified CFBundleVersion: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' build/ipa/Payload/luksMusic.app/Info.plist)"
           
           # Copy Piano SoundFont and App Icons into app root

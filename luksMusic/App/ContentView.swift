@@ -5,6 +5,7 @@
 
 import SwiftUI
 import SwiftData
+import AuthenticationServices
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
@@ -183,7 +184,15 @@ struct SettingsView: View {
     @State private var keyboardOctaves = 3
     @State private var showNoteLabels = true
     @State private var hapticFeedbackEnabled = true
-    
+    @State private var showDeleteAccount = false
+
+    private var appVersion: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let build = info?["CFBundleVersion"] as? String ?? "1"
+        return "\(version) (\(build))"
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -243,6 +252,13 @@ struct SettingsView: View {
                         Button("Sign Out", role: .destructive) {
                             authService.signOut()
                         }
+
+                        if user.authProvider != .guest {
+                            Button("Excluir Conta", role: .destructive) {
+                                authService.authError = nil
+                                showDeleteAccount = true
+                            }
+                        }
                     } else {
                         Button("Sign in with Google") {
                             Task {
@@ -254,10 +270,10 @@ struct SettingsView: View {
                 
                 Section("Piano Audio Engine") {
                     Picker("Sound Instrument", selection: $selectedSoundFont) {
-                        Text("Concert Grand Piano (Steinway)").tag("Concert Grand Piano")
+                        Text("Concert Grand Piano").tag("Concert Grand Piano")
                         Text("Upright Acoustic Piano").tag("Upright Acoustic Piano")
-                        Text("Electric Grand (CP80)").tag("Electric Grand (CP80)")
-                        Text("Rhodes Vintage Piano").tag("Rhodes Vintage Piano")
+                        Text("Electric Grand Piano").tag("Electric Grand Piano")
+                        Text("Vintage Electric Piano").tag("Vintage Electric Piano")
                     }
                 }
                 
@@ -285,7 +301,7 @@ struct SettingsView: View {
                     HStack {
                         Text("App Version")
                         Spacer()
-                        Text("1.0.0 (MuseScore Piano Companion)")
+                        Text(appVersion)
                             .foregroundColor(.secondary)
                     }
                     HStack {
@@ -297,6 +313,86 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showDeleteAccount) {
+                DeleteAccountView()
+            }
+        }
+    }
+}
+
+// MARK: - Account Deletion
+
+struct DeleteAccountView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var authService = AuthService.shared
+    @State private var password: String = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Sua conta e as partituras sincronizadas na nuvem serão apagadas permanentemente. As partituras salvas neste aparelho continuam disponíveis no modo convidado.")
+                        .font(.subheadline)
+                }
+
+                if let user = authService.currentUser {
+                    Section("Confirme sua identidade") {
+                        switch user.authProvider {
+                        case .email:
+                            SecureField("Senha de \(user.email)", text: $password)
+                                .textContentType(.password)
+                            Button("Excluir Conta Permanentemente", role: .destructive) {
+                                delete(.password(password))
+                            }
+                            .disabled(password.isEmpty || authService.isAuthenticating)
+                        case .google:
+                            Button("Confirmar com Google e Excluir", role: .destructive) {
+                                delete(.google)
+                            }
+                            .disabled(authService.isAuthenticating)
+                        case .apple:
+                            SignInWithAppleButton(.continue) { request in
+                                authService.prepareAppleRequest(request)
+                            } onCompletion: { result in
+                                if case .success(let authorization) = result {
+                                    delete(.apple(authorization))
+                                }
+                            }
+                            .signInWithAppleButtonStyle(.white)
+                            .frame(height: 44)
+                            .disabled(authService.isAuthenticating)
+                        case .guest:
+                            EmptyView()
+                        }
+                    }
+                }
+
+                if authService.isAuthenticating {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                }
+
+                if let error = authService.authError {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            .navigationTitle("Excluir Conta")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancelar") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private func delete(_ reauthentication: AuthService.Reauthentication) {
+        Task {
+            if await authService.deleteAccount(reauthentication) {
+                dismiss()
+            }
         }
     }
 }
