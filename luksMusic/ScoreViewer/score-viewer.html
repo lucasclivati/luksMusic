@@ -102,8 +102,6 @@
       document.body.classList.toggle("horizontal", horizontal);
       osmd = createOSMD(horizontal);
       await osmd.load(state.xml);
-      document.getElementById("title").textContent = osmd.Sheet.TitleString || "";
-      document.getElementById("composer").textContent = osmd.Sheet.ComposerString || "";
       osmd.Sheet.Transpose = state.transpose || 0;
       osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = horizontal ? 0 : measuresPerLine(state.zoom || 1);
       osmd.EngravingRules.HorizontalBetweenLyricsDistance = 0.6;
@@ -225,6 +223,8 @@
             || next.mode !== state.mode;
           const moved = next.measure !== state.measure || next.beat !== state.beat;
           state = { ...state, ...next };
+          document.getElementById("title").textContent = state.title || "";
+          document.getElementById("composer").textContent = state.composer || "";
           document.body.style.setProperty("--top-inset", `${state.topInset || 0}px`);
           document.body.style.setProperty("--bottom-inset", `${state.bottomInset || 0}px`);
           if (!state.xml) return;

@@ -32,8 +32,10 @@ final class ScreenshotTests: XCTestCase {
             // Let the engraved score render in the web view
             pause(5)
             playButton.tap()
-            pause(4)
+            waitForLabel(playButton, "Pausar")
+            pause(3)
             playButton.tap()
+            waitForLabel(playButton, "Tocar")
             pause(2)
             capture("02-score")
 
@@ -74,6 +76,11 @@ final class ScreenshotTests: XCTestCase {
         guard element.waitForExistence(timeout: 5) else { return false }
         element.tap()
         return true
+    }
+
+    private func waitForLabel(_ element: XCUIElement, _ label: String) {
+        let predicate = NSPredicate(format: "label == %@", label)
+        _ = XCTWaiter.wait(for: [XCTNSPredicateExpectation(predicate: predicate, object: element)], timeout: 5)
     }
 
     private func pause(_ seconds: TimeInterval) {

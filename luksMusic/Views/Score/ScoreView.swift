@@ -57,6 +57,8 @@ struct ScoreView: View {
             Color.white.ignoresSafeArea()
 
             ScoreWebView(
+                title: viewModel.score.title,
+                composer: viewModel.score.composer,
                 musicXML: musicXML,
                 measureIndex: viewModel.currentMeasureIndex,
                 cursorBeat: viewModel.cursorBeat,
@@ -111,6 +113,8 @@ struct ScoreView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        // White paper: dark status bar text so the time and battery stay visible
+        .preferredColorScheme(.light)
         .onAppear {
             musicXML = MusicXMLExporter.export(viewModel.score)
         }
@@ -453,9 +457,23 @@ struct ScoreView: View {
             }
             .padding(.horizontal, 12)
             .padding(.top, 10)
-
+            
+            HStack {
+                Label("Velocidade", systemImage: "speedometer")
+                    .font(.system(size: 13, weight: .semibold))
+                Spacer()
+                Picker("Velocidade", selection: $viewModel.playbackSpeed) {
+                    Text("0.5×").tag(0.5)
+                    Text("0.75×").tag(0.75)
+                    Text("1×").tag(1.0)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 140)
+            }
+            .padding(.horizontal, 12)
+            
             Divider()
-
+            
             menuItem("Configurações", systemName: "gearshape.fill", identifier: "menuSettingsButton") {
                 showSettingsSheet = true
             }
@@ -473,7 +491,7 @@ struct ScoreView: View {
             }
             .padding(.bottom, 10)
         }
-        .frame(width: 230)
+        .frame(width: 270)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color.white)

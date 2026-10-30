@@ -8,6 +8,8 @@ import SwiftUI
 import WebKit
 
 struct ScoreWebView: UIViewRepresentable {
+    let title: String
+    let composer: String
     let musicXML: String
     let measureIndex: Int
     let cursorBeat: Double
@@ -44,6 +46,8 @@ struct ScoreWebView: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         context.coordinator.onSeek = onSeek
         context.coordinator.apply([
+            "title": title,
+            "composer": composer,
             "xml": musicXML,
             "measure": measureIndex,
             "beat": cursorBeat,
