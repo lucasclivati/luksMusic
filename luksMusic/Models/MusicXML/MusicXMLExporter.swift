@@ -56,6 +56,9 @@ final class MusicXMLExporter {
         let measureLength = max(1, score.timeSignatureTop * divisions * 4 / max(1, score.timeSignatureBottom))
         // Note positions count beats of the time signature's unit (eighths in 3/8); durations count quarters
         let beatLength = Double(divisions) * 4.0 / Double(max(1, score.timeSignatureBottom))
+        // The tempo counts the same beat unit; <sound tempo> is always in quarter notes per minute
+        let beatUnit = ["2": "half", "8": "eighth", "16": "16th"][String(score.timeSignatureBottom)] ?? "quarter"
+        let quarterTempo = Double(score.tempo) * 4.0 / Double(max(1, score.timeSignatureBottom))
 
         for (index, measure) in measures.enumerated() {
             let measureNum = measure.number > 0 ? measure.number : (index + 1)
@@ -87,12 +90,12 @@ final class MusicXMLExporter {
                       <direction placement="above">
                         <direction-type>
                           <metronome>
-                            <beat-unit>quarter</beat-unit>
+                            <beat-unit>\(beatUnit)</beat-unit>
                             <per-minute>\(score.tempo)</per-minute>
                           </metronome>
                         </direction-type>
                         <staff>1</staff>
-                        <sound tempo=\"\(score.tempo)\"/>
+                        <sound tempo=\"\(quarterTempo)\"/>
                       </direction>
                 """
             }
