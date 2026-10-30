@@ -305,9 +305,15 @@
 
         .song-card-header {
             display: flex;
+            flex-wrap: wrap;
             align-items: flex-start;
             justify-content: space-between;
             gap: 12px;
+        }
+
+        .song-card-header > div:first-child {
+            flex: 1 1 180px;
+            min-width: 0;
         }
 
         .song-card-title {
@@ -339,6 +345,7 @@
 
         .privacy-control-box {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 8px;
         }
@@ -355,6 +362,7 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
             transition: all 0.2s ease;
         }
 
@@ -443,8 +451,9 @@
 
         .song-card-details {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 16px;
+            gap: 10px 16px;
             font-size: 11px;
             color: #cbd5e1;
             border-top: 1px solid #1e293b;
@@ -455,6 +464,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .btn-open-score {
