@@ -31,6 +31,8 @@ struct PracticeView: View {
         let startOctaveC = max(24, min(48, (minPitch / 12) * 12))
         let endOctaveC = min(108, max(84, Int(ceil(Double(maxPitch + 1) / 12.0)) * 12))
         _keyboardVM = State(initialValue: PianoKeyboardViewModel(rangeStart: startOctaveC, rangeEnd: endOctaveC))
+        vm.fallingNotes.keyboardRangeStart = startOctaveC
+        vm.fallingNotes.keyboardRangeEnd = endOctaveC
     }
     
     var body: some View {
@@ -96,7 +98,10 @@ struct PracticeView: View {
                 musicXML = MusicXMLExporter.export(viewModel.score)
             }
             .onChange(of: viewModel.practiceMode) { _, _ in
-                viewModel.practiceModeChanged()
+                viewModel.practiceSettingsChanged()
+            }
+            .onChange(of: viewModel.tempoBPM) { _, _ in
+                viewModel.practiceSettingsChanged()
             }
             .onChange(of: viewModel.activeTargetMidiNotes, initial: true) { _, targets in
                 keyboardVM.targetNoteKeys = targets
@@ -138,11 +143,7 @@ struct PracticeView: View {
     @ViewBuilder
     private var fallingNotesSection: some View {
         FallingNotesView(
-            notes: currentFallingNotes,
-            tempo: viewModel.tempoBPM,
-            isPlaying: viewModel.isRunning && !viewModel.isPaused,
-            startKey: keyboardVM.rangeStart,
-            keyCount: keyboardVM.rangeEnd - keyboardVM.rangeStart,
+            viewModel: viewModel.fallingNotes,
             onActiveKeysChanged: { activeKeys, bassKeys, trebleKeys, keyColors in
                 keyboardVM.midiActiveKeys = activeKeys
                 keyboardVM.bassActiveKeys = bassKeys
@@ -356,23 +357,5 @@ struct PracticeView: View {
                 .fontWeight(.bold)
                 .foregroundColor(.secondary)
         }
-    }
-    
-    // MARK: - Falling Notes Generator
-    
-    private var currentFallingNotes: [FallingNote] {
-        var falling: [FallingNote] = []
-        for (mIdx, measure) in viewModel.score.measures.enumerated() {
-            for note in measure.notes where !note.isRest {
-                let noteBeat = Double(mIdx * viewModel.score.timeSignatureTop) + note.position.beat
-                falling.append(FallingNote(
-                    midiNote: Int(note.midiNote),
-                    startBeat: noteBeat,
-                    durationBeats: note.duration.beats,
-                    hand: note.staff == .treble ? .right : .left
-                ))
-            }
-        }
-        return falling
     }
 }

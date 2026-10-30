@@ -63,6 +63,8 @@ final class FallingNotesViewModel {
     var currentBeat: Double = 0.0
     /// Tempo in beats per minute.
     var tempo: Double = 72.0
+    /// Beat the notes stop at (guided practice waits there for the expected notes); nil keeps them falling.
+    var holdBeat: Double? = nil
     /// Number of beats visible above the hit line.
     var visibleBeats: Double = 8.0
     /// Time signature numerator (beats per measure).
@@ -84,6 +86,15 @@ final class FallingNotesViewModel {
         guard isPlaying else { return }
         let deltaBeats = (tempo / 60.0) * deltaSeconds
         currentBeat += deltaBeats
+        if let holdBeat {
+            currentBeat = min(currentBeat, holdBeat)
+        }
+        updateActiveHitNotes()
+    }
+    
+    /// Jumps to `beat` (practice started, looped or moved to a tapped note).
+    func seek(to beat: Double) {
+        currentBeat = beat
         updateActiveHitNotes()
     }
     
@@ -96,7 +107,8 @@ final class FallingNotesViewModel {
         
         for note in notes {
             let noteEnd = note.startBeat + note.durationBeats
-            if currentBeat >= (note.startBeat - 0.05) && currentBeat <= (noteEnd + 0.05) {
+            // Ends a moment early, so a note held at the line doesn't also light the one that ends there
+            if currentBeat >= (note.startBeat - 0.05) && currentBeat < (noteEnd - 0.02) {
                 active.insert(note.midiNote)
                 let beatColor = Color.colorForBeat(note.startBeat, beatsPerMeasure: beatsPerMeasure)
                 colors[note.midiNote] = beatColor
@@ -132,26 +144,9 @@ struct FallingNotesView: View {
     @Bindable var viewModel: FallingNotesViewModel
     var onActiveKeysChanged: ((Set<Int>, Set<Int>, Set<Int>, [Int: Color]) -> Void)? = nil
     
+    /// `viewModel` must outlive the parent's redraws (keep it in a view model or @State), or the notes restart.
     init(viewModel: FallingNotesViewModel, onActiveKeysChanged: ((Set<Int>, Set<Int>, Set<Int>, [Int: Color]) -> Void)? = nil) {
         self.viewModel = viewModel
-        self.onActiveKeysChanged = onActiveKeysChanged
-    }
-    
-    init(
-        notes: [FallingNote],
-        tempo: Int,
-        isPlaying: Bool,
-        startKey: Int = 48,
-        keyCount: Int = 36,
-        onActiveKeysChanged: ((Set<Int>, Set<Int>, Set<Int>, [Int: Color]) -> Void)? = nil
-    ) {
-        let vm = FallingNotesViewModel()
-        vm.notes = notes
-        vm.tempo = Double(tempo)
-        vm.isPlaying = isPlaying
-        vm.keyboardRangeStart = startKey
-        vm.keyboardRangeEnd = startKey + keyCount
-        self.viewModel = vm
         self.onActiveKeysChanged = onActiveKeysChanged
     }
     
@@ -224,7 +219,8 @@ struct FallingNotesView: View {
             
             guard y >= 0 && y <= size.height else { continue }
             
-            let isMeasureLine = beat % viewModel.beatsPerMeasure == 0
+            // Beats count from 1 at the first measure, so measures start at 1, 1 + beatsPerMeasure, ...
+            let isMeasureLine = (beat - 1) % viewModel.beatsPerMeasure == 0
             
             if isMeasureLine {
                 var path = Path()
@@ -238,8 +234,8 @@ struct FallingNotesView: View {
                 )
                 
                 // Measure number text on left margin matching reference screenshot
-                if beat >= 0 {
-                    let measureNumber = (beat / viewModel.beatsPerMeasure) + 1
+                if beat >= 1 {
+                    let measureNumber = ((beat - 1) / viewModel.beatsPerMeasure) + 1
                     let text = Text("\(measureNumber)")
                         .font(.system(size: 13, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.white.opacity(0.45))
@@ -346,7 +342,7 @@ struct FallingNotesView: View {
             let noteEndBeat = note.startBeat + note.durationBeats - viewModel.currentBeat
             
             // Check if note is currently crossing the hit line
-            if relativeBeat <= 0.05 && noteEndBeat >= -0.05 {
+            if relativeBeat <= 0.05 && noteEndBeat > 0.02 {
                 let x = xPosition(for: note.midiNote, size: size, whiteKeyWidth: whiteKeyWidth)
                 let noteColor = Color.colorForBeat(note.startBeat, beatsPerMeasure: viewModel.beatsPerMeasure)
                 

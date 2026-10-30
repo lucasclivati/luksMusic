@@ -57,6 +57,9 @@ final class PracticeViewModel {
     // Decoded once: `score.measures` decodes JSON on every access and the practice clock reads it every step
     private let measures: [Measure]
     
+    // Falling notes above the keyboard, kept on the practice position (one instance, so redraws don't restart them)
+    let fallingNotes = FallingNotesViewModel()
+    
     // MARK: - Initialization
     
     init(score: Score, practiceMode: PracticeMode = .guided) {
@@ -65,8 +68,27 @@ final class PracticeViewModel {
         self.practiceMode = practiceMode
         self.tempoBPM = practiceMode == .slowPractice ? max(40, Int(Double(score.tempo) * 0.7)) : score.tempo
         self.practiceEndMeasure = max(1, score.measureCount)
+        fallingNotes.notes = Self.makeFallingNotes(in: measures, score: score)
+        fallingNotes.beatsPerMeasure = max(1, score.timeSignatureTop)
         updateExpectedNotes()
         setupMicrophoneListener()
+    }
+    
+    /// Score notes as falling bars: beats count from 1 at the first measure, lengths in the time signature's beat.
+    private static func makeFallingNotes(in measures: [Measure], score: Score) -> [FallingNote] {
+        let beatsPerMeasure = Double(score.timeSignatureTop)
+        // Note durations count quarters; positions count the time signature's beat (eighths in 3/8)
+        let beatsPerQuarter = Double(score.timeSignatureBottom) / 4.0
+        return measures.enumerated().flatMap { index, measure in
+            measure.notes.filter { !$0.isRest }.map { note in
+                FallingNote(
+                    midiNote: Int(note.midiNote),
+                    startBeat: Double(index) * beatsPerMeasure + note.position.beat,
+                    durationBeats: note.duration.beats * (note.isTriplet ? 2.0 / 3.0 : 1.0) * beatsPerQuarter,
+                    hand: note.staff == .treble ? .right : .left
+                )
+            }
+        }
     }
     
     private func setupMicrophoneListener() {
@@ -113,12 +135,14 @@ final class PracticeViewModel {
         practiceTimer?.invalidate()
         practiceTimer = nil
         audioEngine.stopAllNotes()
+        syncFallingNotes()
     }
     
     func resumePractice() {
         guard isRunning && isPaused else { return }
         isPaused = false
         startPracticeTimer()
+        syncFallingNotes()
     }
     
     func stopPractice(modelContext: ModelContext? = nil) {
@@ -127,6 +151,7 @@ final class PracticeViewModel {
         practiceTimer?.invalidate()
         practiceTimer = nil
         audioEngine.stopAllNotes()
+        syncFallingNotes()
         if isMicrophoneEnabled {
             microphoneService.stopListening()
         }
@@ -244,8 +269,8 @@ final class PracticeViewModel {
         updateExpectedNotes()
     }
     
-    /// Re-targets the expected notes (hand filter, guided stepping) and the timer after the mode changes.
-    func practiceModeChanged() {
+    /// Re-targets the expected notes (hand filter, guided stepping) and restarts the timer after the mode or tempo changes.
+    func practiceSettingsChanged() {
         practiceTimer?.invalidate()
         practiceTimer = nil
         if isRunning && !isPaused {
@@ -261,6 +286,8 @@ final class PracticeViewModel {
             currentMeasureIndex = next.measure
             currentBeat = next.beat
         }
+        
+        syncFallingNotes()
         
         guard currentMeasureIndex < measures.count else {
             expectedNotes = []
@@ -283,6 +310,26 @@ final class PracticeViewModel {
         let cursorOnset = onset ?? currentMeasure.cursorBeat(at: currentBeat)
         if cursorOnset != cursorBeat {
             cursorBeat = cursorOnset
+        }
+    }
+    
+    /// Keeps the falling notes on the practice position. Guided mode holds them at the expected notes; timed modes
+    /// let them fall on their own clock and only snap back after a jump (start, loop, a tapped note).
+    private func syncFallingNotes() {
+        let beat = Double(currentMeasureIndex * score.timeSignatureTop) + currentBeat
+        fallingNotes.isPlaying = isRunning && !isPaused
+        fallingNotes.tempo = Double(tempoBPM)
+        if practiceMode == .guided {
+            fallingNotes.holdBeat = beat
+            // Past the expected notes, or more than a beat behind them (the player got ahead): jump there
+            if fallingNotes.currentBeat > beat || fallingNotes.currentBeat < beat - 1.0 {
+                fallingNotes.seek(to: beat)
+            }
+        } else {
+            fallingNotes.holdBeat = nil
+            if abs(fallingNotes.currentBeat - beat) > 0.5 {
+                fallingNotes.seek(to: beat)
+            }
         }
     }
     
