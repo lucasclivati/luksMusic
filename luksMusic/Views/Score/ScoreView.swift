@@ -55,7 +55,12 @@ struct ScoreView: View {
     var body: some View {
         ZStack(alignment: .top) {
             Color.white.ignoresSafeArea()
-
+            
+            // The app runs in dark mode (white status bar text), so the status bar gets a dark strip over the paper
+            accentPurple
+                .frame(height: 0)
+                .ignoresSafeArea(edges: .top)
+            
             ScoreWebView(
                 title: viewModel.score.title,
                 composer: viewModel.score.composer,
@@ -113,8 +118,8 @@ struct ScoreView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
-        // White paper: dark status bar text so the time and battery stay visible
-        .preferredColorScheme(.light)
+        // Controls drawn over the white paper use light-mode colors
+        .environment(\.colorScheme, .light)
         .onAppear {
             musicXML = MusicXMLExporter.export(viewModel.score)
         }

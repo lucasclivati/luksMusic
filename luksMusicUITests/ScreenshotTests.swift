@@ -33,7 +33,7 @@ final class ScreenshotTests: XCTestCase {
             pause(5)
             playButton.tap()
             waitForLabel(playButton, "Pausar")
-            pause(3)
+            pause(1)
             playButton.tap()
             waitForLabel(playButton, "Tocar")
             pause(2)
