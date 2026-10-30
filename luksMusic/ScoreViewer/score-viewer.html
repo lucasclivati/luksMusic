@@ -182,6 +182,11 @@
         }
         return;
       }
+      // On the first system, show the page from the top so the title stays visible
+      if (steps.length && step.top <= steps[0].top + 1) {
+        if (window.scrollY > 0) window.scrollTo({ top: 0, behavior });
+        return;
+      }
       const top = rect.top + window.scrollY + step.top;
       const bottom = top + step.height;
       const topInset = state.topInset || 0;

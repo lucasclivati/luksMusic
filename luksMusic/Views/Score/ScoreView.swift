@@ -54,12 +54,9 @@ struct ScoreView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.white.ignoresSafeArea()
-            
-            // The app runs in dark mode (white status bar text), so the status bar gets a dark strip over the paper
-            accentPurple
-                .frame(height: 0)
-                .ignoresSafeArea(edges: .top)
+            // The app runs in dark mode (white status bar text), so the paper stops below the status bar
+            accentPurple.ignoresSafeArea()
+            Color.white.ignoresSafeArea(edges: .bottom)
             
             ScoreWebView(
                 title: viewModel.score.title,

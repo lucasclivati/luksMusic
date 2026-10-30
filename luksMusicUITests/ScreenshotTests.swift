@@ -36,6 +36,10 @@ final class ScreenshotTests: XCTestCase {
             pause(1)
             playButton.tap()
             waitForLabel(playButton, "Tocar")
+            // Back to the first measure so the title and the opening notes are on screen
+            for _ in 0..<4 {
+                tapIfExists(app.buttons["Compasso anterior"])
+            }
             pause(2)
             capture("02-score")
 
