@@ -19,11 +19,12 @@
     body.horizontal {
       overflow-y: hidden;
     }
-    /* Player: the engraving on a sheet of paper over the dark app background, like the web player */
-    body.dark {
+    /* Player: the engraving on a sheet of paper over the dark app background, like the web player
+       (on <html> too, which shows above the paper's top margin and when the page bounces) */
+    html.dark, html.dark body {
       background: #0b1120;
     }
-    body.dark #paper {
+    html.dark #paper {
       margin: 8px 6px 0;
       padding-top: 18px;
       background: #ffffff;
@@ -284,7 +285,7 @@
             || next.fit !== state.fit;
           const moved = next.measure !== state.measure || next.beat !== state.beat;
           state = { ...state, ...next };
-          document.body.classList.toggle("dark", state.theme === "dark");
+          document.documentElement.classList.toggle("dark", state.theme === "dark");
           document.getElementById("title").textContent = state.title || "";
           document.getElementById("composer").textContent = state.composer || "";
           document.getElementById("header").hidden = !state.title && !state.composer;

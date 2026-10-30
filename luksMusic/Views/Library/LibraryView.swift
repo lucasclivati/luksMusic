@@ -121,19 +121,15 @@ struct LibraryView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        if online.isLoading || !filteredOnlineScores.isEmpty {
-                            onlineSection
-                        }
-
-                        localSection
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if online.isLoading || !filteredOnlineScores.isEmpty {
+                        onlineSection
                     }
-                    .padding(.bottom, 90)
-                }
 
-                addButton
+                    localSection
+                }
+                .padding(.bottom, 24)
             }
             .background(Color(.systemBackground))
             .navigationTitle("Biblioteca")
@@ -343,23 +339,6 @@ struct LibraryView: View {
         .padding(.horizontal)
     }
 
-    /// Floating add button in the bottom-right corner.
-    private var addButton: some View {
-        Button {
-            showAddSheet = true
-        } label: {
-            Image(systemName: "plus")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-                .background(.indigo, in: Circle())
-                .shadow(color: .indigo.opacity(0.4), radius: 8, y: 4)
-        }
-        .padding(.trailing, 20)
-        .padding(.bottom, 20)
-        .accessibilityLabel("Adicionar partitura")
-    }
-
     /// Bottom sheet for choosing how to add a score.
     private var addScoreSheet: some View {
         NavigationStack {
@@ -419,6 +398,13 @@ struct LibraryView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
+            Button {
+                showAddSheet = true
+            } label: {
+                Image(systemName: "plus")
+            }
+            .accessibilityLabel("Adicionar partitura")
+
             Button {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     layout = layout == .grid ? .list : .grid
