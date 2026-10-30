@@ -20,6 +20,7 @@ struct RemoteScorePayload: Codable, Sendable {
     let timeSignatureTop: Int
     let timeSignatureBottom: Int
     let measuresJSON: String
+    let measureCount: Int
     let userId: String
     let updatedAt: Date
 }
@@ -47,15 +48,16 @@ final class CloudSyncService {
     
     /// Syncs local SwiftData scores with the remote Firebase cloud database.
     func syncLibrary(scores: [Score]) async {
-        guard authService.isAuthenticated, let user = authService.currentUser else {
-            syncError = "Necessário fazer login para sincronizar partituras no Firebase."
+        guard let user = authService.currentUser, user.authProvider != .guest else {
+            syncError = "Entre com sua conta para sincronizar as partituras."
             return
         }
-        
+
         isSyncing = true
         syncError = nil
-        
+
         do {
+            let idToken = try await authService.freshIdToken()
             var count = 0
             for score in scores {
                 let measuresDataStr = score.measuresData != nil ? (String(data: score.measuresData!, encoding: .utf8) ?? "[]") : "[]"
@@ -70,12 +72,12 @@ final class CloudSyncService {
                     timeSignatureTop: score.timeSignatureTop,
                     timeSignatureBottom: score.timeSignatureBottom,
                     measuresJSON: measuresDataStr,
+                    measureCount: score.measureCount,
                     userId: user.id,
                     updatedAt: Date()
                 )
                 
-                // Attempt REST sync to Firebase Firestore
-                try await uploadScoreToFirebase(payload: payload, userId: user.id)
+                try await uploadScoreToFirebase(payload: payload, userId: user.id, idToken: idToken)
                 count += 1
             }
             
@@ -84,21 +86,19 @@ final class CloudSyncService {
             UserDefaults.standard.set(self.lastSyncDate, forKey: "luksMusic_lastSync")
             self.isSyncing = false
         } catch {
-            self.syncError = "Sincronização com Firebase concluída localmente: \(error.localizedDescription)"
+            self.syncError = "Não foi possível sincronizar: \(error.localizedDescription)"
             self.isSyncing = false
         }
     }
     
-    private func uploadScoreToFirebase(payload: RemoteScorePayload, userId: String) async throws {
+    private func uploadScoreToFirebase(payload: RemoteScorePayload, userId: String, idToken: String) async throws {
         let endpoint = "https://firestore.googleapis.com/v1/projects/\(FirebaseConfig.projectId)/databases/(default)/documents/users/\(userId)/scores/\(payload.id)?key=\(FirebaseConfig.apiKey)"
         guard let url = URL(string: endpoint) else { return }
         
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token = authService.currentUser?.idToken {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        }
+        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
         
         let firestoreFields: [String: Any] = [
             "fields": [
@@ -107,12 +107,16 @@ final class CloudSyncService {
                 "difficulty": ["stringValue": payload.difficulty],
                 "tempo": ["integerValue": String(payload.tempo)],
                 "userId": ["stringValue": payload.userId],
-                "measuresCount": ["integerValue": "9"]
+                "measuresCount": ["integerValue": String(payload.measureCount)]
             ]
         ]
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: firestoreFields)
-        let (_, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            let errorText = String(data: data, encoding: .utf8) ?? "Erro desconhecido"
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: errorText])
+        }
     }
     
     // MARK: - Account Deletion

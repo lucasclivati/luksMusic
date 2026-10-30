@@ -487,6 +487,53 @@ final class AuthService {
         return json
     }
 
+    // MARK: - Session Tokens
+
+    /// A Firebase ID token that is still valid; they expire after an hour, so this refreshes it when needed.
+    func freshIdToken() async throws -> String {
+        guard var user = currentUser, let refreshToken = user.refreshToken else {
+            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Entre com sua conta para continuar."])
+        }
+        if let idToken = user.idToken, let expiry = Self.expiryDate(of: idToken), expiry.timeIntervalSinceNow > 60 {
+            return idToken
+        }
+
+        guard let url = URL(string: "https://securetoken.googleapis.com/v1/token?key=\(FirebaseConfig.apiKey)") else {
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = "grant_type=refresh_token&refresh_token=\(refreshToken)".data(using: .utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let idToken = json["id_token"] as? String else {
+            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Sua sessão expirou. Entre novamente."])
+        }
+        user.idToken = idToken
+        user.refreshToken = json["refresh_token"] as? String ?? refreshToken
+        saveUser(user)
+        return idToken
+    }
+
+    /// Expiry (`exp` claim) of a JWT, read without verifying it; the server still checks the token.
+    private static func expiryDate(of jwt: String) -> Date? {
+        let parts = jwt.split(separator: ".")
+        guard parts.count == 3 else { return nil }
+        var payload = String(parts[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        while payload.count % 4 != 0 {
+            payload += "="
+        }
+        guard let data = Data(base64Encoded: payload),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let exp = json["exp"] as? Double else { return nil }
+        return Date(timeIntervalSince1970: exp)
+    }
+
     // MARK: - Sign Out
     
     func signOut() {

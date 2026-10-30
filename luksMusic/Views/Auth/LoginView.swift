@@ -47,7 +47,7 @@ struct LoginView: View {
                             .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundColor(.white)
                         
-                        Text("Smart Piano Studio & Sheet Music Scanner")
+                        Text("Partituras interativas e prática de piano")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -56,7 +56,7 @@ struct LoginView: View {
                     
                     // Features Highlights
                     VStack(spacing: 12) {
-                        featureRow(icon: "icloud.fill", color: .blue, title: "Firebase Cloud Sync", subtitle: "Sincronização em nuvem com o projeto luksMusic")
+                        featureRow(icon: "icloud.fill", color: .blue, title: "Biblioteca na nuvem", subtitle: "Entre com sua conta para guardar suas partituras")
                         featureRow(icon: "waveform", color: .green, title: "Piano Interativo e Prática", subtitle: "Teclado interativo, metrônomo e partitura conectada")
                     }
                     .padding(.horizontal, 24)

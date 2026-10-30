@@ -186,7 +186,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 // User Account / Google Login Section
-                Section("Account & Firebase Cloud") {
+                Section("Account & Cloud") {
                     if let user = authService.currentUser {
                         HStack(spacing: 12) {
                             Circle()
@@ -208,22 +208,30 @@ struct SettingsView: View {
                         }
                         .padding(.vertical, 4)
                         
-                        // Sync Button
-                        Button {
-                            Task {
-                                await cloudSync.syncLibrary(scores: scores)
-                            }
-                        } label: {
-                            HStack {
-                                Label("Sync Scores to Firebase", systemImage: "arrow.triangle.2.circlepath")
-                                Spacer()
-                                if cloudSync.isSyncing {
-                                    ProgressView()
-                                } else if let lastSync = cloudSync.lastSyncDate {
-                                    Text(lastSync, format: .dateTime.hour().minute())
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
+                        // Sync needs a cloud account; guests keep everything on the device
+                        if user.authProvider != .guest {
+                            Button {
+                                Task {
+                                    await cloudSync.syncLibrary(scores: scores)
                                 }
+                            } label: {
+                                HStack {
+                                    Label("Sync Scores to Cloud", systemImage: "arrow.triangle.2.circlepath")
+                                    Spacer()
+                                    if cloudSync.isSyncing {
+                                        ProgressView()
+                                    } else if let lastSync = cloudSync.lastSyncDate {
+                                        Text(lastSync, format: .dateTime.hour().minute())
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+
+                            if let syncError = cloudSync.syncError {
+                                Text(syncError)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
                             }
                         }
                         
@@ -265,12 +273,6 @@ struct SettingsView: View {
                         Text("App Version")
                         Spacer()
                         Text(appVersion)
-                            .foregroundColor(.secondary)
-                    }
-                    HStack {
-                        Text("Cloud Backend")
-                        Spacer()
-                        Text("Google Firebase Enabled")
                             .foregroundColor(.secondary)
                     }
                 }
