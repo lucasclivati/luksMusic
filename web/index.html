@@ -10,8 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <!-- Tone.js for Sampled Concert Grand Piano -->
     <script src="Tone.js"></script>
-    <!-- Score Data & Measure Layout (Measures 1 to 56) -->
-    <script src="dark_dream_score.js"></script>
+    <!-- Library catalog (each score's notes and measure layout load when it is opened) -->
+    <script src="scores/catalog.js"></script>
     <style>
         :root {
             --app-bg: #0b1120;
@@ -2099,6 +2099,62 @@
             color: #ffffff;
         }
 
+        .sidebar-source-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #94a3b8;
+        }
+
+        .sidebar-source-text a {
+            color: #93c5fd;
+        }
+
+        .sidebar-other-scores {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .other-score-item {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            background: #1c1c28;
+            border: 1px solid #2d2d42;
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+        .other-score-item:hover {
+            border-color: var(--accent-blue);
+            background: #232336;
+        }
+
+        .other-score-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .other-score-meta {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .song-card-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+            font-size: 11px;
+            color: #cbd5e1;
+        }
+
         /* EXPORT MODAL */
         .export-modal-backdrop {
             position: fixed;
@@ -2646,6 +2702,9 @@
                 align-items: flex-start;
                 gap: 10px;
             }
+            .song-card-header > div:first-child {
+                flex: 0 0 auto;
+            }
             .song-card-details {
                 flex-direction: column;
                 align-items: flex-start;
@@ -2715,50 +2774,12 @@
 
         <main class="library-body">
             <div class="library-title-row">
-                <h2>Minhas Partituras</h2>
+                <h2>Partituras</h2>
                 <p>Selecione uma música para abrir o reprodutor interativo com mixer de mãos e teclado.</p>
             </div>
 
-            <div class="songs-grid">
-                <!-- Card 1: Dark Dream (LOTM ED) -->
-                <div class="song-card" id="lotmSongCard">
-                    <div class="song-card-header">
-                        <div>
-                            <h3 class="song-card-title">DARK DREAM (LOTM ED)</h3>
-                            <p class="song-card-meta">Curley Gao • Arr. lukscli • Lord of the Mysteries</p>
-                        </div>
-                        <div class="privacy-control-box">
-                            <span id="lotmAccessBadge" class="badge-access private">🔒 Privada</span>
-                            <button id="cardPrivacyToggleBtn" class="btn-privacy-toggle" title="Alterar visibilidade da partitura (Pública / Privada)">
-                                <span id="cardPrivacyToggleIcon">🌐</span> <span id="cardPrivacyToggleText">Tornar Pública</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="song-card-details">
-                        <div class="song-detail-item">
-                            <span>🎼</span> <span>56 Compassos</span>
-                        </div>
-                        <div class="song-detail-item">
-                            <span>⏱</span> <span>~03:12</span>
-                        </div>
-                        <div class="song-detail-item">
-                            <span>📄</span> <span>7 Páginas (Oficial MuseScore)</span>
-                        </div>
-                        <div class="song-detail-item">
-                            <span id="lotmPrivacyDetailIcon">🔒</span> <span id="lotmPrivacyDetailText">Visibilidade: Privada</span>
-                        </div>
-                    </div>
-
-                    <div id="lotmAccessNotice" style="display: none; font-size: 11px; color: #f87171; line-height: 1.4;">
-                        ⚠️ Acesso restrito: Esta partitura está vinculada exclusivamente à conta <b>lukscli@gmail.com</b>. Alterne para a conta autorizada para tocar.
-                    </div>
-
-                    <button id="openLotmBtn" class="btn-open-score">
-                        <span>▶</span> <span>Abrir Partitura Interativa</span>
-                    </button>
-                </div>
-            </div>
+            <!-- Cards rendered from window.SCORE_CATALOG -->
+            <div class="songs-grid" id="songsGrid"></div>
             <p id="libraryEmptyNotice" style="display: none; color: #94a3b8; font-size: 14px; text-align: center; padding: 40px 0;">
                 Nenhuma partitura pública disponível no momento.
             </p>
@@ -2777,8 +2798,8 @@
                 </button>
                 <span class="brand-badge">luksMusic</span>
                 <div class="song-info">
-                    <h1>DARK DREAM (LOTM ED)</h1>
-                    <p>Curley Gao • Arr. lukscli • 70 BPM • 56 Compassos (Completo)</p>
+                    <h1 id="playerSongTitle"></h1>
+                    <p id="playerSongMeta"></p>
                 </div>
             </div>
 
@@ -2817,130 +2838,10 @@
             </div>
         </header>
 
-        <!-- MAIN WORKSPACE: 7 AUTHENTIC MUSESCORE SHEETS + COLLAPSIBLE SIDEBAR -->
+        <!-- MAIN WORKSPACE: ENGRAVED SCORE PAGES + COLLAPSIBLE SIDEBAR -->
         <div class="player-workspace" id="playerWorkspace">
-            <div class="score-scroll-area" id="scoreScrollArea">
-
-            <!-- PAGE 1 (M1 to M9) -->
-            <div class="sheet-paper" id="sheetPage1" data-page="1">
-                <div class="page-badge">1</div>
-                <div class="page-container" id="pageContainer1">
-                    <img src="score_page_1.svg" class="score-svg-img" alt="Página 1">
-                    <div class="page-overlay" id="pageOverlay1">
-                        <div class="active-measure-box" id="measureBox1"></div>
-                        <div class="playback-cursor-line" id="cursorLine1">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip1"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE 2 (M10 to M17) -->
-            <div class="sheet-paper" id="sheetPage2" data-page="2">
-                <div class="page-badge">2</div>
-                <div class="page-container" id="pageContainer2">
-                    <img src="score_page_2.svg" class="score-svg-img" alt="Página 2">
-                    <div class="page-overlay" id="pageOverlay2">
-                        <div class="active-measure-box" id="measureBox2"></div>
-                        <div class="playback-cursor-line" id="cursorLine2">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE 3 (M18 to M23) -->
-            <div class="sheet-paper" id="sheetPage3" data-page="3">
-                <div class="page-badge">3</div>
-                <div class="page-container" id="pageContainer3">
-                    <img src="score_page_3.svg" class="score-svg-img" alt="Página 3">
-                    <div class="page-overlay" id="pageOverlay3">
-                        <div class="active-measure-box" id="measureBox3"></div>
-                        <div class="playback-cursor-line" id="cursorLine3">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip3"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE 4 (M24 to M31) -->
-            <div class="sheet-paper" id="sheetPage4" data-page="4">
-                <div class="page-badge">4</div>
-                <div class="page-container" id="pageContainer4">
-                    <img src="score_page_4.svg" class="score-svg-img" alt="Página 4">
-                    <div class="page-overlay" id="pageOverlay4">
-                        <div class="active-measure-box" id="measureBox4"></div>
-                        <div class="playback-cursor-line" id="cursorLine4">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip4"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE 5 (M32 to M41) -->
-            <div class="sheet-paper" id="sheetPage5" data-page="5">
-                <div class="page-badge">5</div>
-                <div class="page-container" id="pageContainer5">
-                    <img src="score_page_5.svg" class="score-svg-img" alt="Página 5">
-                    <div class="page-overlay" id="pageOverlay5">
-                        <div class="active-measure-box" id="measureBox5"></div>
-                        <div class="playback-cursor-line" id="cursorLine5">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip5"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE 6 (M42 to M49) -->
-            <div class="sheet-paper" id="sheetPage6" data-page="6">
-                <div class="page-badge">6</div>
-                <div class="page-container" id="pageContainer6">
-                    <img src="score_page_6.svg" class="score-svg-img" alt="Página 6">
-                    <div class="page-overlay" id="pageOverlay6">
-                        <div class="active-measure-box" id="measureBox6"></div>
-                        <div class="playback-cursor-line" id="cursorLine6">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip6"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE 7 (M50 to M56) -->
-            <div class="sheet-paper" id="sheetPage7" data-page="7">
-                <div class="page-badge">7</div>
-                <div class="page-container" id="pageContainer7">
-                    <img src="score_page_7.svg" class="score-svg-img" alt="Página 7">
-                    <div class="page-overlay" id="pageOverlay7">
-                        <div class="active-measure-box" id="measureBox7"></div>
-                        <div class="playback-cursor-line" id="cursorLine7">
-                            <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
-                                <div class="cursor-pin-droplet"></div>
-                            </div>
-                            <div class="cursor-notes-tooltip" id="cursorTooltip7"></div>
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- end sheetPage7 -->
-
-            </div> <!-- end scoreScrollArea -->
+            <!-- Pages are built for the open score by buildScorePages() -->
+            <div class="score-scroll-area" id="scoreScrollArea"></div>
 
             <!-- FLOATING SCORE CONTROLS HUD (Zoom, Fullscreen & Piano dock toggle) -->
             <div class="score-floating-hud" id="scoreFloatingHUD">
@@ -2981,7 +2882,7 @@
                 <aside class="musescore-sidebar" id="musescoreSidebar">
                     <!-- Title & Header -->
                     <div class="sidebar-title-row">
-                        <h2 class="sidebar-score-title">Dark Dream – Curley Gao</h2>
+                        <h2 class="sidebar-score-title" id="sidebarScoreTitle"></h2>
                     </div>
 
                     <!-- Author Row -->
@@ -2992,7 +2893,7 @@
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                                 </svg>
                             </div>
-                            <span class="sidebar-author-name">lukscli</span>
+                            <span class="sidebar-author-name" id="sidebarAuthorName"></span>
                             <span id="sidebarAuthorBadge" class="author-badge-pill" style="display: none;">Autor (Você)</span>
                         </div>
                         <button id="sidebarFollowBtn" class="sidebar-btn-follow" title="Seguir o arranjador">+ Seguir</button>
@@ -3014,7 +2915,7 @@
 
                     <!-- Engagement Stats -->
                     <div class="sidebar-stats-row">
-                        <div class="stat-item" id="statViewsItem" title="Visualizações totais da partitura"><span class="stat-icon">👁</span> <span id="statViewsCount">1</span></div>
+                        <div class="stat-item" id="statViewsItem" title="Pessoas que abriram a partitura"><span class="stat-icon">👁</span> <span id="statViewsCount">1</span></div>
                         <div class="stat-item clickable" id="statLikesItem" title="Curtir partitura"><span class="stat-icon" id="statHeartIcon">🤍</span> <span id="statLikesCount">0</span></div>
                         <div class="stat-item clickable" id="statCommentsItem" title="Ver comentários e feedback"><span class="stat-icon">💬</span> <span id="statCommentsCount">0</span></div>
                         <div class="stat-item clickable" id="statRatingItem" title="Ver e avaliar com estrelas"><span class="stat-icon">⭐</span> <span id="statRatingValue">5.0 (1)</span></div>
@@ -3090,13 +2991,19 @@
                     <!-- Tags -->
                     <div class="sidebar-section">
                         <div class="sidebar-section-title">Tags</div>
-                        <div class="sidebar-tags-cloud">
-                            <span class="tag-pill">Advanced</span>
-                            <span class="tag-pill">Soundtrack</span>
-                            <span class="tag-pill">Solo Piano</span>
-                            <span class="tag-pill">Piano</span>
-                            <span class="tag-pill">Piano for Advanced</span>
-                        </div>
+                        <div class="sidebar-tags-cloud" id="sidebarTags"></div>
+                    </div>
+
+                    <!-- Edition source & license -->
+                    <div class="sidebar-section" id="sidebarSourceSection" style="display: none;">
+                        <div class="sidebar-section-title">Edição</div>
+                        <div class="sidebar-source-text" id="sidebarSourceText"></div>
+                    </div>
+
+                    <!-- Other public scores from the library -->
+                    <div class="sidebar-section" id="sidebarOtherScoresSection" style="display: none;">
+                        <div class="sidebar-section-title">Outras partituras</div>
+                        <div class="sidebar-other-scores" id="sidebarOtherScores"></div>
                     </div>
                 </aside>
             </div> <!-- end sidebarWrapper -->
@@ -3109,31 +3016,8 @@
                     <h3>Exportar e Baixar Partitura</h3>
                     <button id="closeExportModalBtn" class="close-modal-btn">✕</button>
                 </div>
-                <div class="export-options-list">
-                    <a href="dark_dream_official.mid" download="Dark_Dream_Curley_Gao.mid" class="export-option-item">
-                        <div class="export-icon midi-icon">🎹</div>
-                        <div class="export-info">
-                            <div class="export-title">Arquivo MIDI (.mid)</div>
-                            <div class="export-desc">Todas as 56 medidas, canais independentes de mão direita e esquerda.</div>
-                        </div>
-                        <span class="export-dl-badge">Baixar</span>
-                    </a>
-                    <a href="dark_dream_audio_clean.mp3" download="Dark_Dream_Curley_Gao.mp3" class="export-option-item">
-                        <div class="export-icon audio-icon">🎵</div>
-                        <div class="export-info">
-                            <div class="export-title">Áudio Master (.mp3 320 kbps)</div>
-                            <div class="export-desc">Gravação completa sem ruídos ou chiados.</div>
-                        </div>
-                        <span class="export-dl-badge">Baixar</span>
-                    </a>
-                    <a href="dark_dream_score.json" download="Dark_Dream_Curley_Gao_Score.json" class="export-option-item">
-                        <div class="export-icon json-icon">🎼</div>
-                        <div class="export-info">
-                            <div class="export-title">Dados da Partitura (.json)</div>
-                            <div class="export-desc">Estrutura vetorial compatível com sintetizadores e sequenciadores.</div>
-                        </div>
-                        <span class="export-dl-badge">Baixar</span>
-                    </a>
+                <div class="export-options-list" id="exportOptionsList">
+                    <!-- Score files from the catalog are inserted before the PDF option -->
                     <button id="exportPdfBtn" class="export-option-item" style="border: none; text-align: left; width: 100%; font-family: inherit;">
                         <div class="export-icon pdf-icon">📄</div>
                         <div class="export-info">
@@ -3201,7 +3085,7 @@
             <div class="mixer-hud-header">
                 <div class="mixer-hud-title">
                     <span>🎛️ Mixer de Mãos</span>
-                    <span class="mixer-subtitle">Balanço independente de Mão Direita & Esquerda</span>
+                    <span class="mixer-subtitle" id="mixerSubtitle">Balanço independente de Mão Direita & Esquerda</span>
                 </div>
                 <button id="closeMixerBtn" class="mixer-close-btn" title="Fechar (X)">✕</button>
             </div>
@@ -3212,8 +3096,8 @@
                         <div class="channel-identity">
                             <span class="channel-clef">𝄞</span>
                             <div>
-                                <div class="channel-title">Mão Direita</div>
-                                <div class="channel-desc">Clave de Sol • Melodia</div>
+                                <div class="channel-title" id="rhChannelTitle">Mão Direita</div>
+                                <div class="channel-desc" id="rhChannelDesc">Clave de Sol • Melodia</div>
                             </div>
                         </div>
                         <div class="channel-actions">
@@ -3234,8 +3118,8 @@
                         <div class="channel-identity">
                             <span class="channel-clef">𝄢</span>
                             <div>
-                                <div class="channel-title">Mão Esquerda</div>
-                                <div class="channel-desc">Clave de Fá • Harmonia & Baixo</div>
+                                <div class="channel-title" id="lhChannelTitle">Mão Esquerda</div>
+                                <div class="channel-desc" id="lhChannelDesc">Clave de Fá • Harmonia & Baixo</div>
                             </div>
                         </div>
                         <div class="channel-actions">
@@ -3267,13 +3151,13 @@
                 </div>
             </div>
             <div class="timeline-bar" id="timelineBar">
-                <span id="timeElapsedDisplay" class="time-display">00:00 / 03:12</span>
-                <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="224" step="0.1" value="0">
-                <span id="measurePill" class="measure-badge-btn">Compasso 1 / 56</span>
+                <span id="timeElapsedDisplay" class="time-display">00:00 / 00:00</span>
+                <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="1" step="0.1" value="0">
+                <span id="measurePill" class="measure-badge-btn">Compasso 1</span>
                 <div id="miniMixerTrigger" class="mini-mixer-pill" title="Clique para abrir o Mixer completo">
-                    <span style="color: var(--accent-cyan);">RH: <b id="miniRhVol">95%</b></span>
+                    <span style="color: var(--accent-cyan);"><span id="miniRhLabel">RH</span>: <b id="miniRhVol">95%</b></span>
                     <span style="color: #64748b;">•</span>
-                    <span style="color: var(--accent-green);">LH: <b id="miniLhVol">90%</b></span>
+                    <span style="color: var(--accent-green);"><span id="miniLhLabel">LH</span>: <b id="miniLhVol">90%</b></span>
                 </div>
             </div>
 
@@ -3285,7 +3169,7 @@
                     <span id="activeNotesText" class="notes-bar-text">Pausado — arraste a linha azul ou dê play para conferir as notas</span>
                 </div>
                 <div class="notes-bar-right">
-                    <span id="activeChordPill" class="active-chord-badge">Curley Gao • LOTM ED</span>
+                    <span id="activeChordPill" class="active-chord-badge"></span>
                 </div>
             </div>
 
@@ -3311,8 +3195,11 @@
             messagingSenderId: "623234251480"
         };
 
-        const AUTHORIZED_LOTM_EMAIL = "lukscli@gmail.com";
+        const AUTHOR_EMAIL = "lukscli@gmail.com";
+        const AUTHOR_ID = "lukscli";
+        const SCORE_CATALOG = window.SCORE_CATALOG || [];
         let currentUser = null;
+        let currentScore = null;
 
         try {
             firebase.initializeApp(firebaseConfig);
@@ -3323,7 +3210,6 @@
         const auth = firebase.auth ? firebase.auth() : null;
         const googleProvider = firebase.auth ? new firebase.auth.GoogleAuthProvider() : null;
         const db = firebase.firestore ? firebase.firestore() : null;
-        const LOTM_PRIVACY_DOC = db ? db.collection('scoreSettings').doc('lotm') : null;
 
         // View Management
         const loginView = document.getElementById("loginView");
@@ -3338,10 +3224,8 @@
         const googleSignInBtn = document.getElementById("googleSignInBtn");
         const loginStatusMsg = document.getElementById("loginStatusMsg");
 
-        const lotmSongCard = document.getElementById("lotmSongCard");
-        const lotmAccessBadge = document.getElementById("lotmAccessBadge");
-        const lotmAccessNotice = document.getElementById("lotmAccessNotice");
-        const openLotmBtn = document.getElementById("openLotmBtn");
+        const songsGrid = document.getElementById("songsGrid");
+        const libraryEmptyNotice = document.getElementById("libraryEmptyNotice");
         const backToLibraryBtn = document.getElementById("backToLibraryBtn");
 
         function showView(viewElement) {
@@ -3355,89 +3239,144 @@
             }
         }
 
+        function isAuthorViewer() {
+            const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
+            return email === AUTHOR_EMAIL;
+        }
+
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatCount(n) {
+            n = n || 0;
+            return n >= 1000 ? (n / 1000).toFixed(1) + 'K' : String(n);
+        }
+
         // -------------------------------------------------------------
         // SCORE PRIVACY: PUBLIC VS PRIVATE MANAGEMENT
         // -------------------------------------------------------------
-        // Visibility lives in Firestore (scoreSettings/lotm) so every visitor sees the author's choice;
-        // the score stays private until that document says otherwise.
-        let scorePrivacy = 'private';
-        let privacyLoaded = !LOTM_PRIVACY_DOC;
-        if (LOTM_PRIVACY_DOC) {
-            LOTM_PRIVACY_DOC.onSnapshot(snap => {
-                scorePrivacy = (snap.exists && snap.data().privacy === 'public') ? 'public' : 'private';
+        // Visibility lives in Firestore (scoreSettings/{scoreId}) so every visitor sees the author's choice;
+        // a score without that document uses its catalog default (copyrighted songs stay private).
+        const scorePrivacyById = {};
+        let privacyLoaded = !db;
+        if (db) {
+            db.collection('scoreSettings').onSnapshot(snap => {
+                Object.keys(scorePrivacyById).forEach(id => delete scorePrivacyById[id]);
+                snap.forEach(doc => { scorePrivacyById[doc.id] = doc.data().privacy; });
                 privacyLoaded = true;
                 updateScorePrivacyUI();
                 openSharedScoreIfPending();
-            }, err => console.warn("Privacy sync error:", err));
+            }, err => {
+                console.warn("Privacy sync error:", err);
+                privacyLoaded = true;
+                updateScorePrivacyUI();
+                openSharedScoreIfPending();
+            });
         }
 
-        // Shared links (?partitura=dark-dream) open the score once the visitor is signed in
-        const LOTM_SCORE_SLUG = 'dark-dream';
-        let pendingSharedScore = new URLSearchParams(location.search).get('partitura') === LOTM_SCORE_SLUG;
+        function privacyOf(score) {
+            const privacy = scorePrivacyById[score.id];
+            return (privacy === 'public' || privacy === 'private') ? privacy : (score.defaultPrivacy || 'private');
+        }
+
+        // Private scores don't appear for anyone but the author
+        function canOpenScore(score) {
+            return privacyOf(score) === 'public' || isAuthorViewer();
+        }
+
+        // Shared links (?partitura=<slug>) open the score once the visitor is signed in
+        let pendingSharedSlug = new URLSearchParams(location.search).get('partitura');
 
         function openSharedScoreIfPending() {
-            if (!pendingSharedScore || !currentUser || !privacyLoaded) return;
-            pendingSharedScore = false;
-            openLotmBtn.click();
+            if (!pendingSharedSlug || !currentUser || !privacyLoaded) return;
+            const score = SCORE_CATALOG.find(s => s.slug === pendingSharedSlug);
+            pendingSharedSlug = null;
+            if (score) openScore(score);
+        }
+
+        function ratingSummary(stats) {
+            const count = (stats && stats.ratingCount) || 0;
+            return { count, avg: count > 0 ? ((stats.ratingSum || 0) / count) : 0 };
+        }
+
+        function renderLibrary() {
+            if (!songsGrid) return;
+            const isOwner = isAuthorViewer();
+            const visible = SCORE_CATALOG.filter(canOpenScore);
+
+            songsGrid.innerHTML = visible.map(score => {
+                const isPublic = privacyOf(score) === 'public';
+                const stats = scoreStats[score.id] || {};
+                const rating = ratingSummary(stats);
+                const badge = isPublic
+                    ? '<span class="badge-access public">🌐 Pública</span>'
+                    : '<span class="badge-access private">🔒 Privada (Sua Conta)</span>';
+                const toggle = isOwner
+                    ? `<button class="btn-privacy-toggle" data-privacy-score="${escapeHtml(score.id)}" title="Alterar visibilidade da partitura (Pública / Privada)">
+                           <span>${isPublic ? '🔒' : '🌐'}</span> <span>${isPublic ? 'Tornar Privada' : 'Tornar Pública'}</span>
+                       </button>`
+                    : '';
+                return `
+                    <div class="song-card">
+                        <div class="song-card-header">
+                            <div>
+                                <h3 class="song-card-title">${escapeHtml(score.title)}</h3>
+                                <p class="song-card-meta">${escapeHtml(score.credits)}</p>
+                            </div>
+                            <div class="privacy-control-box">${badge}${toggle}</div>
+                        </div>
+                        <div class="song-card-details">
+                            <div class="song-detail-item"><span>🎼</span> <span>${score.measures} Compassos</span></div>
+                            <div class="song-detail-item"><span>⏱</span> <span>~${escapeHtml(score.durationLabel)}</span></div>
+                            <div class="song-detail-item"><span>📄</span> <span>${score.pages.length} Páginas</span></div>
+                            <div class="song-detail-item"><span>${score.license ? '📜' : '©'}</span> <span>${escapeHtml(score.license ? score.license.name : 'Uso privado do autor')}</span></div>
+                        </div>
+                        <div class="song-card-stats">
+                            <span title="Curtidas">❤️ ${formatCount(stats.likes)}</span>
+                            <span title="Avaliação média">⭐ ${rating.count ? `${rating.avg.toFixed(1)} (${rating.count})` : '—'}</span>
+                            <span title="Pessoas que abriram">👁 ${formatCount(stats.views)}</span>
+                            <span title="Comentários">💬 ${formatCount(stats.comments)}</span>
+                        </div>
+                        <button class="btn-open-score" data-open-score="${escapeHtml(score.id)}">
+                            <span>▶</span> <span>Abrir Partitura Interativa</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            if (libraryEmptyNotice) libraryEmptyNotice.style.display = visible.length ? 'none' : 'block';
+        }
+
+        if (songsGrid) {
+            songsGrid.addEventListener("click", (e) => {
+                const privacyBtn = e.target.closest("[data-privacy-score]");
+                if (privacyBtn) {
+                    const score = SCORE_CATALOG.find(s => s.id === privacyBtn.dataset.privacyScore);
+                    if (score) toggleScorePrivacy(score);
+                    return;
+                }
+                const openBtn = e.target.closest("[data-open-score]");
+                if (openBtn) {
+                    const score = SCORE_CATALOG.find(s => s.id === openBtn.dataset.openScore);
+                    if (score) openScore(score);
+                }
+            });
         }
 
         function updateScorePrivacyUI() {
-            const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
-            const isOwner = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
-            const isPublic = (scorePrivacy === 'public');
+            renderLibrary();
+            renderOtherScores();
+            if (!currentScore) return;
 
-            // Card Elements
-            const cardPrivacyToggleBtn = document.getElementById('cardPrivacyToggleBtn');
-            const cardPrivacyToggleIcon = document.getElementById('cardPrivacyToggleIcon');
-            const cardPrivacyToggleText = document.getElementById('cardPrivacyToggleText');
-            const lotmPrivacyDetailIcon = document.getElementById('lotmPrivacyDetailIcon');
-            const lotmPrivacyDetailText = document.getElementById('lotmPrivacyDetailText');
-
-            if (cardPrivacyToggleBtn) {
-                cardPrivacyToggleBtn.style.display = isOwner ? 'inline-flex' : 'none';
-                if (cardPrivacyToggleIcon) cardPrivacyToggleIcon.textContent = isPublic ? '🔒' : '🌐';
-                if (cardPrivacyToggleText) cardPrivacyToggleText.textContent = isPublic ? 'Tornar Privada' : 'Tornar Pública';
-            }
-
-            if (lotmPrivacyDetailIcon) lotmPrivacyDetailIcon.textContent = isPublic ? '🌐' : '🔒';
-            if (lotmPrivacyDetailText) lotmPrivacyDetailText.textContent = isPublic ? 'Visibilidade: Pública (Todos)' : 'Visibilidade: Privada (Autor)';
-
-            if (isPublic) {
-                // Anyone can access
-                lotmSongCard.classList.remove("locked");
-                lotmAccessBadge.className = "badge-access public";
-                lotmAccessBadge.innerHTML = "🌐 Pública";
-                lotmAccessNotice.style.display = "none";
-                openLotmBtn.classList.remove("disabled");
-                openLotmBtn.disabled = false;
-                openLotmBtn.innerHTML = "<span>▶</span> <span>Abrir Partitura Interativa</span>";
-            } else {
-                // Private score
-                if (isOwner) {
-                    lotmSongCard.classList.remove("locked");
-                    lotmAccessBadge.className = "badge-access private";
-                    lotmAccessBadge.innerHTML = "🔒 Privada (Sua Conta)";
-                    lotmAccessNotice.style.display = "none";
-                    openLotmBtn.classList.remove("disabled");
-                    openLotmBtn.disabled = false;
-                    openLotmBtn.innerHTML = "<span>▶</span> <span>Abrir Partitura Interativa</span>";
-                } else {
-                    lotmSongCard.classList.add("locked");
-                    lotmAccessBadge.className = "badge-access locked";
-                    lotmAccessBadge.innerHTML = "🔒 Privada";
-                    lotmAccessNotice.style.display = "block";
-                    lotmAccessNotice.innerHTML = "⚠️ Acesso restrito: Esta partitura está configurada como <b>Privada</b> pelo autor (lukscli@gmail.com).";
-                    openLotmBtn.classList.add("disabled");
-                    openLotmBtn.disabled = true;
-                    openLotmBtn.innerHTML = "<span>🔒</span> <span>Acesso Restrito ao Autor</span>";
-                }
-            }
-
-            // Private scores don't appear for anyone but the author
-            const hiddenForViewer = !isPublic && !isOwner;
-            lotmSongCard.style.display = hiddenForViewer ? 'none' : '';
-            const libraryEmptyNotice = document.getElementById('libraryEmptyNotice');
-            if (libraryEmptyNotice) libraryEmptyNotice.style.display = hiddenForViewer ? 'block' : 'none';
+            const isOwner = isAuthorViewer();
+            const isPublic = (privacyOf(currentScore) === 'public');
 
             // Player Sidebar Elements
             const sidebarPrivacyCard = document.getElementById('sidebarPrivacyCard');
@@ -3457,7 +3396,7 @@
                 sidebarPrivacyTitle.textContent = isPublic ? 'Partitura Pública' : 'Partitura Privada';
             }
             if (sidebarPrivacySub) {
-                sidebarPrivacySub.textContent = isPublic 
+                sidebarPrivacySub.textContent = isPublic
                     ? 'Qualquer usuário com acesso à biblioteca pode visualizar e tocar.'
                     : (isOwner ? 'Acessível exclusivamente por você (lukscli@gmail.com).' : 'Acesso restrito ao proprietário.');
             }
@@ -3470,30 +3409,26 @@
 
             // Guard active player view if privacy changed to private while unauthorized
             if (playerView.classList.contains("active-view") && !isPublic && !isOwner) {
-                pausePlayback();
-                showView(libraryView);
+                closePlayer();
                 showToast('A partitura foi definida como privada pelo autor.', '🔒');
             }
         }
 
-        function toggleScorePrivacy() {
-            const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
-            const isOwner = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
-            if (!isOwner) {
+        function toggleScorePrivacy(score) {
+            if (!isAuthorViewer()) {
                 showToast('Apenas o autor (lukscli@gmail.com) pode alterar a privacidade!', '⚠️');
                 return;
             }
 
-            if (!LOTM_PRIVACY_DOC) {
+            if (!db || !score) {
                 showToast('Não foi possível salvar a visibilidade agora.', '⚠️');
                 return;
             }
 
             // The snapshot listener updates the UI (immediately, then again once the server confirms)
-            const nextPrivacy = (scorePrivacy === 'public') ? 'private' : 'public';
-            LOTM_PRIVACY_DOC.set({ privacy: nextPrivacy, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+            const nextPrivacy = (privacyOf(score) === 'public') ? 'private' : 'public';
+            db.collection('scoreSettings').doc(score.id).set({ privacy: nextPrivacy, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
                 .then(() => {
-                    if (typeof updateEngagementUI === 'function') updateEngagementUI();
                     if (nextPrivacy === 'public') {
                         showToast('Partitura definida como PÚBLICA! Qualquer pessoa agora pode acessar.', '🌐');
                     } else {
@@ -3507,10 +3442,12 @@
         }
 
         function updateAuthState(user) {
+            const userChanged = (currentUser ? currentUser.uid : null) !== (user ? user.uid : null);
             currentUser = user;
             if (!user) {
                 // Not authenticated -> show login view
                 pausePlayback();
+                unsubscribeViewerData();
                 showView(loginView);
                 return;
             }
@@ -3530,17 +3467,16 @@
                 userAvatarFallback.innerText = (email.charAt(0) || "U").toUpperCase();
             }
 
+            if (userChanged) subscribeViewerData();
             updateScorePrivacyUI();
-            if (typeof updateEngagementUI === 'function') updateEngagementUI();
+            updateEngagementUI();
 
-            const isAuthorizedForLOTM = (scorePrivacy === 'public') || (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
             // Navigate to library if not already in player
             if (!playerView.classList.contains("active-view")) {
                 showView(libraryView);
-            } else if (!isAuthorizedForLOTM) {
+            } else if (!currentScore || !canOpenScore(currentScore)) {
                 // If in player but not authorized, boot back to library
-                pausePlayback();
-                showView(libraryView);
+                closePlayer();
             }
             openSharedScoreIfPending();
         }
@@ -3613,39 +3549,133 @@
             }
         });
 
-        // Open LOTM Score button in Library
-        openLotmBtn.addEventListener("click", () => {
+        // Score data scripts set window.SCORE_DATA / MEASURE_LAYOUT / NOTE_COLUMNS; they load one at a time
+        // so two scores opened in quick succession never mix their globals.
+        const scoreDataCache = {};
+        let scoreDataQueue = Promise.resolve();
+
+        function loadScoreData(score) {
+            if (scoreDataCache[score.id]) return Promise.resolve(scoreDataCache[score.id]);
+            const load = () => new Promise((resolve, reject) => {
+                if (scoreDataCache[score.id]) return resolve(scoreDataCache[score.id]);
+                const script = document.createElement("script");
+                script.src = score.data;
+                script.onload = () => {
+                    scoreDataCache[score.id] = {
+                        notes: window.SCORE_DATA || [],
+                        layout: window.MEASURE_LAYOUT || [],
+                        columns: window.NOTE_COLUMNS || {}
+                    };
+                    delete window.SCORE_DATA;
+                    delete window.MEASURE_LAYOUT;
+                    delete window.NOTE_COLUMNS;
+                    resolve(scoreDataCache[score.id]);
+                };
+                script.onerror = () => reject(new Error(`Falha ao carregar ${score.data}`));
+                document.head.appendChild(script);
+            });
+            scoreDataQueue = scoreDataQueue.then(load, load);
+            return scoreDataQueue;
+        }
+
+        let openScoreRequest = 0;
+
+        async function openScore(score) {
             if (!currentUser) {
                 showView(loginView);
                 return;
             }
-            const email = (currentUser.email || "").toLowerCase().trim();
-            const isOwner = (email === AUTHORIZED_LOTM_EMAIL.toLowerCase());
-            const isPublic = (scorePrivacy === 'public');
-
-            if (!isPublic && !isOwner) {
+            if (!canOpenScore(score)) {
                 showToast("Esta partitura está configurada como privada pelo autor.", "🔒");
                 return;
             }
+
+            const request = ++openScoreRequest;
+            let data;
+            try {
+                data = await loadScoreData(score);
+            } catch (err) {
+                console.error("Score load error:", err);
+                showToast('Não foi possível carregar a partitura. Tente novamente.', '⚠️');
+                return;
+            }
+            if (request !== openScoreRequest) return;
+
+            pausePlayback();
+            setActiveScore(score, data);
             showView(playerView);
             window.scrollTo(0, 0);
-            if (typeof recordScoreView === 'function') recordScoreView();
-            if (typeof updateEngagementUI === 'function') updateEngagementUI();
-        });
+            if (scoreScrollArea) scoreScrollArea.scrollTop = 0;
+            history.replaceState(null, '', `${location.pathname}?partitura=${encodeURIComponent(score.slug)}`);
+            recordScoreView();
+        }
 
-        // Back to Library button in Player
-        backToLibraryBtn.addEventListener("click", () => {
+        function closePlayer() {
             pausePlayback();
             showView(libraryView);
-        });
+            history.replaceState(null, '', location.pathname);
+        }
+
+        // Back to Library button in Player
+        backToLibraryBtn.addEventListener("click", closePlayer);
 
         // -------------------------------------------------------------
         // 2. SCORE AUDIO & SYNCHRONIZATION ENGINE
         // -------------------------------------------------------------
-        const SCORE_DATA = window.SCORE_DATA || [];
-        const MEASURE_LAYOUT = window.MEASURE_LAYOUT || [];
+        // Data of the open score (set by setActiveScore). Beats are quarter notes; each measure may carry
+        // its own length (`beats`) and tempo (`bpm`), otherwise the score's defaults apply.
+        let SCORE_DATA = [];
+        let MEASURE_LAYOUT = [];
         // Notehead x (page %) of every onset, measured on the engraved SVG pages: { measure: [[beat, xPct], ...] }
-        const NOTE_COLUMNS = window.NOTE_COLUMNS || {};
+        let NOTE_COLUMNS = {};
+        let BASE_BPM = 70;
+        let TOTAL_MEASURES = 0;
+        let TOTAL_BEATS = 0;
+        let TOTAL_SECONDS = 0;
+        let PAGE_COUNT = 0;
+        let measureStartBeat = [];
+        let measureStartSec = [];
+
+        function measureBeats(mIdx) {
+            const m = SCORE_DATA[mIdx];
+            return (m && m.beats) || (currentScore && currentScore.beatsPerMeasure) || 4;
+        }
+
+        function measureBpm(mIdx) {
+            const m = SCORE_DATA[mIdx];
+            return (m && m.bpm) || BASE_BPM;
+        }
+
+        function measureLabel(mIdx) {
+            const m = SCORE_DATA[mIdx];
+            return (m && m.label) || String(mIdx + 1);
+        }
+
+        function computeTimeline() {
+            measureStartBeat = [];
+            measureStartSec = [];
+            let beat = 0;
+            let sec = 0;
+            for (let i = 0; i < TOTAL_MEASURES; i++) {
+                measureStartBeat.push(beat);
+                measureStartSec.push(sec);
+                beat += measureBeats(i);
+                sec += measureBeats(i) * 60.0 / measureBpm(i);
+            }
+            TOTAL_BEATS = beat;
+            TOTAL_SECONDS = sec;
+        }
+
+        // Seconds from the start (at 1x) of `beat` (1-based) inside measure `mIdx`
+        function secondsAt(mIdx, beat) {
+            if (!TOTAL_MEASURES) return 0;
+            return measureStartSec[mIdx] + (beat - 1.0) * 60.0 / measureBpm(mIdx);
+        }
+
+        function currentBeatPosition() {
+            if (!TOTAL_MEASURES) return 0;
+            return measureStartBeat[currentMeasureIdx] + (currentBeat - 1.0);
+        }
 
         // Column of the latest onset at or before `beat`, so the cursor always rests on a notehead
         function cursorColumnAt(mIdx, beat) {
@@ -3875,50 +3905,23 @@
 
         const audio = new ScoreAudioEngine();
 
-        // 61-Key Virtual Piano Keyboard (C2 to C7: MIDI 36 to 96)
+        // Virtual Piano Keyboard: C2 to C7 (MIDI 36 to 96), widened to whole octaves when a score goes beyond
         const keyboardFrame = document.getElementById("pianoKeyboardFrame");
         const bottomDock = document.getElementById("bottomDock");
         const dockResizer = document.getElementById("dockResizer");
         const keyElementsMap = new Map();
 
-        const KEYBOARD_CONFIG = [
-            { midi: 36, white: true, label: "C2" }, { midi: 37, white: false },
-            { midi: 38, white: true }, { midi: 39, white: false },
-            { midi: 40, white: true },
-            { midi: 41, white: true }, { midi: 42, white: false },
-            { midi: 43, white: true }, { midi: 44, white: false },
-            { midi: 45, white: true }, { midi: 46, white: false },
-            { midi: 47, white: true },
-            { midi: 48, white: true, label: "C3" }, { midi: 49, white: false },
-            { midi: 50, white: true }, { midi: 51, white: false },
-            { midi: 52, white: true },
-            { midi: 53, white: true }, { midi: 54, white: false },
-            { midi: 55, white: true }, { midi: 56, white: false },
-            { midi: 57, white: true }, { midi: 58, white: false },
-            { midi: 59, white: true },
-            { midi: 60, white: true, label: "C4" }, { midi: 61, white: false },
-            { midi: 62, white: true }, { midi: 63, white: false },
-            { midi: 64, white: true },
-            { midi: 65, white: true }, { midi: 66, white: false },
-            { midi: 67, white: true }, { midi: 68, white: false },
-            { midi: 69, white: true }, { midi: 70, white: false },
-            { midi: 71, white: true },
-            { midi: 72, white: true, label: "C5" }, { midi: 73, white: false },
-            { midi: 74, white: true }, { midi: 75, white: false },
-            { midi: 76, white: true },
-            { midi: 77, white: true }, { midi: 78, white: false },
-            { midi: 79, white: true }, { midi: 80, white: false },
-            { midi: 81, white: true }, { midi: 82, white: false },
-            { midi: 83, white: true },
-            { midi: 84, white: true, label: "C6" }, { midi: 85, white: false },
-            { midi: 86, white: true }, { midi: 87, white: false },
-            { midi: 88, white: true },
-            { midi: 89, white: true }, { midi: 90, white: false },
-            { midi: 91, white: true }, { midi: 92, white: false },
-            { midi: 93, white: true }, { midi: 94, white: false },
-            { midi: 95, white: true },
-            { midi: 96, white: true, label: "C7" }
-        ];
+        function keyboardConfig(lowMidi, highMidi) {
+            const config = [];
+            for (let midi = lowMidi; midi <= highMidi; midi++) {
+                const pc = midi % 12;
+                const white = [0, 2, 4, 5, 7, 9, 11].includes(pc);
+                config.push(pc === 0 ? { midi, white, label: `C${Math.floor(midi / 12) - 1}` } : { midi, white });
+            }
+            return config;
+        }
+
+        let KEYBOARD_CONFIG = keyboardConfig(36, 96);
 
         function layoutKeyboard(wWidth, wHeight) {
             const bWidth = Math.max(11, Math.round(wWidth * 0.64));
@@ -4101,9 +4104,6 @@
         let loopMode = 'off'; // 'off' | 'segment' | 'song'
         let isMetronomeOn = false;
         let speedMultiplier = 1.0;
-        const BASE_BPM = 70;
-        const TOTAL_MEASURES = 56;
-        const TOTAL_BEATS = TOTAL_MEASURES * 4;
 
         let currentMeasureIdx = 0;
         let currentBeat = 1.0;
@@ -4144,17 +4144,19 @@
         const presetOnlyRHBtn = document.getElementById("presetOnlyRHBtn");
         const presetOnlyLHBtn = document.getElementById("presetOnlyLHBtn");
 
-        const origAudio = new Audio("dark_dream_audio_clean.mp3");
+        // Recording of the open score, when it has one (otherwise the synthesized pianos play the notes)
+        const origAudio = new Audio();
         origAudio.preload = "auto";
-        let useOriginalAudio = true;
-        let currentPianoType = 'original';
+        let useOriginalAudio = false;
+        let currentPianoType = 'musescore_grand';
 
         const audioModeBtn = document.getElementById("audioModeBtn");
         const pianoTypeSelect = document.getElementById("pianoTypeSelect");
         const sidebarPianoSelect = document.getElementById("sidebarPianoSelect");
         const sidebarPianoLabel = document.getElementById("sidebarPianoLabel");
 
-        function applySoundMode(mode, triggerAudition = false) {
+        function applySoundMode(mode, triggerAudition = false, quiet = false) {
+            if (mode === 'original' && !(currentScore && currentScore.audio)) mode = 'musescore_grand';
             currentPianoType = mode;
             if (mode === 'original') {
                 useOriginalAudio = true;
@@ -4165,11 +4167,10 @@
                 }
                 if (sidebarPianoLabel) sidebarPianoLabel.textContent = "Piano: Original";
                 if (isPlaying) {
-                    const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
-                    origAudio.currentTime = Math.max(0, sec);
+                    origAudio.currentTime = Math.max(0, secondsAt(currentMeasureIdx, currentBeat));
                     origAudio.play().catch(e => console.log(e));
                 }
-                showToast("Modo de som: Áudio Original", "🎵");
+                if (!quiet) showToast("Modo de som: Áudio Original", "🎵");
             } else {
                 useOriginalAudio = false;
                 origAudio.pause();
@@ -4181,7 +4182,7 @@
                     audioModeBtn.style.color = "#d8b4fe";
                 }
                 if (sidebarPianoLabel) sidebarPianoLabel.textContent = "Piano: " + pianoName;
-                showToast("Tipo de piano: " + pianoName, "🎹");
+                if (!quiet) showToast("Tipo de piano: " + pianoName, "🎹");
                 if (triggerAudition) {
                     audio.audition(mode);
                 }
@@ -4305,7 +4306,7 @@
                 loopBtn.classList.add("loop-segment-active");
                 loopBtn.innerHTML = "🔂 Loop: Segmento";
                 loopBtn.title = "Loop do Segmento/Compasso Atual (L) • Clique para Modo Música Inteira";
-                if (showNotification) showToast(`Loop: Repetindo Compasso ${currentMeasureIdx + 1}`, "🔂");
+                if (showNotification) showToast(`Loop: Repetindo Compasso ${measureLabel(currentMeasureIdx)}`, "🔂");
             } else if (loopMode === "song") {
                 loopBtn.classList.add("loop-song-active");
                 loopBtn.innerHTML = "🔁 Loop: Música";
@@ -4347,6 +4348,7 @@
         // NOTE INSPECTION & REAL-TIME DRAGGABLE PLAYHEAD ENGINE
         // =============================================================
         function getNoteDurationInBeats(n) {
+            if (typeof n.len === "number") return n.len;
             if (n.triplet) return 1.0 / 3.0;
             switch (n.dur) {
                 case "whole": return 4.0;
@@ -4456,7 +4458,7 @@
 
             const textEl = document.getElementById("activeNotesText");
             if (textEl) {
-                textEl.innerHTML = `<span class="rh-note">Mão Dir (Clave Sol):</span> ${rhStr} &nbsp;•&nbsp; <span class="lh-note">Mão Esq (Clave Fá):</span> ${lhStr}`;
+                textEl.innerHTML = `<span class="rh-note">${channelLabels.treble.notes}:</span> ${rhStr} &nbsp;•&nbsp; <span class="lh-note">${channelLabels.bass.notes}:</span> ${lhStr}`;
             }
 
             const mNum = currentMeasureIdx + 1;
@@ -4466,7 +4468,7 @@
             if (tooltip) {
                 const rhShort = active.trebleMidi.map(m => midiToNoteName(m).split(" ")[0]).join(", ") || "—";
                 const lhShort = active.bassMidi.map(m => midiToNoteName(m).split(" ")[0]).join(", ") || "—";
-                tooltip.textContent = `C.${mNum} (T.${cursorBeat.toFixed(1)}) • RH: ${rhShort} | LH: ${lhShort}`;
+                tooltip.textContent = `C.${measureLabel(currentMeasureIdx)} (T.${cursorBeat.toFixed(1)}) • ${channelLabels.treble.short}: ${rhShort} | ${channelLabels.bass.short}: ${lhShort}`;
                 tooltip.style.display = isScrubbing || !isPlaying ? "block" : "none";
             }
 
@@ -4532,14 +4534,15 @@
             // Snap to the note closest to the click
             const cols = NOTE_COLUMNS[matchM.number];
             const beatFrac = Math.max(0, Math.min(1.0, (clickXPct - matchM.left_pct) / matchM.width_pct));
+            const mIdx = matchM.number - 1;
             const beat = (cols && cols.length)
                 ? cols.reduce((best, c) => Math.abs(c[1] - clickXPct) < Math.abs(best[1] - clickXPct) ? c : best)[0]
-                : 1.0 + beatFrac * 4.0;
+                : 1.0 + beatFrac * measureBeats(mIdx);
             return {
                 measure: matchM,
-                measureIdx: matchM.number - 1,
+                measureIdx: mIdx,
                 beat: beat,
-                totalBeats: (matchM.number - 1) * 4 + (beat - 1.0)
+                totalBeats: measureStartBeat[mIdx] + (beat - 1.0)
             };
         }
 
@@ -4580,7 +4583,7 @@
             document.body.style.userSelect = '';
             updateActiveNotesUI(false);
             setTimeout(() => {
-                for (let p = 1; p <= 7; p++) {
+                for (let p = 1; p <= PAGE_COUNT; p++) {
                     const tip = document.getElementById(`cursorTooltip${p}`);
                     if (tip && !isScrubbing && isPlaying) tip.style.display = 'none';
                 }
@@ -4596,24 +4599,45 @@
         window.addEventListener("pointerup", stopScrubbing);
         window.addEventListener("pointercancel", stopScrubbing);
 
-        for (let p = 1; p <= 7; p++) {
-            const overlay = document.getElementById(`pageOverlay${p}`);
-            if (overlay) {
-                overlay.addEventListener("pointerdown", (e) => {
+        // Engraved pages of the open score, each with its overlay for the measure box, cursor and scrubbing
+        function buildScorePages(score) {
+            scoreScrollArea.innerHTML = "";
+            score.pages.forEach((src, i) => {
+                const p = i + 1;
+                const page = document.createElement("div");
+                page.className = "sheet-paper";
+                page.id = `sheetPage${p}`;
+                page.dataset.page = p;
+                page.innerHTML = `
+                    <div class="page-badge">${p}</div>
+                    <div class="page-container" id="pageContainer${p}">
+                        <img src="${escapeHtml(src)}" class="score-svg-img" alt="Página ${p}">
+                        <div class="page-overlay" id="pageOverlay${p}">
+                            <div class="active-measure-box" id="measureBox${p}"></div>
+                            <div class="playback-cursor-line" id="cursorLine${p}">
+                                <div class="cursor-drag-pin" title="Arraste para mover o cursor e inspecionar notas">
+                                    <div class="cursor-pin-droplet"></div>
+                                </div>
+                                <div class="cursor-notes-tooltip" id="cursorTooltip${p}"></div>
+                            </div>
+                        </div>
+                    </div>`;
+                scoreScrollArea.appendChild(page);
+
+                page.querySelector(".page-overlay").addEventListener("pointerdown", (e) => {
                     if (e.button !== 0 && e.pointerType === "mouse") return;
                     startScrubbing(p, e.clientX, e.clientY);
                 });
-            }
-            const curLine = document.getElementById(`cursorLine${p}`);
-            if (curLine) {
-                curLine.addEventListener("pointerdown", (e) => {
+                page.querySelector(".playback-cursor-line").addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
                     startScrubbing(p, e.clientX, e.clientY);
                 });
-            }
+            });
         }
 
         window.addEventListener("keydown", (e) => {
+            // Typing in the comment box or another field is not a shortcut
+            if (e.target.closest && e.target.closest("input, textarea, select")) return;
             if (e.code === "Space") {
                 if (playerView.classList.contains("active-view")) {
                     e.preventDefault();
@@ -4641,13 +4665,13 @@
         });
 
         function startPlayback() {
+            if (!TOTAL_MEASURES) return;
             isPlaying = true;
             playBtn.innerHTML = "⏸";
             const fsPlayIcon = document.getElementById("fsPlayIcon");
             if (fsPlayIcon) fsPlayIcon.textContent = "⏸";
             if (useOriginalAudio) {
-                const sec = (currentMeasureIdx * 4 + (currentBeat - 1.0)) * (60.0 / BASE_BPM);
-                origAudio.currentTime = Math.max(0, sec);
+                origAudio.currentTime = Math.max(0, secondsAt(currentMeasureIdx, currentBeat));
                 origAudio.play().catch(e => console.log("Audio autoplay prevented:", e));
             }
             lastTimestamp = performance.now();
@@ -4672,14 +4696,16 @@
         }
 
         function seekToBeat(totalBeats, playSound = false) {
-            if (origAudio) {
-                origAudio.currentTime = Math.max(0, totalBeats * (60.0 / BASE_BPM));
-            }
-            const mIdx = Math.min(TOTAL_MEASURES - 1, Math.max(0, Math.floor(totalBeats / 4)));
-            const beatInM = 1.0 + (totalBeats % 4);
+            if (!TOTAL_MEASURES) return;
+            totalBeats = Math.max(0, Math.min(TOTAL_BEATS - 0.001, totalBeats));
+            let mIdx = 0;
+            while (mIdx + 1 < TOTAL_MEASURES && measureStartBeat[mIdx + 1] <= totalBeats) mIdx++;
 
             currentMeasureIdx = mIdx;
-            currentBeat = beatInM;
+            currentBeat = 1.0 + (totalBeats - measureStartBeat[mIdx]);
+            if (origAudio && useOriginalAudio) {
+                origAudio.currentTime = Math.max(0, secondsAt(mIdx, currentBeat));
+            }
             playedNotesSet.clear();
             lastMetroBeatInt = Math.floor(currentBeat);
 
@@ -4694,14 +4720,15 @@
             const dt = (timestamp - lastTimestamp) / 1000.0;
             lastTimestamp = timestamp;
 
-            const currentBPM = BASE_BPM * speedMultiplier;
+            const currentBPM = measureBpm(currentMeasureIdx) * speedMultiplier;
             const deltaBeats = (currentBPM / 60.0) * dt;
+            const beatsInMeasure = measureBeats(currentMeasureIdx);
 
             const prevBeat = currentBeat;
             currentBeat += deltaBeats;
 
             const currentBeatInt = Math.floor(currentBeat);
-            if (currentBeatInt !== lastMetroBeatInt && currentBeatInt >= 1 && currentBeatInt <= 4) {
+            if (currentBeatInt !== lastMetroBeatInt && currentBeatInt >= 1 && currentBeatInt <= beatsInMeasure) {
                 lastMetroBeatInt = currentBeatInt;
                 if (isMetronomeOn) {
                     const isDownbeat = (currentBeatInt === 1);
@@ -4712,21 +4739,20 @@
                 }
             }
 
-            if (currentBeat >= 5.0) {
+            if (currentBeat >= 1.0 + beatsInMeasure) {
                 if (loopMode === "segment") {
                     currentBeat = 1.0;
                     playedNotesSet.clear();
                     lastMetroBeatInt = 1;
 
                     if (useOriginalAudio) {
-                        const sec = currentMeasureIdx * 4 * (60.0 / BASE_BPM);
-                        origAudio.currentTime = Math.max(0, sec);
+                        origAudio.currentTime = Math.max(0, secondsAt(currentMeasureIdx, 1.0));
                         origAudio.play().catch(e => console.log(e));
                     }
                     triggerNotesInMeasure(currentMeasureIdx, 0.95, currentBeat + 0.05);
                 } else {
                     currentMeasureIdx++;
-                    currentBeat = 1.0 + (currentBeat - 5.0);
+                    currentBeat = 1.0 + (currentBeat - (1.0 + beatsInMeasure));
                     playedNotesSet.clear();
                     lastMetroBeatInt = 1;
 
@@ -4764,7 +4790,9 @@
                     const key = `t-${mIdx}-${idx}-${n.beat}`;
                     if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
                         playedNotesSet.add(key);
-                        const dur = n.dur === "16th" ? 0.22 : (n.dur === "dottedQuarter" ? 1.0 : 0.55);
+                        const dur = typeof n.len === "number"
+                            ? Math.min(2.5, Math.max(0.15, n.len * 60.0 / measureBpm(mIdx)))
+                            : (n.dur === "16th" ? 0.22 : (n.dur === "dottedQuarter" ? 1.0 : 0.55));
                         if (!useOriginalAudio) {
                             audio.playChord(n.chord, dur, n.triplet ? 0.8 : 0.95, true);
                         }
@@ -4778,7 +4806,9 @@
                     const key = `b-${mIdx}-${idx}-${n.beat}`;
                     if (n.beat > startB && n.beat <= endB && !playedNotesSet.has(key)) {
                         playedNotesSet.add(key);
-                        const dur = n.dur === "16th" ? 0.25 : 0.75;
+                        const dur = typeof n.len === "number"
+                            ? Math.min(2.5, Math.max(0.15, n.len * 60.0 / measureBpm(mIdx)))
+                            : (n.dur === "16th" ? 0.25 : 0.75);
                         if (!useOriginalAudio) {
                             audio.playChord(n.chord, dur, 0.85, false);
                         }
@@ -4789,20 +4819,21 @@
         }
 
         function updateScrubberAndDisplay() {
-            const totalBeats = currentMeasureIdx * 4 + (currentBeat - 1.0);
-            timelineSlider.value = totalBeats;
+            if (!TOTAL_MEASURES) return;
+            timelineSlider.value = currentBeatPosition();
 
-            const totalDurationSec = (TOTAL_BEATS / (BASE_BPM * speedMultiplier)) * 60;
-            const elapsedSec = (totalBeats / (BASE_BPM * speedMultiplier)) * 60;
+            const totalDurationSec = TOTAL_SECONDS / speedMultiplier;
+            const elapsedSec = secondsAt(currentMeasureIdx, currentBeat) / speedMultiplier;
 
             const fmt = (s) => {
+                s = Math.floor(s + 1e-6);
                 const min = Math.floor(s / 60);
-                const sec = Math.floor(s % 60);
+                const sec = s % 60;
                 return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
             };
 
             timeElapsedDisplay.innerText = `${fmt(elapsedSec)} / ${fmt(totalDurationSec)}`;
-            measurePill.innerText = `Compasso ${currentMeasureIdx + 1} / ${TOTAL_MEASURES}`;
+            measurePill.innerText = `Compasso ${measureLabel(currentMeasureIdx)} / ${measureLabel(TOTAL_MEASURES - 1)}`;
         }
 
         function updateScorePlayhead() {
@@ -4813,7 +4844,7 @@
             const targetPage = mDef.page;
 
             // Always display active box and cursor on targetPage, even when paused!
-            for (let p = 1; p <= 7; p++) {
+            for (let p = 1; p <= PAGE_COUNT; p++) {
                 const box = document.getElementById(`measureBox${p}`);
                 const cur = document.getElementById(`cursorLine${p}`);
                 if (p === targetPage) {
@@ -4845,7 +4876,7 @@
             box.style.height = `${mDef.height_pct + padH}%`;
 
             const col = cursorColumnAt(currentMeasureIdx, currentBeat);
-            const beatFrac = Math.max(0, Math.min(1.0, (currentBeat - 1.0) / 4.0));
+            const beatFrac = Math.max(0, Math.min(1.0, (currentBeat - 1.0) / measureBeats(currentMeasureIdx)));
             const curLeftPct = col ? col[1] : mDef.left_pct + beatFrac * mDef.width_pct;
             cur.style.left = `${curLeftPct}%`;
             cur.style.top = `${Math.max(0, mDef.top_pct - padTop)}%`;
@@ -4910,74 +4941,290 @@
         }
 
         // =============================================================
-        // REAL ENGAGEMENT DATA & STORE
+        // ACTIVE SCORE: HEADER, SIDEBAR, DOWNLOADS & SUGGESTIONS
         // =============================================================
-        const ENGAGEMENT_STORAGE_KEY = 'luksmusic_score_lotm_engagement_v2';
+        const playerSongTitle = document.getElementById('playerSongTitle');
+        const playerSongMeta = document.getElementById('playerSongMeta');
+        const sidebarScoreTitle = document.getElementById('sidebarScoreTitle');
+        const sidebarAuthorName = document.getElementById('sidebarAuthorName');
+        const sidebarTags = document.getElementById('sidebarTags');
+        const sidebarSourceSection = document.getElementById('sidebarSourceSection');
+        const sidebarSourceText = document.getElementById('sidebarSourceText');
+        const sidebarOtherScoresSection = document.getElementById('sidebarOtherScoresSection');
+        const sidebarOtherScores = document.getElementById('sidebarOtherScores');
+        const exportOptionsList = document.getElementById('exportOptionsList');
+        const activeChordPill = document.getElementById('activeChordPill');
 
-        function getEngagementData() {
-            try {
-                const raw = localStorage.getItem(ENGAGEMENT_STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && typeof parsed === 'object') {
-                        if (!Array.isArray(parsed.likes)) parsed.likes = [];
-                        if (!Array.isArray(parsed.favorites)) parsed.favorites = [];
-                        if (!Array.isArray(parsed.comments)) parsed.comments = [];
-                        if (!parsed.ratings || typeof parsed.ratings !== 'object') parsed.ratings = {};
-                        if (!Array.isArray(parsed.following)) parsed.following = [];
-                        if (typeof parsed.views !== 'number') parsed.views = 1;
-                        return parsed;
-                    }
-                }
-            } catch(e) {
-                console.error("Erro ao ler engajamento:", e);
-            }
-            const initialData = {
-                views: 1,
-                likes: ["lukscli@gmail.com"],
-                favorites: ["lukscli@gmail.com"],
-                ratings: { "lukscli@gmail.com": 5 },
-                comments: [
-                    {
-                        id: "c_init_luks",
-                        authorEmail: "lukscli@gmail.com",
-                        authorName: "lukscli",
-                        text: "Arranjo oficial para piano solo de Dark Dream (LOTM ED). 56 compassos com canais independentes de mão direita e esquerda. Bom treino a todos!",
-                        timestamp: 1729900000000
-                    }
-                ],
-                following: []
+        // The "treble" and "bass" channels are the two hands, or Primo and Secondo in a piano duet
+        const DEFAULT_CHANNELS = {
+            treble: { name: "Mão Direita", notes: "Mão Dir (Clave Sol)", desc: "Clave de Sol • Melodia", preset: "Só M. Direita", short: "RH" },
+            bass: { name: "Mão Esquerda", notes: "Mão Esq (Clave Fá)", desc: "Clave de Fá • Harmonia & Baixo", preset: "Só M. Esquerda", short: "LH" }
+        };
+        let channelLabels = DEFAULT_CHANNELS;
+
+        function applyChannelLabels(score) {
+            const custom = score.channels || {};
+            channelLabels = {
+                treble: { ...DEFAULT_CHANNELS.treble, ...custom.treble },
+                bass: { ...DEFAULT_CHANNELS.bass, ...custom.bass }
             };
-            saveEngagementData(initialData);
-            return initialData;
+            const { treble, bass } = channelLabels;
+            document.getElementById('mixerSubtitle').textContent = score.channels
+                ? `Balanço independente de ${treble.name} & ${bass.name}`
+                : 'Balanço independente de Mão Direita & Esquerda';
+            document.getElementById('rhChannelTitle').textContent = treble.name;
+            document.getElementById('rhChannelDesc').textContent = treble.desc;
+            document.getElementById('lhChannelTitle').textContent = bass.name;
+            document.getElementById('lhChannelDesc').textContent = bass.desc;
+            document.getElementById('miniRhLabel').textContent = treble.short;
+            document.getElementById('miniLhLabel').textContent = bass.short;
+            presetOnlyRHBtn.textContent = treble.preset;
+            presetOnlyLHBtn.textContent = bass.preset;
+            rhMuteBtn.title = `Mutar ${treble.name}`;
+            rhSoloBtn.title = `Solar ${treble.name}`;
+            lhMuteBtn.title = `Mutar ${bass.name}`;
+            lhSoloBtn.title = `Solar ${bass.name}`;
         }
 
-        function saveEngagementData(data) {
-            try {
-                localStorage.setItem(ENGAGEMENT_STORAGE_KEY, JSON.stringify(data));
-            } catch(e) {
-                console.error("Erro ao salvar engajamento:", e);
+        function setActiveScore(score, data) {
+            unsubscribeScoreEngagement();
+            currentScore = score;
+            SCORE_DATA = data.notes;
+            MEASURE_LAYOUT = data.layout;
+            NOTE_COLUMNS = data.columns;
+            BASE_BPM = score.bpm;
+            TOTAL_MEASURES = SCORE_DATA.length;
+            PAGE_COUNT = score.pages.length;
+            computeTimeline();
+            timelineSlider.max = TOTAL_BEATS;
+
+            buildScorePages(score);
+            fitKeyboardToScore();
+            applyChannelLabels(score);
+
+            playerSongTitle.textContent = score.title;
+            playerSongMeta.textContent = `${score.credits} • ${score.bpm} BPM • ${TOTAL_MEASURES} Compassos`;
+            sidebarScoreTitle.textContent = score.sidebarTitle;
+            sidebarAuthorName.textContent = score.arranger;
+            activeChordPill.textContent = score.shortCredits;
+            document.title = `${score.sidebarTitle} - luksMusic`;
+
+            sidebarTags.innerHTML = (score.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
+
+            if (score.license) {
+                sidebarSourceText.innerHTML = `${escapeHtml(score.edition)}`
+                    + (score.editionUrl ? `<br><a href="${escapeHtml(score.editionUrl)}" target="_blank" rel="noopener">Edição digital original</a>` : '')
+                    + `<br>Licença: <a href="${escapeHtml(score.license.url)}" target="_blank" rel="noopener">${escapeHtml(score.license.name)}</a>`;
+                sidebarSourceSection.style.display = '';
+            } else {
+                sidebarSourceSection.style.display = 'none';
             }
-        }
 
-        function getUserIdentity() {
-            if (currentUser && currentUser.email) {
-                const email = currentUser.email.toLowerCase().trim();
-                const name = (currentUser.displayName || email.split('@')[0] || 'Usuário').trim();
-                return { email, name, isAuth: true };
+            exportOptionsList.querySelectorAll('a.export-option-item').forEach(a => a.remove());
+            const pdfBtn = document.getElementById('exportPdfBtn');
+            (score.downloads || []).forEach(d => {
+                const a = document.createElement('a');
+                a.className = 'export-option-item';
+                a.href = d.href;
+                a.download = d.filename;
+                a.innerHTML = `
+                    <div class="export-icon ${escapeHtml(d.iconClass)}">${escapeHtml(d.icon)}</div>
+                    <div class="export-info">
+                        <div class="export-title">${escapeHtml(d.title)}</div>
+                        <div class="export-desc">${escapeHtml(d.desc)}</div>
+                    </div>
+                    <span class="export-dl-badge">Baixar</span>`;
+                exportOptionsList.insertBefore(a, pdfBtn);
+            });
+
+            // Only scores with a recording offer "Áudio Original"
+            origAudio.pause();
+            if (score.audio) {
+                origAudio.src = score.audio;
+            } else {
+                origAudio.removeAttribute('src');
+                origAudio.load();
             }
-            return { email: 'visitante@luksmusic.local', name: 'Visitante', isAuth: false };
-        }
-
-        function recordScoreView() {
-            try {
-                if (!sessionStorage.getItem('luksmusic_score_lotm_viewed')) {
-                    sessionStorage.setItem('luksmusic_score_lotm_viewed', '1');
-                    const data = getEngagementData();
-                    data.views = (data.views || 0) + 1;
-                    saveEngagementData(data);
+            [pianoTypeSelect, sidebarPianoSelect].forEach(sel => {
+                const opt = sel && sel.querySelector('option[value="original"]');
+                if (opt) {
+                    opt.hidden = !score.audio;
+                    opt.disabled = !score.audio;
                 }
-            } catch(e) {}
+            });
+            if (audioModeBtn) audioModeBtn.style.display = score.audio ? '' : 'none';
+            applySoundMode(score.audio ? 'original' : 'musescore_grand', false, true);
+
+            loopMode = 'off';
+            updateLoopButtonUI(false);
+            lastActivePage = 1;
+            lastPlayedScrubChord = "";
+            seekToBeat(0);
+            if (isFitWidth) setSheetWidth(getFitWidth(), true, false);
+
+            subscribeScoreEngagement();
+            updateScorePrivacyUI();
+            updateEngagementUI();
+        }
+
+        // Widen the virtual keyboard to whole octaves when the score goes beyond C2–C7
+        function fitKeyboardToScore() {
+            let low = 36;
+            let high = 96;
+            SCORE_DATA.forEach(m => {
+                [...(m.treble || []), ...(m.bass || [])].forEach(n => (n.chord || []).forEach(midi => {
+                    low = Math.min(low, midi);
+                    high = Math.max(high, midi);
+                }));
+            });
+            low = Math.max(21, low - (low % 12));
+            high = Math.min(108, high + ((12 - (high % 12)) % 12));
+            const first = KEYBOARD_CONFIG[0].midi;
+            const last = KEYBOARD_CONFIG[KEYBOARD_CONFIG.length - 1].midi;
+            if (low === first && high === last) return;
+            KEYBOARD_CONFIG = keyboardConfig(low, high);
+            buildKeyboardDOM();
+            applyDockHeight(bottomDock.offsetHeight || 142, false);
+        }
+
+        // "Outras partituras": the other scores this visitor can open, best rated first
+        function renderOtherScores() {
+            if (!sidebarOtherScores || !sidebarOtherScoresSection) return;
+            const others = SCORE_CATALOG
+                .filter(s => (!currentScore || s.id !== currentScore.id) && canOpenScore(s))
+                .map(s => ({ score: s, stats: scoreStats[s.id] || {} }))
+                .sort((a, b) => (ratingSummary(b.stats).avg - ratingSummary(a.stats).avg) || ((b.stats.likes || 0) - (a.stats.likes || 0)));
+
+            sidebarOtherScoresSection.style.display = others.length ? '' : 'none';
+            sidebarOtherScores.innerHTML = others.map(({ score, stats }) => {
+                const rating = ratingSummary(stats);
+                return `
+                    <button class="other-score-item" data-open-score="${escapeHtml(score.id)}" title="Abrir ${escapeHtml(score.sidebarTitle)}">
+                        <span class="other-score-title">${escapeHtml(score.sidebarTitle)}</span>
+                        <span class="other-score-meta">${escapeHtml(score.credits)}</span>
+                        <span class="other-score-meta">❤️ ${formatCount(stats.likes)} • ⭐ ${rating.count ? rating.avg.toFixed(1) : '—'} • 👁 ${formatCount(stats.views)}</span>
+                    </button>`;
+            }).join('');
+        }
+
+        if (sidebarOtherScores) {
+            sidebarOtherScores.addEventListener('click', (e) => {
+                const item = e.target.closest('[data-open-score]');
+                if (!item) return;
+                const score = SCORE_CATALOG.find(s => s.id === item.dataset.openScore);
+                if (score) openScore(score);
+            });
+        }
+
+        // =============================================================
+        // SHARED ENGAGEMENT (FIRESTORE)
+        // =============================================================
+        // scores/{scoreId} holds the public totals, scores/{scoreId}/users/{uid} this visitor's view, like,
+        // favorite and rating, and scores/{scoreId}/comments the comments. The rules only accept writes
+        // that move the totals by the visitor's own change, so every visitor sees the same numbers.
+        const scoreStats = {};
+        let myVisitor = {};
+        let currentComments = [];
+        let isFollowingAuthor = false;
+        let scoreEngagementUnsubs = [];
+        let followUnsub = null;
+
+        function scoreRef(score) {
+            return db.collection('scores').doc(score.id);
+        }
+
+        if (db) {
+            SCORE_CATALOG.forEach(score => {
+                scoreRef(score).onSnapshot(snap => {
+                    scoreStats[score.id] = snap.exists ? snap.data() : {};
+                    renderLibrary();
+                    renderOtherScores();
+                    if (currentScore && currentScore.id === score.id) updateEngagementUI();
+                }, err => console.warn("Stats sync error:", err));
+            });
+        }
+
+        function unsubscribeScoreEngagement() {
+            scoreEngagementUnsubs.forEach(unsub => unsub());
+            scoreEngagementUnsubs = [];
+            myVisitor = {};
+            currentComments = [];
+        }
+
+        function subscribeScoreEngagement() {
+            unsubscribeScoreEngagement();
+            if (!db || !currentScore || !currentUser) return;
+            const ref = scoreRef(currentScore);
+            scoreEngagementUnsubs.push(ref.collection('users').doc(currentUser.uid).onSnapshot(snap => {
+                myVisitor = snap.exists ? snap.data() : {};
+                updateEngagementUI();
+            }, err => console.warn("Visitor sync error:", err)));
+            scoreEngagementUnsubs.push(ref.collection('comments').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
+                currentComments = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+                updateEngagementUI();
+            }, err => console.warn("Comments sync error:", err)));
+        }
+
+        // Follow state of the signed-in visitor plus the open score's engagement
+        function subscribeViewerData() {
+            if (followUnsub) followUnsub();
+            followUnsub = null;
+            isFollowingAuthor = false;
+            if (db && currentUser) {
+                followUnsub = db.collection('authors').doc(AUTHOR_ID).collection('followers').doc(currentUser.uid).onSnapshot(snap => {
+                    isFollowingAuthor = snap.exists;
+                    updateEngagementUI();
+                }, err => console.warn("Follow sync error:", err));
+            }
+            subscribeScoreEngagement();
+        }
+
+        function unsubscribeViewerData() {
+            if (followUnsub) followUnsub();
+            followUnsub = null;
+            isFollowingAuthor = false;
+            unsubscribeScoreEngagement();
+        }
+
+        function engagementError(err) {
+            console.error("Engagement save error:", err);
+            showToast('Não foi possível salvar agora. Tente novamente.', '⚠️');
+        }
+
+        function canEngage(message) {
+            if (currentUser && db && currentScore) return true;
+            showToast(message, '🔒');
+            return false;
+        }
+
+        // Applies this visitor's change and the matching deltas on the score totals in one transaction
+        function updateVisitor(change) {
+            const ref = scoreRef(currentScore);
+            const visitorRef = ref.collection('users').doc(currentUser.uid);
+            const inc = firebase.firestore.FieldValue.increment;
+            const one = v => (v ? 1 : 0);
+            return db.runTransaction(async t => {
+                const snap = await t.get(visitorRef);
+                const before = snap.exists ? snap.data() : {};
+                const prev = { viewed: !!before.viewed, liked: !!before.liked, favorited: !!before.favorited, rating: before.rating || 0 };
+                const next = { ...prev, ...change(prev) };
+                if (snap.exists && Object.keys(prev).every(k => prev[k] === next[k])) return next;
+                t.set(visitorRef, { ...next, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                t.set(ref, {
+                    views: inc(one(next.viewed) - one(prev.viewed)),
+                    likes: inc(one(next.liked) - one(prev.liked)),
+                    favorites: inc(one(next.favorited) - one(prev.favorited)),
+                    ratingCount: inc(one(next.rating > 0) - one(prev.rating > 0)),
+                    ratingSum: inc(next.rating - prev.rating)
+                }, { merge: true });
+                return next;
+            });
+        }
+
+        // Each signed-in visitor counts once per score
+        function recordScoreView() {
+            if (!currentUser || !db || !currentScore) return;
+            updateVisitor(() => ({ viewed: true })).catch(err => console.warn("View record error:", err));
         }
 
         function updateStarVisuals(val) {
@@ -4994,20 +5241,10 @@
             });
         }
 
-        function escapeCommentHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-
-        function renderCommentsList(data) {
+        function renderCommentsList() {
             if (!commentsList) return;
-            const ident = getUserIdentity();
-            const comments = data.comments || [];
+            const comments = currentComments;
+            const isOwner = isAuthorViewer();
 
             if (modalCommentsCountHeader) {
                 modalCommentsCountHeader.textContent = comments.length;
@@ -5018,33 +5255,31 @@
                 return;
             }
 
-            const sorted = [...comments].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            commentsList.innerHTML = comments.map(c => {
+                const canDelete = !!currentUser && (c.uid === currentUser.uid || isOwner);
+                const name = c.authorName || 'Usuário';
+                const initial = name.charAt(0).toUpperCase();
 
-            commentsList.innerHTML = sorted.map(c => {
-                const isAuthorOfSong = (c.authorEmail.toLowerCase() === AUTHORIZED_LOTM_EMAIL.toLowerCase());
-                const canDelete = ident.isAuth && (c.authorEmail.toLowerCase() === ident.email);
-                const initial = (c.authorName || c.authorEmail || 'U').charAt(0).toUpperCase();
-
-                const dateObj = new Date(c.timestamp || Date.now());
-                const dateStr = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) + 
+                const dateObj = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : new Date();
+                const dateStr = dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) +
                                 ' às ' + dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
                 return `
-                    <div class="comment-item" id="comment_${c.id}">
+                    <div class="comment-item">
                         <div class="comment-item-header">
                             <div class="comment-user-box">
-                                <div class="comment-avatar">${initial}</div>
+                                <div class="comment-avatar">${escapeHtml(initial)}</div>
                                 <div>
                                     <div class="comment-author-name">
-                                        <span>${escapeCommentHtml(c.authorName || c.authorEmail)}</span>
-                                        ${isAuthorOfSong ? '<span class="author-badge-pill">Autor</span>' : ''}
+                                        <span>${escapeHtml(name)}</span>
+                                        ${c.isAuthor ? '<span class="author-badge-pill">Autor</span>' : ''}
                                     </div>
                                     <div class="comment-date">${dateStr}</div>
                                 </div>
                             </div>
-                            ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${c.id}" title="Excluir seu comentário">🗑️ Excluir</button>` : ''}
+                            ${canDelete ? `<button class="comment-delete-btn" data-comment-id="${escapeHtml(c.id)}" title="Excluir comentário">🗑️ Excluir</button>` : ''}
                         </div>
-                        <div class="comment-body">${escapeCommentHtml(c.text)}</div>
+                        <div class="comment-body">${escapeHtml(c.text)}</div>
                     </div>
                 `;
             }).join('');
@@ -5052,48 +5287,40 @@
             commentsList.querySelectorAll('.comment-delete-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const commentId = btn.getAttribute('data-comment-id');
-                    deleteComment(commentId);
+                    deleteComment(btn.getAttribute('data-comment-id'));
                 });
             });
         }
 
         function updateEngagementUI() {
-            const data = getEngagementData();
-            const ident = getUserIdentity();
-            const userEmail = ident.email;
-            const isOwner = (userEmail === AUTHORIZED_LOTM_EMAIL.toLowerCase());
+            if (!currentScore) return;
+            const stats = scoreStats[currentScore.id] || {};
+            const isOwner = isAuthorViewer();
+            const byLuksMusicAuthor = currentScore.authorId === AUTHOR_ID;
 
-            // 1. Author Row & Follow Button
+            // 1. Author Row & Follow Button (only arrangements published by lukscli can be followed)
             if (sidebarAuthorBadge) {
-                sidebarAuthorBadge.style.display = isOwner ? 'inline-flex' : 'none';
+                sidebarAuthorBadge.style.display = (byLuksMusicAuthor && isOwner) ? 'inline-flex' : 'none';
             }
             if (sidebarFollowBtn) {
-                if (isOwner) {
+                if (!byLuksMusicAuthor || isOwner) {
                     sidebarFollowBtn.style.display = 'none';
                 } else {
                     sidebarFollowBtn.style.display = 'inline-block';
-                    const isFollowing = data.following && data.following.includes(userEmail);
-                    if (isFollowing) {
-                        sidebarFollowBtn.textContent = 'Seguindo';
-                        sidebarFollowBtn.classList.add('following');
-                    } else {
-                        sidebarFollowBtn.textContent = '+ Seguir';
-                        sidebarFollowBtn.classList.remove('following');
-                    }
+                    sidebarFollowBtn.textContent = isFollowingAuthor ? 'Seguindo' : '+ Seguir';
+                    sidebarFollowBtn.classList.toggle('following', isFollowingAuthor);
                 }
             }
 
             // 2. Views
             if (statViewsCount) {
-                statViewsCount.textContent = (data.views >= 1000) ? (data.views / 1000).toFixed(1) + 'K' : data.views;
+                statViewsCount.textContent = formatCount(stats.views);
             }
 
             // 3. Likes
-            const hasLiked = data.likes && data.likes.includes(userEmail);
-            const likesTotal = (data.likes || []).length;
+            const hasLiked = !!myVisitor.liked;
             if (statLikesCount) {
-                statLikesCount.textContent = likesTotal;
+                statLikesCount.textContent = formatCount(stats.likes);
             }
             if (statHeartIcon) {
                 statHeartIcon.textContent = hasLiked ? '❤️' : '🤍';
@@ -5104,7 +5331,7 @@
             }
 
             // 4. Favorites (Salvar nos Favoritos)
-            const hasFavorited = data.favorites && data.favorites.includes(userEmail);
+            const hasFavorited = !!myVisitor.favorited;
             if (sidebarSaveBtn) {
                 sidebarSaveBtn.classList.toggle('saved-active', hasFavorited);
                 if (sidebarHeartIcon) {
@@ -5116,156 +5343,113 @@
             }
 
             // 5. Comments Count
-            const commentsTotal = (data.comments || []).length;
             if (statCommentsCount) {
-                statCommentsCount.textContent = commentsTotal;
+                statCommentsCount.textContent = formatCount(stats.comments);
             }
 
             // 6. Ratings
-            const ratingsObj = data.ratings || {};
-            const ratingValues = Object.values(ratingsObj);
-            let avg = 0;
-            if (ratingValues.length > 0) {
-                const sum = ratingValues.reduce((a, b) => a + b, 0);
-                avg = (sum / ratingValues.length).toFixed(1);
-            }
-            const count = ratingValues.length;
+            const { count, avg } = ratingSummary(stats);
+            const avgText = avg.toFixed(1);
             if (statRatingValue) {
-                statRatingValue.textContent = count > 0 ? `${avg} (${count})` : 'Sem avaliações';
+                statRatingValue.textContent = count > 0 ? `${avgText} (${count})` : 'Sem avaliações';
             }
             if (ratingModalScore) {
-                ratingModalScore.textContent = count > 0 ? avg : '—';
+                ratingModalScore.textContent = count > 0 ? avgText : '—';
             }
             if (ratingModalCount) {
-                ratingModalCount.textContent = count > 0 ? `Baseado em ${count} avaliação${count > 1 ? 'ões' : ''}` : 'Nenhuma avaliação ainda';
+                ratingModalCount.textContent = count > 0 ? `Baseado em ${count} ${count > 1 ? 'avaliações' : 'avaliação'}` : 'Nenhuma avaliação ainda';
             }
 
-            const userRating = ratingsObj[userEmail] || 0;
+            const userRating = myVisitor.rating || 0;
             if (ratingModalSubtext) {
                 ratingModalSubtext.textContent = userRating > 0 ? `Sua avaliação: ${userRating} estrela${userRating > 1 ? 's' : ''}` : 'Clique em uma estrela para avaliar';
             }
 
-            updateStarVisuals(userRating || Math.round(Number(avg)) || 0);
+            updateStarVisuals(userRating || Math.round(avg) || 0);
 
             if (commentsModal && !commentsModal.classList.contains('hidden')) {
-                renderCommentsList(data);
+                renderCommentsList();
             }
         }
 
         function toggleLike() {
-            const ident = getUserIdentity();
-            if (!ident.isAuth) {
-                showToast('Faça login com o Google para curtir!', '🔒');
-                return;
-            }
-            const data = getEngagementData();
-            const idx = data.likes.indexOf(ident.email);
-            if (idx >= 0) {
-                data.likes.splice(idx, 1);
-                showToast('Curtida removida.', '🤍');
-            } else {
-                data.likes.push(ident.email);
-                showToast('Você curtiu esta partitura!', '❤️');
-            }
-            saveEngagementData(data);
-            updateEngagementUI();
+            if (!canEngage('Faça login com o Google para curtir!')) return;
+            updateVisitor(v => ({ liked: !v.liked, viewed: true }))
+                .then(v => showToast(v.liked ? 'Você curtiu esta partitura!' : 'Curtida removida.', v.liked ? '❤️' : '🤍'))
+                .catch(engagementError);
         }
 
         function toggleFavorite() {
-            const ident = getUserIdentity();
-            if (!ident.isAuth) {
-                showToast('Faça login com o Google para salvar nos favoritos!', '🔒');
-                return;
-            }
-            const data = getEngagementData();
-            const idx = data.favorites.indexOf(ident.email);
-            if (idx >= 0) {
-                data.favorites.splice(idx, 1);
-                showToast('Partitura removida dos seus favoritos.', '☆');
-            } else {
-                data.favorites.push(ident.email);
-                showToast('Partitura salva nos seus favoritos!', '★');
-            }
-            saveEngagementData(data);
-            updateEngagementUI();
+            if (!canEngage('Faça login com o Google para salvar nos favoritos!')) return;
+            updateVisitor(v => ({ favorited: !v.favorited, viewed: true }))
+                .then(v => showToast(v.favorited ? 'Partitura salva nos seus favoritos!' : 'Partitura removida dos seus favoritos.', v.favorited ? '★' : '☆'))
+                .catch(engagementError);
         }
 
         function toggleFollow() {
-            const ident = getUserIdentity();
-            if (!ident.isAuth) {
-                showToast('Faça login com o Google para seguir o autor!', '🔒');
-                return;
-            }
-            if (ident.email === AUTHORIZED_LOTM_EMAIL.toLowerCase()) {
+            if (!canEngage('Faça login com o Google para seguir o autor!')) return;
+            if (isAuthorViewer()) {
                 showToast('Você é o autor deste arranjo!', '👤');
                 return;
             }
-            const data = getEngagementData();
-            const idx = data.following.indexOf(ident.email);
-            if (idx >= 0) {
-                data.following.splice(idx, 1);
-                showToast('Você deixou de seguir lukscli.', '👤');
-            } else {
-                data.following.push(ident.email);
-                showToast('Você agora está seguindo lukscli!', '👤');
-            }
-            saveEngagementData(data);
-            updateEngagementUI();
+            const ref = db.collection('authors').doc(AUTHOR_ID).collection('followers').doc(currentUser.uid);
+            const follow = !isFollowingAuthor;
+            (follow ? ref.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }) : ref.delete())
+                .then(() => showToast(follow ? 'Você agora está seguindo lukscli!' : 'Você deixou de seguir lukscli.', '👤'))
+                .catch(engagementError);
         }
 
-        function addComment(text) {
-            const ident = getUserIdentity();
-            if (!ident.isAuth) {
-                showToast('Faça login com o Google para comentar!', '🔒');
-                return;
-            }
+        async function addComment(text) {
+            if (!canEngage('Faça login com o Google para comentar!')) return false;
             const cleanText = (text || '').trim();
-            if (!cleanText) return;
+            if (!cleanText) return false;
 
-            const data = getEngagementData();
-            const newComment = {
-                id: 'c_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-                authorEmail: ident.email,
-                authorName: ident.name,
-                text: cleanText,
-                timestamp: Date.now()
-            };
-            data.comments.unshift(newComment);
-            saveEngagementData(data);
-            updateEngagementUI();
-            renderCommentsList(data);
-            showToast('Comentário publicado!', '💬');
+            try {
+                // The rules compare the name with the sign-in token, so take it from there
+                const token = await currentUser.getIdTokenResult();
+                const ref = scoreRef(currentScore);
+                const commentRef = ref.collection('comments').doc();
+                const batch = db.batch();
+                batch.set(commentRef, {
+                    uid: currentUser.uid,
+                    authorName: token.claims.name || '',
+                    isAuthor: isAuthorViewer() && !!currentUser.emailVerified,
+                    text: cleanText,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                batch.set(ref, { comments: firebase.firestore.FieldValue.increment(1), lastCommentId: commentRef.id }, { merge: true });
+                await batch.commit();
+                showToast('Comentário publicado!', '💬');
+                return true;
+            } catch (err) {
+                engagementError(err);
+                return false;
+            }
         }
 
         function deleteComment(commentId) {
-            const ident = getUserIdentity();
-            if (!ident.isAuth) return;
-            const data = getEngagementData();
-            const comment = data.comments.find(c => c.id === commentId);
+            if (!canEngage('Faça login com o Google para gerenciar comentários!')) return;
+            const comment = currentComments.find(c => c.id === commentId);
             if (!comment) return;
-            if (comment.authorEmail.toLowerCase() !== ident.email) {
+            if (comment.uid !== currentUser.uid && !isAuthorViewer()) {
                 showToast('Você só pode excluir seus próprios comentários!', '⚠️');
                 return;
             }
-            data.comments = data.comments.filter(c => c.id !== commentId);
-            saveEngagementData(data);
-            updateEngagementUI();
-            renderCommentsList(data);
-            showToast('Comentário removido.', '🗑️');
+            const ref = scoreRef(currentScore);
+            const batch = db.batch();
+            batch.delete(ref.collection('comments').doc(commentId));
+            batch.set(ref, { comments: firebase.firestore.FieldValue.increment(-1), lastCommentId: commentId }, { merge: true });
+            batch.commit()
+                .then(() => showToast('Comentário removido.', '🗑️'))
+                .catch(engagementError);
         }
 
         function rateScore(stars) {
-            const ident = getUserIdentity();
-            if (!ident.isAuth) {
-                showToast('Faça login com o Google para avaliar!', '🔒');
-                return;
-            }
+            if (!canEngage('Faça login com o Google para avaliar!')) return;
             const val = Math.max(1, Math.min(5, parseInt(stars, 10)));
-            const data = getEngagementData();
-            data.ratings[ident.email] = val;
-            saveEngagementData(data);
-            updateEngagementUI();
-            showToast(`Obrigado por avaliar com ${val} estrelas!`, '⭐');
+            updateVisitor(() => ({ rating: val, viewed: true }))
+                .then(() => showToast(`Obrigado por avaliar com ${val} estrelas!`, '⭐'))
+                .catch(engagementError);
         }
 
         // =============================================================
@@ -5589,7 +5773,7 @@
         if (statCommentsItem && commentsModal) {
             statCommentsItem.addEventListener('click', () => {
                 commentsModal.classList.remove('hidden');
-                renderCommentsList(getEngagementData());
+                renderCommentsList();
             });
         }
 
@@ -5614,10 +5798,14 @@
         }
 
         if (commentForm) {
-            commentForm.addEventListener('submit', (e) => {
+            const submitCommentBtn = document.getElementById('submitCommentBtn');
+            commentForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                if (commentTextInput) {
-                    addComment(commentTextInput.value);
+                if (!commentTextInput) return;
+                if (submitCommentBtn) submitCommentBtn.disabled = true;
+                const published = await addComment(commentTextInput.value);
+                if (submitCommentBtn) submitCommentBtn.disabled = false;
+                if (published) {
                     commentTextInput.value = '';
                     if (commentCharCount) commentCharCount.textContent = '0';
                 }
@@ -5676,10 +5864,11 @@
         // Share
         if (sidebarShareBtn) {
             sidebarShareBtn.addEventListener('click', async () => {
-                const url = `${location.origin}/?partitura=${LOTM_SCORE_SLUG}`;
+                if (!currentScore) return;
+                const url = `${location.origin}/?partitura=${encodeURIComponent(currentScore.slug)}`;
                 if (navigator.share) {
                     try {
-                        await navigator.share({ title: 'Dark Dream – luksMusic', url });
+                        await navigator.share({ title: `${currentScore.sidebarTitle} – luksMusic`, url });
                         return;
                     } catch (e) {
                         if (e.name === 'AbortError') return;
@@ -5733,26 +5922,15 @@
 
 
 
-        const cardPrivacyToggleBtn = document.getElementById('cardPrivacyToggleBtn');
-        if (cardPrivacyToggleBtn) {
-            cardPrivacyToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleScorePrivacy();
-            });
-        }
-
         const sidebarPrivacyToggleBtn = document.getElementById('sidebarPrivacyToggleBtn');
         if (sidebarPrivacyToggleBtn) {
             sidebarPrivacyToggleBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                toggleScorePrivacy();
+                toggleScorePrivacy(currentScore);
             });
         }
 
-        updateScrubberAndDisplay();
-        updateEngagementUI();
-        updateScorePlayhead();
-        updateActiveNotesUI(false);
+        renderLibrary();
     </script>
 </body>
 </html>

@@ -9,7 +9,8 @@
       "ignore": [
         "firebase.json",
         "**/.*",
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "tools/**"
       ],
       "headers": [
         {
@@ -46,7 +47,8 @@
       "ignore": [
         "firebase.json",
         "**/.*",
-        "**/node_modules/**"
+        "**/node_modules/**",
+        "tools/**"
       ]
     }
   ]

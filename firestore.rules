@@ -1,6 +1,78 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAuthor() {
+      return signedIn()
+        && request.auth.token.email == 'lukscli@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function flag(m, key) {
+      return m.get(key, false) == true ? 1 : 0;
+    }
+
+    function rated(m) {
+      return m.get('rating', 0) > 0 ? 1 : 0;
+    }
+
+    // The score totals moved by exactly one visitor's change (view, like, favorite, rating)
+    function totalsFollowVisitor(before, after, vBefore, vAfter) {
+      return after.get('views', 0) == before.get('views', 0) + flag(vAfter, 'viewed') - flag(vBefore, 'viewed')
+        && after.get('likes', 0) == before.get('likes', 0) + flag(vAfter, 'liked') - flag(vBefore, 'liked')
+        && after.get('favorites', 0) == before.get('favorites', 0) + flag(vAfter, 'favorited') - flag(vBefore, 'favorited')
+        && after.get('ratingCount', 0) == before.get('ratingCount', 0) + rated(vAfter) - rated(vBefore)
+        && after.get('ratingSum', 0) == before.get('ratingSum', 0) + vAfter.get('rating', 0) - vBefore.get('rating', 0);
+    }
+
+    // The comment counter only moves when the comment named in lastCommentId is created or deleted in the same write
+    function commentCountFollows(scoreId, before, after) {
+      let delta = after.get('comments', 0) - before.get('comments', 0);
+      let commentPath = /databases/$(database)/documents/scores/$(scoreId)/comments/$(after.get('lastCommentId', '-'));
+      return delta == 0
+        || (delta == 1 && !exists(commentPath) && existsAfter(commentPath))
+        || (delta == -1 && exists(commentPath) && !existsAfter(commentPath));
+    }
+
+    function statsWriteValid(scoreId) {
+      let visitorPath = /databases/$(database)/documents/scores/$(scoreId)/users/$(request.auth.uid);
+      let before = resource == null ? {} : resource.data;
+      let after = request.resource.data;
+      let vBefore = exists(visitorPath) ? get(visitorPath).data : {};
+      let vAfter = existsAfter(visitorPath) ? getAfter(visitorPath).data : {};
+      return after.keys().hasOnly(['views', 'likes', 'favorites', 'ratingCount', 'ratingSum', 'comments', 'lastCommentId'])
+        && totalsFollowVisitor(before, after, vBefore, vAfter)
+        && commentCountFollows(scoreId, before, after);
+    }
+
+    function visitorWriteValid(scoreId) {
+      let statsPath = /databases/$(database)/documents/scores/$(scoreId);
+      let data = request.resource.data;
+      return data.keys().hasOnly(['viewed', 'liked', 'favorited', 'rating', 'updatedAt'])
+        && data.get('viewed', false) is bool
+        && data.get('liked', false) is bool
+        && data.get('favorited', false) is bool
+        && data.get('rating', 0) is int
+        && data.get('rating', 0) >= 0
+        && data.get('rating', 0) <= 5
+        && totalsFollowVisitor(
+          exists(statsPath) ? get(statsPath).data : {},
+          getAfter(statsPath).data,
+          resource == null ? {} : resource.data,
+          data);
+    }
+
+    function commentCounted(scoreId, commentId, delta) {
+      let statsPath = /databases/$(database)/documents/scores/$(scoreId);
+      let before = exists(statsPath) ? get(statsPath).data : {};
+      let after = getAfter(statsPath).data;
+      return after.get('comments', 0) == before.get('comments', 0) + delta
+        && after.get('lastCommentId', '') == commentId;
+    }
+
     // Each user's synced library (iOS app): only the signed-in owner can read, write or delete it.
     match /users/{userId}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -14,6 +86,46 @@ service cloud.firestore {
         && request.auth.token.email_verified == true
         && request.resource.data.keys().hasOnly(['privacy', 'updatedAt'])
         && request.resource.data.privacy in ['public', 'private'];
+    }
+
+    // Shared engagement of the web player's scores. scores/{scoreId} holds the public totals and
+    // scores/{scoreId}/users/{uid} one visitor's view, like, favorite and rating. Both are written in
+    // the same transaction and each side checks the other, so every signed-in user counts once and
+    // nobody can move the totals on their own.
+    match /scores/{scoreId} {
+      allow read: if true;
+      allow create, update: if signedIn() && scoreId.matches('[a-z0-9-]{1,64}') && statsWriteValid(scoreId);
+
+      match /users/{userId} {
+        allow read: if signedIn() && request.auth.uid == userId;
+        allow create, update: if signedIn() && request.auth.uid == userId && visitorWriteValid(scoreId);
+      }
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['uid', 'authorName', 'isAuthor', 'text', 'createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.authorName == request.auth.token.get('name', '')
+          && request.resource.data.isAuthor == isAuthor()
+          && request.resource.data.text is string
+          && request.resource.data.text.trim().size() > 0
+          && request.resource.data.text.size() <= 500
+          && request.resource.data.createdAt == request.time
+          && commentCounted(scoreId, commentId, 1);
+        // Commenters remove their own comments; the author moderates any of them
+        allow delete: if signedIn()
+          && (resource.data.uid == request.auth.uid || isAuthor())
+          && commentCounted(scoreId, commentId, -1);
+      }
+    }
+
+    // Followers of an arranger: each follower only sees and changes their own follow
+    match /authors/{authorId}/followers/{userId} {
+      allow read, delete: if signedIn() && request.auth.uid == userId;
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['createdAt'])
+        && request.resource.data.createdAt == request.time;
     }
   }
 }
