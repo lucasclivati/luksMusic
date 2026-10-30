@@ -45,6 +45,18 @@ final class ScoreViewModel {
     private var lastPlaybackTime: TimeInterval = 0.0
     private var playedNoteIds: Set<UUID> = []
     
+    /// `score.measures` decodes JSON on every access and playback reads it 50 times a second, so keep the decoded copy
+    @ObservationIgnored private var measuresCache: (modified: Date, measures: [Measure])?
+    
+    private var measures: [Measure] {
+        if let cache = measuresCache, cache.modified == score.lastModified {
+            return cache.measures
+        }
+        let decoded = score.measures
+        measuresCache = (score.lastModified, decoded)
+        return decoded
+    }
+    
     // MARK: - Transposition Helpers
     
     // Indexed by the major tonic's pitch class (0 = C)
@@ -121,7 +133,7 @@ final class ScoreViewModel {
     func seek(toMeasure index: Int, beat: Double) {
         guard index >= 0 && index < score.measureCount else { return }
         currentMeasureIndex = index
-        currentBeat = score.measures[index].nearestOnset(to: beat)
+        currentBeat = measures[index].nearestOnset(to: beat)
         playedNoteIds.removeAll()
         triggerNotes(around: currentBeat)
         refreshActiveNotes()
@@ -129,7 +141,7 @@ final class ScoreViewModel {
 
     /// Recomputes the keys under the cursor; call after anything that moves the cursor or changes transposition.
     func refreshActiveNotes() {
-        let measures = score.measures
+        let measures = self.measures
         guard currentMeasureIndex < measures.count else {
             activeMidiNotes = []
             return
@@ -195,8 +207,9 @@ final class ScoreViewModel {
     }
     
     private func triggerNotesBetween(startBeat: Double, endBeat: Double) {
-        guard currentMeasureIndex < score.measures.count else { return }
-        let currentMeasure = score.measures[currentMeasureIndex]
+        let measures = self.measures
+        guard currentMeasureIndex < measures.count else { return }
+        let currentMeasure = measures[currentMeasureIndex]
         let bpm = Double(score.tempo) * playbackSpeed
         
         for note in currentMeasure.notes where !note.isRest && !isMuted(note.staff) {
@@ -217,8 +230,9 @@ final class ScoreViewModel {
     }
     
     private func triggerNotes(around beat: Double) {
-        guard currentMeasureIndex < score.measures.count else { return }
-        let currentMeasure = score.measures[currentMeasureIndex]
+        let measures = self.measures
+        guard currentMeasureIndex < measures.count else { return }
+        let currentMeasure = measures[currentMeasureIndex]
         let bpm = Double(score.tempo) * playbackSpeed
         
         for note in currentMeasure.notes where !note.isRest && !isMuted(note.staff) {

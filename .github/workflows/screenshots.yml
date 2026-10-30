@@ -57,7 +57,7 @@ jobs:
             -project luksMusic.xcodeproj \
             -scheme luksMusic \
             -destination "id=$UDID" \
-            -only-testing:luksMusicUITests/ScreenshotTests \
+            -only-testing:luksMusicUITests \
             -resultBundlePath build/Screenshots.xcresult \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO

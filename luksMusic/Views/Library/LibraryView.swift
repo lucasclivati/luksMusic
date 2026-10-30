@@ -393,6 +393,15 @@ struct LibraryView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
+            // Scores published on luksmusic.web.app, with their original pages
+            NavigationLink {
+                OnlineLibraryView()
+            } label: {
+                Image(systemName: "globe")
+            }
+            .accessibilityLabel("Biblioteca online")
+            .accessibilityIdentifier("onlineLibraryButton")
+
             // Layout toggle
             Button {
                 withAnimation(.easeInOut(duration: 0.25)) {

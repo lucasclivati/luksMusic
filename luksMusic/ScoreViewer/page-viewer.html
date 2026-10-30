@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=4">
+  <title>luksMusic Pages</title>
+  <style>
+    html, body {
+      margin: 0;
+      background: #ffffff;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      padding-top: var(--top-inset, 64px);
+      padding-bottom: var(--bottom-inset, 160px);
+    }
+    .page {
+      position: relative;
+      width: 100%;
+      margin: 0 auto 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .page img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .measure-box {
+      position: absolute;
+      display: none;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      border-radius: 3px;
+      pointer-events: none;
+    }
+    .cursor {
+      position: absolute;
+      display: none;
+      width: 3px;
+      transform: translateX(-50%);
+      background: #2563eb;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.8);
+      border-radius: 1px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="pages"></div>
+  <script>
+    // Shows a score's original engraved pages (as on luksmusic.web.app) with the cursor on the notehead of the
+    // current onset, using the score's MEASURE_LAYOUT and NOTE_COLUMNS. The app drives it through luks.update();
+    // taps go back as {type: "seek", measure, beat}.
+    const post = (message) => {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.luks) {
+        window.webkit.messageHandlers.luks.postMessage(message);
+      }
+    };
+
+    // Same padding the web player draws around the current measure (percent of the page)
+    const PAD_TOP = 1.2;
+    const PAD_HEIGHT = 2.4;
+
+    let state = {};
+    let layout = [];
+    let columns = {};
+    let pages = [];
+
+    function build() {
+      const root = document.getElementById("pages");
+      root.innerHTML = "";
+      pages = (state.pages || []).map((url, i) => {
+        const page = document.createElement("div");
+        page.className = "page";
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = `Página ${i + 1}`;
+        img.addEventListener("load", () => place(false));
+        const box = document.createElement("div");
+        box.className = "measure-box";
+        const cursor = document.createElement("div");
+        cursor.className = "cursor";
+        page.append(img, box, cursor);
+        page.addEventListener("click", (event) => tap(i + 1, page, event));
+        root.append(page);
+        return { page, box, cursor };
+      });
+    }
+
+    // Latest onset at or before `beat`, so the cursor always rests on a notehead
+    function columnAt(number, beat) {
+      const cols = columns[number];
+      if (!cols || !cols.length) return null;
+      let col = cols[0];
+      for (const c of cols) {
+        if (c[0] <= beat + 0.001) col = c;
+      }
+      return col;
+    }
+
+    function place(scroll) {
+      pages.forEach((p) => {
+        p.box.style.display = "none";
+        p.cursor.style.display = "none";
+      });
+      const number = (state.measure || 0) + 1;
+      const m = layout.find((x) => x.number === number);
+      if (!m || !pages[m.page - 1]) return;
+      const p = pages[m.page - 1];
+      const top = Math.max(0, m.top_pct - PAD_TOP);
+      const height = m.height_pct + PAD_HEIGHT;
+      Object.assign(p.box.style, { display: "block", left: `${m.left_pct}%`, top: `${top}%`, width: `${m.width_pct}%`, height: `${height}%` });
+      const col = columnAt(number, state.beat || 1);
+      const fraction = Math.max(0, Math.min(1, ((state.beat || 1) - 1) / (state.beatsPerMeasure || 4)));
+      const left = col ? col[1] : m.left_pct + fraction * m.width_pct;
+      Object.assign(p.cursor.style, { display: "block", left: `${left}%`, top: `${top}%`, height: `${height}%` });
+      if (scroll) keepInView(p.page, top, height);
+    }
+
+    function keepInView(pageEl, topPct, heightPct) {
+      const rect = pageEl.getBoundingClientRect();
+      const y1 = rect.top + rect.height * topPct / 100;
+      const y2 = rect.top + rect.height * (topPct + heightPct) / 100;
+      const visibleTop = state.topInset || 0;
+      const visibleBottom = innerHeight - (state.bottomInset || 0);
+      if (y1 < visibleTop || y2 > visibleBottom) {
+        window.scrollTo({ top: Math.max(0, window.scrollY + y1 - visibleTop - 16), behavior: "smooth" });
+      }
+    }
+
+    // Tap: the system under the finger, the measure by x, then that measure's closest note
+    function tap(pageNumber, pageEl, event) {
+      const rect = pageEl.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width * 100;
+      const y = (event.clientY - rect.top) / rect.height * 100;
+      const onPage = layout.filter((m) => m.page === pageNumber);
+      if (!onPage.length) return;
+      const distance = (m) => y < m.top_pct ? m.top_pct - y : (y > m.top_pct + m.height_pct ? y - m.top_pct - m.height_pct : 0);
+      const nearest = Math.min(...onPage.map(distance));
+      const row = onPage.filter((m) => distance(m) - nearest < 0.5);
+      const m = row.find((r) => x >= r.left_pct && x <= r.left_pct + r.width_pct)
+        || row.reduce((a, b) => Math.abs(a.left_pct + a.width_pct / 2 - x) < Math.abs(b.left_pct + b.width_pct / 2 - x) ? a : b);
+      const cols = columns[m.number] || [];
+      const col = cols.length ? cols.reduce((a, c) => Math.abs(c[1] - x) < Math.abs(a[1] - x) ? c : a) : [1, 0];
+      post({ type: "seek", measure: m.number - 1, beat: col[0] });
+    }
+
+    window.luks = {
+      update(next) {
+        const rebuild = next.pages !== undefined && JSON.stringify(next.pages) !== JSON.stringify(state.pages);
+        if (next.layout) layout = next.layout;
+        if (next.columns) columns = next.columns;
+        const moved = next.measure !== state.measure || next.beat !== state.beat;
+        state = { ...state, ...next };
+        document.body.style.setProperty("--top-inset", `${state.topInset || 0}px`);
+        document.body.style.setProperty("--bottom-inset", `${state.bottomInset || 0}px`);
+        if (rebuild) build();
+        if (rebuild || moved) place(!rebuild);
+      },
+    };
+
+    post({ type: "loaded" });
+  </script>
+</body>
+</html>
