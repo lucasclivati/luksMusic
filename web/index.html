@@ -1448,6 +1448,24 @@
             letter-spacing: 0.3px;
         }
 
+        .note-step-btn {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            border-radius: 4px;
+            min-width: 30px;
+            height: 24px;
+            font-size: 10px;
+            cursor: pointer;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+
+        .note-step-btn:hover {
+            border-color: var(--accent-cyan);
+            color: #ffffff;
+        }
+
         .scrubber-slider {
             flex: 1;
             -webkit-appearance: none;
@@ -2842,6 +2860,11 @@
                 padding: 2px 6px;
                 font-size: 10px;
             }
+            .note-step-btn {
+                min-width: 34px;
+                height: 30px;
+                font-size: 12px;
+            }
             .mini-mixer-pill {
                 display: none;
             }
@@ -3326,7 +3349,9 @@
             <div class="timeline-bar" id="timelineBar">
                 <span id="timeElapsedDisplay" class="time-display">00:00 / 00:00</span>
                 <input type="range" id="timelineSlider" class="scrubber-slider" min="0" max="1" step="0.1" value="0">
+                <button id="prevNoteBtn" class="note-step-btn" title="Nota anterior (←)">◀</button>
                 <span id="measurePill" class="measure-badge-btn">Compasso 1</span>
+                <button id="nextNoteBtn" class="note-step-btn" title="Próxima nota (→)">▶</button>
                 <div id="miniMixerTrigger" class="mini-mixer-pill" title="Clique para abrir o Mixer completo">
                     <span style="color: var(--accent-cyan);"><span id="miniRhLabel">RH</span>: <b id="miniRhVol">95%</b></span>
                     <span style="color: #64748b;">•</span>
@@ -4515,6 +4540,8 @@
 
             if (bottomDock) {
                 bottomDock.style.height = `${clampedH}px`;
+                // The floating zoom HUD sits right above the dock
+                document.documentElement.style.setProperty('--dock-height', `${clampedH}px`);
             }
 
             const availableH = clampedH - 52;
@@ -5072,22 +5099,30 @@
 
         let isScrubbing = false;
         let lastScrubPage = 1;
+        // Touch drag of the cursor: where the finger and the cursor started
+        let scrubAnchor = null;
 
-        function startScrubbing(page, clientX, clientY) {
+        function startScrubbing(page, clientX, clientY, fine = false) {
             isScrubbing = true;
             lastScrubPage = page;
             document.body.style.userSelect = 'none';
             if (isPlaying) {
                 pausePlayback();
             }
-            handleScrubMove(page, clientX, clientY);
+            const line = document.getElementById(`cursorLine${page}`);
+            const lineXPct = line ? parseFloat(line.style.left) : NaN;
+            scrubAnchor = (fine && Number.isFinite(lineXPct)) ? { clientX, xPct: lineXPct } : null;
+            if (!scrubAnchor) handleScrubMove(page, clientX, clientY);
         }
 
         function handleScrubMove(page, clientX, clientY) {
             const overlay = document.getElementById(`pageOverlay${page}`);
             if (!overlay) return;
             const rect = overlay.getBoundingClientRect();
-            const clickXPct = ((clientX - rect.left) / rect.width) * 100.0;
+            // Dragged by a finger, the cursor moves at half its speed so notes closer than a fingertip can be reached
+            const clickXPct = scrubAnchor
+                ? scrubAnchor.xPct + ((clientX - scrubAnchor.clientX) / rect.width) * 50.0
+                : ((clientX - rect.left) / rect.width) * 100.0;
             const clickYPct = ((clientY - rect.top) / rect.height) * 100.0;
 
             const hit = findMeasureAndBeatAtPoint(page, clickXPct, clickYPct);
@@ -5099,6 +5134,7 @@
         function stopScrubbing() {
             if (!isScrubbing) return;
             isScrubbing = false;
+            scrubAnchor = null;
             document.body.style.userSelect = '';
             updateActiveNotesUI(false);
             setTimeout(() => {
@@ -5146,14 +5182,51 @@
                 });
                 page.querySelector(".playback-cursor-line").addEventListener("pointerdown", (e) => {
                     e.stopPropagation();
-                    startScrubbing(p, e.clientX, e.clientY);
+                    startScrubbing(p, e.clientX, e.clientY, e.pointerType !== "mouse");
                 });
             });
         }
 
+        // Beats of a measure where the cursor can rest
+        function measureOnsets(mIdx) {
+            const cols = NOTE_COLUMNS[mIdx + 1];
+            if (cols && cols.length) return cols.map(c => c[0]);
+            const m = SCORE_DATA[mIdx] || {};
+            return [...new Set([...(m.treble || []), ...(m.bass || [])].map(n => n.beat))].sort((a, b) => a - b);
+        }
+
+        // Previous / next note, for screens where the notes are closer together than a fingertip
+        function stepNote(dir) {
+            if (!TOTAL_MEASURES) return;
+            if (isPlaying) pausePlayback();
+            const col = cursorColumnAt(currentMeasureIdx, currentBeat);
+            const here = col ? col[0] : currentBeat;
+            let mIdx = currentMeasureIdx;
+            const onsets = measureOnsets(mIdx);
+            let beat = dir > 0 ? onsets.find(b => b > here + 0.001) : [...onsets].reverse().find(b => b < here - 0.001);
+            while (beat === undefined) {
+                mIdx += dir;
+                if (mIdx < 0 || mIdx >= TOTAL_MEASURES) return;
+                const other = measureOnsets(mIdx);
+                beat = dir > 0 ? other[0] : other[other.length - 1];
+            }
+            seekToBeat(measureStartBeat[mIdx] + beat - 1.0, true);
+            const mDef = MEASURE_LAYOUT.find(m => m.number === mIdx + 1);
+            const line = mDef && document.getElementById(`cursorLine${mDef.page}`);
+            if (line) line.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+        }
+
+        document.getElementById("prevNoteBtn").addEventListener("click", () => stepNote(-1));
+        document.getElementById("nextNoteBtn").addEventListener("click", () => stepNote(1));
+
         window.addEventListener("keydown", (e) => {
             // Typing in the comment box or another field is not a shortcut
             if (e.target.closest && e.target.closest("input, textarea, select")) return;
+            if ((e.code === "ArrowLeft" || e.code === "ArrowRight") && playerView.classList.contains("active-view")) {
+                e.preventDefault();
+                stepNote(e.code === "ArrowRight" ? 1 : -1);
+                return;
+            }
             if (e.code === "Space") {
                 if (playerView.classList.contains("active-view")) {
                     e.preventDefault();
@@ -6161,6 +6234,7 @@
             const isHidden = bottomDock.classList.contains("dock-hidden");
             const shouldHide = forceState !== undefined ? !forceState : !isHidden;
             bottomDock.classList.toggle("dock-hidden", shouldHide);
+            document.documentElement.style.setProperty('--dock-height', `${shouldHide ? 0 : bottomDock.offsetHeight}px`);
             
             if (floatingRestorePianoBtn) {
                 floatingRestorePianoBtn.style.display = shouldHide ? "inline-flex" : "none";
