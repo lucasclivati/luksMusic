@@ -18,6 +18,8 @@ struct ScoreWebView: UIViewRepresentable {
     var horizontal: Bool = false
     /// Scales the single line to fill the view's height (practice strip) instead of using `zoom`.
     var fitsHeight: Bool = false
+    /// The player shows the engraving as a sheet of paper on its dark background; the practice strip stays white.
+    var isDark: Bool = false
     var topInset: CGFloat = 64
     var bottomInset: CGFloat = 160
     var onSeek: (Int, Double) -> Void
@@ -31,9 +33,10 @@ struct ScoreWebView: UIViewRepresentable {
         configuration.userContentController.add(WeakScriptMessageHandler(context.coordinator), name: "luks")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
+        let background = isDark ? UIColor(PlayerTheme.background) : .white
         webView.isOpaque = false
-        webView.backgroundColor = .white
-        webView.scrollView.backgroundColor = .white
+        webView.backgroundColor = background
+        webView.scrollView.backgroundColor = background
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.showsHorizontalScrollIndicator = false
         webView.navigationDelegate = context.coordinator
@@ -57,6 +60,7 @@ struct ScoreWebView: UIViewRepresentable {
             "transpose": transposition,
             "mode": horizontal ? "singleLine" : "portraitView",
             "fit": fitsHeight,
+            "theme": isDark ? "dark" : "light",
             "topInset": Double(topInset),
             "bottomInset": Double(bottomInset)
         ])

@@ -34,7 +34,7 @@ struct PracticeStatsView: View {
                         Button {
                             dismiss()
                         } label: {
-                            Text("Done")
+                            Text("Concluir")
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -48,11 +48,11 @@ struct PracticeStatsView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 32)
             }
-            .navigationTitle("Practice Summary")
+            .navigationTitle("Resumo do estudo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close") {
+                    Button("Fechar") {
                         dismiss()
                     }
                 }
@@ -82,7 +82,7 @@ struct PracticeStatsView: View {
                 VStack(spacing: 2) {
                     Text(String(format: "%.0f%%", session.accuracy))
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                    Text("Accuracy")
+                    Text("Precisão")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -110,10 +110,10 @@ struct PracticeStatsView: View {
     @ViewBuilder
     private func statsGrid() -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            statItem(title: "Correct Notes", value: "\(session.correctNotes)", icon: "checkmark.circle.fill", color: .green)
-            statItem(title: "Incorrect", value: "\(session.incorrectNotes)", icon: "xmark.circle.fill", color: .red)
-            statItem(title: "Max Streak", value: "\(session.longestStreak)", icon: "flame.fill", color: .orange)
-            statItem(title: "Total Played", value: "\(session.totalNotesPlayed)", icon: "pianokeys", color: .blue)
+            statItem(title: "Notas certas", value: "\(session.correctNotes)", icon: "checkmark.circle.fill", color: .green)
+            statItem(title: "Erradas", value: "\(session.incorrectNotes)", icon: "xmark.circle.fill", color: .red)
+            statItem(title: "Maior sequência", value: "\(session.longestStreak)", icon: "flame.fill", color: .orange)
+            statItem(title: "Notas tocadas", value: "\(session.totalNotesPlayed)", icon: "pianokeys", color: .blue)
         }
     }
     
@@ -144,11 +144,11 @@ struct PracticeStatsView: View {
     @ViewBuilder
     private func sessionDetailsCard() -> some View {
         VStack(spacing: 12) {
-            detailRow(title: "Tempo Used", value: "\(session.tempoUsed) BPM")
+            detailRow(title: "Andamento", value: "\(session.tempoUsed) BPM")
             Divider()
-            detailRow(title: "Sections Finished", value: "\(session.sectionsCompleted)")
+            detailRow(title: "Trechos concluídos", value: "\(session.sectionsCompleted)")
             Divider()
-            detailRow(title: "Duration", value: formatDuration(session.duration))
+            detailRow(title: "Duração", value: formatDuration(session.duration))
         }
         .padding(16)
         .background(Color(.secondarySystemBackground))
@@ -172,7 +172,7 @@ struct PracticeStatsView: View {
     @ViewBuilder
     private func ratingSection() -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("How did this practice feel?")
+            Text("Como foi este estudo?")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             

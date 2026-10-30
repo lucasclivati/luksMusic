@@ -1,7 +1,8 @@
 // LibraryView.swift
 // luksMusic
 //
-// Main library screen displaying all user scores in a searchable, filterable grid or list.
+// Main library screen: the luksMusic online scores (original engraved pages, as on luksmusic.web.app) on top,
+// then the user's own scores in a searchable, filterable grid or list.
 
 import SwiftUI
 import SwiftData
@@ -10,10 +11,10 @@ import SwiftData
 
 /// Sort options available in the library.
 enum LibrarySortOption: String, CaseIterable, Identifiable {
-    case dateCreated = "Date Added"
-    case title = "Title"
-    case difficulty = "Difficulty"
-    case lastPracticed = "Last Practiced"
+    case dateCreated = "Data de inclusão"
+    case title = "Título"
+    case difficulty = "Dificuldade"
+    case lastPracticed = "Último estudo"
 
     var id: String { rawValue }
 
@@ -35,11 +36,12 @@ enum LibraryLayout: String, CaseIterable {
 
 // MARK: - LibraryView
 
-/// The main library screen showing all of the user's musical scores.
+/// The main library screen showing the online scores and the user's own scores.
 struct LibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Score.dateCreated, order: .reverse) private var scores: [Score]
 
+    @State private var online = OnlineLibraryService.shared
     @State private var searchText = ""
     @State private var sortOption: LibrarySortOption = .dateCreated
     @State private var sortAscending = false
@@ -49,7 +51,9 @@ struct LibraryView: View {
     @State private var showFavoritesOnly = false
     @State private var showAddSheet = false
     @State private var showImportSheet = false
-    @State private var showFilterMenu = false
+
+    /// Sources a score can still come from (the camera scanner was removed).
+    private let filterableSources: [ScoreSource] = [.manual, .imported]
 
     // MARK: Computed Properties
 
@@ -57,7 +61,6 @@ struct LibraryView: View {
     private var filteredScores: [Score] {
         var result = scores
 
-        // Search filter
         if !searchText.isEmpty {
             let query = searchText.lowercased()
             result = result.filter {
@@ -66,22 +69,18 @@ struct LibraryView: View {
             }
         }
 
-        // Difficulty filter
         if let difficulty = selectedDifficulty {
             result = result.filter { $0.difficulty == difficulty }
         }
 
-        // Source filter
         if let source = selectedSource {
             result = result.filter { $0.source == source }
         }
 
-        // Favorites filter
         if showFavoritesOnly {
             result = result.filter { $0.isFavorite }
         }
 
-        // Sort
         result.sort { a, b in
             let ascending: Bool
             switch sortOption {
@@ -101,6 +100,15 @@ struct LibraryView: View {
         return result
     }
 
+    /// Online scores matching the search.
+    private var filteredOnlineScores: [OnlineScore] {
+        guard !searchText.isEmpty else { return online.scores }
+        let query = searchText.lowercased()
+        return online.scores.filter {
+            $0.title.lowercased().contains(query) || $0.credits.lowercased().contains(query)
+        }
+    }
+
     private var activeFilterCount: Int {
         var count = 0
         if selectedDifficulty != nil { count += 1 }
@@ -114,47 +122,158 @@ struct LibraryView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
-                if scores.isEmpty && searchText.isEmpty {
-                    emptyStateView
-                } else {
-                    scoreContentView
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if online.isLoading || !filteredOnlineScores.isEmpty {
+                            onlineSection
+                        }
+
+                        localSection
+                    }
+                    .padding(.bottom, 90)
                 }
 
                 addButton
             }
             .background(Color(.systemBackground))
-            .navigationTitle("My Library")
-            .searchable(text: $searchText, prompt: "Search scores…")
+            .navigationTitle("Biblioteca")
+            .searchable(text: $searchText, prompt: "Buscar partituras")
             .toolbar { toolbarContent }
+            .navigationDestination(for: UUID.self) { scoreID in
+                if let score = scores.first(where: { $0.id == scoreID }) {
+                    ScoreView(score: score)
+                }
+            }
+            .navigationDestination(for: OnlineScore.self) { score in
+                OnlineScoreView(score: score)
+            }
             .sheet(isPresented: $showAddSheet) { addScoreSheet }
             .sheet(isPresented: $showImportSheet) {
                 ImportScoreView()
             }
+            .task {
+                if online.scores.isEmpty {
+                    await online.refresh()
+                }
+            }
+            .refreshable {
+                await online.refresh()
+            }
         }
     }
 
-    // MARK: - Subviews
+    // MARK: - Online Scores
 
-    /// Content area showing either the grid or list of scores.
-    @ViewBuilder
-    private var scoreContentView: some View {
-        VStack(spacing: 0) {
-            // Active filters bar
-            if activeFilterCount > 0 {
-                activeFiltersBar
+    private var onlineSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("luksMusic Online")
+                        .font(.title3.weight(.bold))
+                    Text("Páginas originais, iguais ao site")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                NavigationLink {
+                    OnlineLibraryView()
+                } label: {
+                    Text("Ver todas")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .accessibilityIdentifier("onlineLibraryButton")
             }
+            .padding(.horizontal)
 
-            if filteredScores.isEmpty {
-                ContentUnavailableView.search(text: searchText)
-            } else {
-                ScrollView {
-                    switch layout {
-                    case .grid:
-                        gridLayout
-                    case .list:
-                        listLayout
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 14) {
+                    if online.isLoading && online.scores.isEmpty {
+                        ForEach(0..<3, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Color(.secondarySystemGroupedBackground))
+                                .frame(width: 140, height: 186)
+                        }
+                    }
+                    ForEach(filteredOnlineScores) { score in
+                        NavigationLink(value: score) {
+                            onlineCard(score)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal)
+                .padding(.bottom, 4)
+            }
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 20)
+    }
+
+    private func onlineCard(_ score: OnlineScore) -> some View {
+        // "Dark Dream – Curley Gao" → title on the cover, composer below it
+        let parts = score.title.components(separatedBy: " – ")
+        return VStack(alignment: .leading, spacing: 6) {
+            SheetCover(title: parts[0], subtitle: parts.count > 1 ? parts[1] : "")
+                .frame(width: 140, height: 186)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
+                .overlay(alignment: .topTrailing) {
+                    if score.isPrivate {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(6)
+                            .background(Color.black.opacity(0.7), in: Circle())
+                            .padding(6)
+                            .accessibilityLabel("Privada")
+                    }
+                }
+
+            Text(score.title)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+            Text(score.credits)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(width: 140, alignment: .leading)
+    }
+
+    // MARK: - My Scores
+
+    @ViewBuilder
+    private var localSection: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("Minhas partituras")
+                .font(.title3.weight(.bold))
+            Spacer()
+            if activeFilterCount > 0 {
+                Button("Limpar filtros") {
+                    withAnimation {
+                        selectedDifficulty = nil
+                        selectedSource = nil
+                        showFavoritesOnly = false
+                    }
+                }
+                .font(.caption)
+            }
+        }
+        .padding(.horizontal)
+
+        if scores.isEmpty {
+            emptyStateView
+        } else if filteredScores.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+                .padding(.top, 20)
+        } else {
+            switch layout {
+            case .grid:
+                gridLayout
+            case .list:
+                listLayout
             }
         }
     }
@@ -178,11 +297,6 @@ struct LibraryView: View {
             }
         }
         .padding()
-        .navigationDestination(for: UUID.self) { scoreID in
-            if let score = scores.first(where: { $0.id == scoreID }) {
-                ScoreView(score: score)
-            }
-        }
     }
 
     /// List layout with full-width rows.
@@ -193,128 +307,40 @@ struct LibraryView: View {
                     ScoreListItemView(score: score, layout: .list)
                 }
                 .buttonStyle(.plain)
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        deleteScore(score)
-                    } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
-                .swipeActions(edge: .leading) {
-                    Button {
-                        toggleFavorite(score)
-                    } label: {
-                        Label(
-                            score.isFavorite ? "Unfavorite" : "Favorite",
-                            systemImage: score.isFavorite ? "star.slash" : "star.fill"
-                        )
-                    }
-                    .tint(.yellow)
-                }
                 .contextMenu {
                     scoreContextMenu(for: score)
                 }
             }
         }
         .padding()
-        .navigationDestination(for: UUID.self) { scoreID in
-            if let score = scores.first(where: { $0.id == scoreID }) {
-                ScoreView(score: score)
-            }
-        }
     }
 
-    /// Active filters horizontal strip.
-    private var activeFiltersBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                if let difficulty = selectedDifficulty {
-                    filterChip(difficulty.rawValue) {
-                        withAnimation { selectedDifficulty = nil }
-                    }
-                }
-                if let source = selectedSource {
-                    filterChip(source.rawValue) {
-                        withAnimation { selectedSource = nil }
-                    }
-                }
-                if showFavoritesOnly {
-                    filterChip("Favorites") {
-                        withAnimation { showFavoritesOnly = false }
-                    }
-                }
-
-                Button("Clear All") {
-                    withAnimation {
-                        selectedDifficulty = nil
-                        selectedSource = nil
-                        showFavoritesOnly = false
-                    }
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-        }
-        .background(.ultraThinMaterial)
-    }
-
-    /// A removable filter chip.
-    private func filterChip(_ label: String, onRemove: @escaping () -> Void) -> some View {
-        HStack(spacing: 4) {
-            Text(label)
-                .font(.caption.weight(.medium))
-            Button(action: onRemove) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.caption2)
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(.indigo.opacity(0.25), in: Capsule())
-        .foregroundStyle(.indigo)
-    }
-
-    /// Empty state shown when no scores exist.
+    /// Shown when the user has no scores of their own yet.
     private var emptyStateView: some View {
-        VStack(spacing: 24) {
-            Spacer()
-
-            ZStack {
-                Circle()
-                    .fill(.indigo.opacity(0.12))
-                    .frame(width: 140, height: 140)
-                Image(systemName: "music.note.list")
-                    .font(.system(size: 56))
-                    .foregroundStyle(.indigo)
-            }
-
-            VStack(spacing: 8) {
-                Text("No Scores Yet")
-                    .font(.title2.bold())
-
-                Text("Add your first score by tapping the\nbutton below to get started.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
+        VStack(spacing: 14) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 40))
+                .foregroundStyle(.indigo)
+            Text("Nenhuma partitura sua ainda")
+                .font(.headline)
+            Text("Importe um arquivo MusicXML ou crie uma partitura nova.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
             Button {
                 showAddSheet = true
             } label: {
-                Label("Add Score", systemImage: "plus")
+                Label("Adicionar partitura", systemImage: "plus")
                     .font(.headline)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
             }
             .buttonStyle(.borderedProminent)
             .tint(.indigo)
-
-            Spacer()
-            Spacer()
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 32)
+        .padding(.horizontal)
     }
 
     /// Floating add button in the bottom-right corner.
@@ -331,7 +357,7 @@ struct LibraryView: View {
         }
         .padding(.trailing, 20)
         .padding(.bottom, 20)
-        .accessibilityLabel("Add new score")
+        .accessibilityLabel("Adicionar partitura")
     }
 
     /// Bottom sheet for choosing how to add a score.
@@ -345,9 +371,9 @@ struct LibraryView: View {
                     } label: {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Create New")
+                                Text("Criar nova")
                                     .font(.body.weight(.medium))
-                                Text("Start with an empty score")
+                                Text("Comece com uma partitura em branco")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -363,9 +389,9 @@ struct LibraryView: View {
                     } label: {
                         Label {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Import File")
+                                Text("Importar arquivo")
                                     .font(.body.weight(.medium))
-                                Text("MusicXML files")
+                                Text("Arquivos MusicXML (.musicxml, .xml)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -376,11 +402,11 @@ struct LibraryView: View {
                     }
                 }
             }
-            .navigationTitle("Add Score")
+            .navigationTitle("Adicionar partitura")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { showAddSheet = false }
+                    Button("Cancelar") { showAddSheet = false }
                 }
             }
         }
@@ -393,16 +419,6 @@ struct LibraryView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            // Scores published on luksmusic.web.app, with their original pages
-            NavigationLink {
-                OnlineLibraryView()
-            } label: {
-                Image(systemName: "globe")
-            }
-            .accessibilityLabel("Biblioteca online")
-            .accessibilityIdentifier("onlineLibraryButton")
-
-            // Layout toggle
             Button {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     layout = layout == .grid ? .list : .grid
@@ -410,8 +426,8 @@ struct LibraryView: View {
             } label: {
                 Image(systemName: layout == .grid ? "rectangle.grid.1x2" : "square.grid.2x2")
             }
+            .accessibilityLabel(layout == .grid ? "Mostrar em lista" : "Mostrar em grade")
 
-            // Sort menu
             Menu {
                 ForEach(LibrarySortOption.allCases) { option in
                     Button {
@@ -433,17 +449,16 @@ struct LibraryView: View {
             } label: {
                 Image(systemName: "arrow.up.arrow.down")
             }
+            .accessibilityLabel("Ordenar")
 
-            // Filter menu
             Menu {
-                // Difficulty filters
-                Section("Difficulty") {
+                Section("Dificuldade") {
                     ForEach(Difficulty.allCases) { difficulty in
                         Button {
                             selectedDifficulty = selectedDifficulty == difficulty ? nil : difficulty
                         } label: {
                             HStack {
-                                Text(difficulty.rawValue)
+                                Text(difficulty.displayName)
                                 if selectedDifficulty == difficulty {
                                     Image(systemName: "checkmark")
                                 }
@@ -452,14 +467,13 @@ struct LibraryView: View {
                     }
                 }
 
-                // Source filters
-                Section("Source") {
-                    ForEach(ScoreSource.allCases) { source in
+                Section("Origem") {
+                    ForEach(filterableSources) { source in
                         Button {
                             selectedSource = selectedSource == source ? nil : source
                         } label: {
                             HStack {
-                                Label(source.rawValue, systemImage: source.iconName)
+                                Label(source.displayName, systemImage: source.iconName)
                                 if selectedSource == source {
                                     Image(systemName: "checkmark")
                                 }
@@ -473,7 +487,7 @@ struct LibraryView: View {
                         showFavoritesOnly.toggle()
                     } label: {
                         HStack {
-                            Label("Favorites Only", systemImage: "star.fill")
+                            Label("Só favoritas", systemImage: "star.fill")
                             if showFavoritesOnly {
                                 Image(systemName: "checkmark")
                             }
@@ -484,6 +498,7 @@ struct LibraryView: View {
                 Image(systemName: activeFilterCount > 0 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                     .foregroundStyle(activeFilterCount > 0 ? .indigo : .primary)
             }
+            .accessibilityLabel("Filtrar")
         }
     }
 
@@ -495,7 +510,7 @@ struct LibraryView: View {
             toggleFavorite(score)
         } label: {
             Label(
-                score.isFavorite ? "Remove from Favorites" : "Add to Favorites",
+                score.isFavorite ? "Remover dos favoritos" : "Favoritar",
                 systemImage: score.isFavorite ? "star.slash" : "star.fill"
             )
         }
@@ -505,14 +520,14 @@ struct LibraryView: View {
         Button(role: .destructive) {
             deleteScore(score)
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label("Apagar", systemImage: "trash")
         }
     }
 
     // MARK: - Actions
 
     private func createNewScore() {
-        let score = Score(title: "Untitled Score", composer: "", source: .manual)
+        let score = Score(title: "Partitura sem título", composer: "", source: .manual)
         modelContext.insert(score)
     }
 
@@ -527,21 +542,13 @@ struct LibraryView: View {
 
 // MARK: - Preview
 
-#Preview("Library - Empty") {
-    LibraryView()
-        .modelContainer(for: Score.self, inMemory: true)
-        .preferredColorScheme(.dark)
-}
-
-#Preview("Library - With Scores") {
+#Preview("Library") {
     let container = try! ModelContainer(for: Score.self, configurations: .init(isStoredInMemoryOnly: true))
 
     let sampleScores: [(String, String, Difficulty, ScoreSource)] = [
         ("Moonlight Sonata", "Beethoven", .advanced, .imported),
         ("Für Elise", "Beethoven", .intermediate, .imported),
         ("Prelude in C Major", "Bach", .beginner, .manual),
-        ("Nocturne Op. 9 No. 2", "Chopin", .expert, .scanned),
-        ("Clair de Lune", "Debussy", .advanced, .imported),
     ]
 
     for (title, composer, difficulty, source) in sampleScores {
@@ -550,10 +557,8 @@ struct LibraryView: View {
             composer: composer,
             difficulty: difficulty,
             source: source,
-            estimatedDuration: TimeInterval.random(in: 120...600)
+            estimatedDuration: 240
         )
-        score.isFavorite = Bool.random()
-        score.lastPracticed = Date().addingTimeInterval(-Double.random(in: 0...604800))
         container.mainContext.insert(score)
     }
 

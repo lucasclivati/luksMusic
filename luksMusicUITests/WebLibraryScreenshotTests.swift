@@ -1,9 +1,9 @@
 // WebLibraryScreenshotTests.swift
 // luksMusicUITests
 //
-// Opens the online library (scores from luksmusic.web.app) as a guest and a public score with its original
-// pages, attaching screenshots for the "App Store Screenshots" workflow. Runs after ScreenshotTests, so the
-// guest session may already exist.
+// Opens a public score of the online library (luksmusic.web.app) from the library's "luksMusic Online" row
+// as a guest, with its original pages, attaching screenshots for the "App Store Screenshots" workflow.
+// Runs after ScreenshotTests, so the guest session may already exist.
 
 import XCTest
 
@@ -19,32 +19,36 @@ final class WebLibraryScreenshotTests: XCTestCase {
             guestButton.tap()
         }
 
-        let onlineButton = app.buttons["onlineLibraryButton"]
-        if onlineButton.waitForExistence(timeout: 15) {
-            onlineButton.tap()
+        // A short public-domain score (two pages) from the site's catalog
+        let score = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "October (Autumn Song)")).firstMatch
+        if score.waitForExistence(timeout: 40) {
+            pause(1)
+            capture("08-online-library")
+            score.tap()
 
-            // A short public-domain score (two pages) from the site's catalog
-            let score = app.staticTexts["October (Autumn Song) – Tchaikovsky"]
-            if score.waitForExistence(timeout: 40) {
-                pause(1)
-                capture("08-online-library")
-                score.tap()
+            // Pages come from the web, so give them time to download and draw
+            pause(10)
+            capture("09-online-score")
 
-                // Pages come from the web, so give them time to download and draw
-                pause(10)
-                capture("09-online-score")
+            let playButton = app.buttons["playPauseButton"]
+            if playButton.waitForExistence(timeout: 5) {
+                playButton.tap()
+                pause(3)
+                playButton.tap()
+                pause(2)
+                capture("10-online-score-cursor")
 
-                let playButton = app.buttons["playPauseButton"]
-                if playButton.waitForExistence(timeout: 5) {
-                    playButton.tap()
-                    pause(3)
-                    playButton.tap()
-                    pause(2)
-                    capture("10-online-score-cursor")
+                for _ in 0..<2 {
+                    let next = app.buttons["nextNoteButton"]
+                    if next.exists { next.tap() }
+                    pause(0.5)
                 }
-            } else {
-                capture("08-online-library")
+                pause(1)
+                capture("12-online-score-steps")
             }
+        } else {
+            capture("08-online-library")
         }
 
         let tree = XCTAttachment(string: app.debugDescription)

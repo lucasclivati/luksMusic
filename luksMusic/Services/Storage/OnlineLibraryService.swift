@@ -12,6 +12,8 @@ import Observation
 /// One score of the web catalog.
 struct OnlineScore: Identifiable, Hashable {
     let id: String
+    /// The score's `?partitura=` link name on the site
+    let slug: String
     let title: String
     let credits: String
     let bpm: Int
@@ -20,6 +22,13 @@ struct OnlineScore: Identifiable, Hashable {
     let dataURL: URL
     let defaultPrivacy: String
     var isPrivate: Bool = false
+
+    /// The score on the web player, as its Share button links to it
+    var webURL: URL {
+        var components = URLComponents(url: OnlineLibraryService.siteURL, resolvingAgainstBaseURL: false)
+        components?.queryItems = [URLQueryItem(name: "partitura", value: slug)]
+        return components?.url ?? OnlineLibraryService.siteURL
+    }
 }
 
 /// What the page viewer and the player need for one score.
@@ -37,7 +46,7 @@ struct OnlineScoreContent {
 final class OnlineLibraryService {
 
     static let shared = OnlineLibraryService()
-    static let siteURL = URL(string: "https://luksmusic.web.app/")!
+    nonisolated static let siteURL = URL(string: "https://luksmusic.web.app/")!
 
     /// The web player's author, who also sees private scores (same account as the Firestore rules).
     private static let authorEmail = "lukscli@gmail.com"
@@ -157,6 +166,7 @@ final class OnlineLibraryService {
               let dataURL = URL(string: data, relativeTo: siteURL) else { return nil }
         return OnlineScore(
             id: id,
+            slug: entry["slug"] as? String ?? id,
             title: entry["sidebarTitle"] as? String ?? entry["title"] as? String ?? id,
             credits: entry["credits"] as? String ?? "",
             bpm: entry["bpm"] as? Int ?? 80,

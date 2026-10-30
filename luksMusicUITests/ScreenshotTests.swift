@@ -20,9 +20,10 @@ final class ScreenshotTests: XCTestCase {
             guestButton.tap()
         }
 
-        let furElise = app.staticTexts["Für Elise (Bagatelle No. 25)"]
+        let furElise = element(containing: "Für Elise (Bagatelle No. 25)")
         if furElise.waitForExistence(timeout: 15) {
-            pause(1)
+            // Let the online scores row load above the user's scores
+            pause(4)
             capture("01-library")
             furElise.tap()
         }
@@ -36,17 +37,23 @@ final class ScreenshotTests: XCTestCase {
             pause(1)
             playButton.tap()
             waitForLabel(playButton, "Tocar")
-            // Back to the first measure so the title and the opening notes are on screen
-            for _ in 0..<4 {
-                tapIfExists(app.buttons["Compasso anterior"])
-            }
+            // Back to the first note so the title and the opening notes are on screen
+            tapIfExists(app.buttons["Voltar ao início"])
             pause(2)
             capture("02-score")
+
+            // Step note by note: the cursor, the lit keys and the note names follow
+            for _ in 0..<3 {
+                tapIfExists(app.buttons["nextNoteButton"])
+                pause(0.5)
+            }
+            pause(1)
+            capture("11-score-steps")
 
             if tapIfExists(app.buttons["scoreMenuButton"]) {
                 pause(1)
                 capture("06-score-menu")
-                if tapIfExists(app.buttons["menuSettingsButton"]) {
+                if tapIfExists(app.buttons["Configurações"]) {
                     pause(2)
                     capture("03-score-settings")
                     app.swipeDown(velocity: .fast)
@@ -54,7 +61,7 @@ final class ScreenshotTests: XCTestCase {
                 }
             }
 
-            if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["menuPracticeButton"]) {
+            if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["Modo Estudo"]) {
                 // Let the engraved strip render in the web view
                 pause(5)
                 capture("04-practice")
@@ -68,7 +75,7 @@ final class ScreenshotTests: XCTestCase {
                 }
                 pause(2)
                 capture("07-practice-progress")
-                tapIfExists(app.buttons["Done"])
+                tapIfExists(app.buttons["Concluir"])
             }
         }
 
@@ -77,6 +84,11 @@ final class ScreenshotTests: XCTestCase {
         tree.name = "ui-tree"
         tree.lifetime = .keepAlways
         add(tree)
+    }
+
+    /// The first element whose label contains `text` (a card's texts may be merged into its button's label).
+    private func element(containing text: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", text)).firstMatch
     }
 
     private func capture(_ name: String) {

@@ -36,21 +36,21 @@ struct ContentView: View {
             // Tab 1: Library
             LibraryView()
                 .tabItem {
-                    Label("Library", systemImage: "music.note.list")
+                    Label("Biblioteca", systemImage: "music.note.list")
                 }
                 .tag(0)
             
             // Tab 3: History & Stats
             PracticeHistoryView()
                 .tabItem {
-                    Label("Progress", systemImage: "chart.bar.xaxis")
+                    Label("Progresso", systemImage: "chart.bar.xaxis")
                 }
                 .tag(2)
             
             // Tab 4: Settings & Cloud Sync
             SettingsView()
                 .tabItem {
-                    Label("Settings", systemImage: "gearshape")
+                    Label("Ajustes", systemImage: "gearshape")
                 }
                 .tag(3)
         }
@@ -72,9 +72,9 @@ struct PracticeHistoryView: View {
                         Image(systemName: "pianokeys")
                             .font(.system(size: 44))
                             .foregroundColor(.secondary)
-                        Text("No Practice Sessions Yet")
+                        Text("Nenhum estudo registrado ainda")
                             .font(.headline)
-                        Text("Open any score in the library or scan a sheet to begin training!")
+                        Text("Abra uma partitura e toque em Modo Estudo para começar a treinar.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -87,7 +87,7 @@ struct PracticeHistoryView: View {
                         summaryStatsCard()
                     }
                     
-                    Section("Recent Sessions") {
+                    Section("Estudos recentes") {
                         ForEach(sessions) { session in
                             HStack(spacing: 12) {
                                 ZStack {
@@ -106,7 +106,7 @@ struct PracticeHistoryView: View {
                                     Text(session.scoreTitle)
                                         .font(.subheadline)
                                         .fontWeight(.semibold)
-                                    Text("\(session.practiceMode.displayName) • \(session.totalNotesPlayed) notes")
+                                    Text("\(session.practiceMode.displayName) • \(session.totalNotesPlayed) notas")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
@@ -122,7 +122,7 @@ struct PracticeHistoryView: View {
                     }
                 }
             }
-            .navigationTitle("Practice Progress")
+            .navigationTitle("Progresso")
         }
     }
     
@@ -136,7 +136,7 @@ struct PracticeHistoryView: View {
                 Text("\(sessions.count)")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("Sessions")
+                Text("Estudos")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -146,7 +146,7 @@ struct PracticeHistoryView: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.green)
-                Text("Avg Accuracy")
+                Text("Precisão média")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -156,7 +156,7 @@ struct PracticeHistoryView: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.orange)
-                Text("Max Streak")
+                Text("Maior sequência")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -186,7 +186,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 // User Account / Google Login Section
-                Section("Account & Cloud") {
+                Section("Conta e nuvem") {
                     if let user = authService.currentUser {
                         HStack(spacing: 12) {
                             Circle()
@@ -216,7 +216,7 @@ struct SettingsView: View {
                                 }
                             } label: {
                                 HStack {
-                                    Label("Sync Scores to Cloud", systemImage: "arrow.triangle.2.circlepath")
+                                    Label("Sincronizar partituras na nuvem", systemImage: "arrow.triangle.2.circlepath")
                                     Spacer()
                                     if cloudSync.isSyncing {
                                         ProgressView()
@@ -235,18 +235,18 @@ struct SettingsView: View {
                             }
                         }
                         
-                        Button("Sign Out", role: .destructive) {
+                        Button("Sair da conta", role: .destructive) {
                             authService.signOut()
                         }
 
                         if user.authProvider != .guest {
-                            Button("Excluir Conta", role: .destructive) {
+                            Button("Excluir conta", role: .destructive) {
                                 authService.authError = nil
                                 showDeleteAccount = true
                             }
                         }
                     } else {
-                        Button("Sign in with Google") {
+                        Button("Entrar com Google") {
                             Task {
                                 await authService.signInWithGoogle()
                             }
@@ -254,30 +254,30 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("External MIDI Connection") {
+                Section("Teclado MIDI externo") {
                     HStack {
                         Image(systemName: "pianokeys")
                             .foregroundColor(.accentColor)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("CoreMIDI Status")
+                            Text("Conexão MIDI")
                                 .font(.subheadline)
-                            Text(MIDIService.shared.isDeviceConnected ? "Connected" : "No external MIDI device")
+                            Text(MIDIService.shared.isDeviceConnected ? "Conectado" : "Nenhum teclado MIDI conectado")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                     }
                 }
                 
-                Section("About") {
+                Section("Sobre") {
                     HStack {
-                        Text("App Version")
+                        Text("Versão do app")
                         Spacer()
                         Text(appVersion)
                             .foregroundColor(.secondary)
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle("Ajustes")
             .sheet(isPresented: $showDeleteAccount) {
                 DeleteAccountView()
             }

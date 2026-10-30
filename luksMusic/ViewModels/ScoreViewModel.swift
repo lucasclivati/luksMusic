@@ -24,7 +24,13 @@ final class ScoreViewModel {
 
     // Keys under the playback cursor for the interactive keyboard (kept while paused)
     var activeMidiNotes: Set<Int> = []
-    
+
+    // The same keys by hand (treble staff = right hand, bass staff = left hand) and their names ("Sol4, Sol5")
+    var activeTrebleMidi: Set<Int> = []
+    var activeBassMidi: Set<Int> = []
+    var trebleNoteNames: String = ""
+    var bassNoteNames: String = ""
+
     // Onset the cursor rests on in the current measure (drives the engraved score's cursor)
     var cursorBeat: Double = 1.0
     
@@ -74,6 +80,23 @@ final class ScoreViewModel {
 
     var transpositionKeyText: String {
         Self.keyTextByTonic[transposedTonic]
+    }
+
+    // MARK: - Timeline
+
+    /// Beats in one measure, in the time signature's unit (the unit the player's clock counts).
+    var beatsPerMeasure: Double {
+        Double(max(1, score.timeSignatureTop))
+    }
+
+    /// Position of the cursor in the piece, in seconds at the written tempo.
+    var elapsedSeconds: Double {
+        (Double(currentMeasureIndex) * beatsPerMeasure + currentBeat - 1) * 60 / Double(max(1, score.tempo))
+    }
+
+    /// Length of the piece in seconds at the written tempo.
+    var totalSeconds: Double {
+        Double(score.measureCount) * beatsPerMeasure * 60 / Double(max(1, score.tempo))
     }
 
     // MARK: - Initialization
@@ -152,10 +175,76 @@ final class ScoreViewModel {
             cursorBeat = onset
         }
         let notes = measure.soundingNotes(at: onset)
-        let midi = Set(notes.map { Int($0.midiNote) + transpositionSemitones })
+        let treble = notes.filter { $0.staff == .treble }
+        let bass = notes.filter { $0.staff == .bass }
+        let trebleMidi = Set(treble.map { Int($0.midiNote) + transpositionSemitones })
+        let bassMidi = Set(bass.map { Int($0.midiNote) + transpositionSemitones })
+        if trebleMidi != activeTrebleMidi {
+            activeTrebleMidi = trebleMidi
+            trebleNoteNames = noteNames(treble)
+        }
+        if bassMidi != activeBassMidi {
+            activeBassMidi = bassMidi
+            bassNoteNames = noteNames(bass)
+        }
+        let midi = trebleMidi.union(bassMidi)
         if midi != activeMidiNotes {
             activeMidiNotes = midi
         }
+    }
+
+    private static let solfege: [NoteName: String] = [.C: "Dó", .D: "Ré", .E: "Mi", .F: "Fá", .G: "Sol", .A: "Lá", .B: "Si"]
+    private static let solfegeBySemitone = ["Dó", "Dó♯", "Ré", "Mi♭", "Mi", "Fá", "Fá♯", "Sol", "Lá♭", "Lá", "Si♭", "Si"]
+
+    /// The notes in solfège with their octave, lowest first ("Dó3, Sol3"); spelled from the score unless transposed.
+    private func noteNames(_ notes: [Note]) -> String {
+        let named = notes.map { note -> (midi: Int, name: String) in
+            let midi = Int(note.midiNote) + transpositionSemitones
+            if transpositionSemitones == 0, let syllable = Self.solfege[note.pitch.noteName] {
+                let accidental = note.pitch.accidental == .natural ? "" : note.pitch.accidental.symbol
+                return (midi, "\(syllable)\(accidental)\(note.pitch.octave)")
+            }
+            return (midi, "\(Self.solfegeBySemitone[((midi % 12) + 12) % 12])\(midi / 12 - 1)")
+        }
+        var seen = Set<Int>()
+        return named
+            .sorted { $0.midi < $1.midi }
+            .filter { seen.insert($0.midi).inserted }
+            .map { $0.name }
+            .joined(separator: ", ")
+    }
+
+    // MARK: - Note Steps
+
+    /// Moves the cursor to the next note or rest, crossing into the next measure after the last one.
+    func stepForward() {
+        let measures = self.measures
+        guard currentMeasureIndex < measures.count else { return }
+        if let next = Self.onsets(of: measures[currentMeasureIndex]).first(where: { $0 > cursorBeat + 0.001 }) {
+            seek(toMeasure: currentMeasureIndex, beat: next)
+        } else if currentMeasureIndex + 1 < measures.count {
+            seek(toMeasure: currentMeasureIndex + 1, beat: Self.onsets(of: measures[currentMeasureIndex + 1]).first ?? 1.0)
+        }
+    }
+
+    /// Moves the cursor to the previous note or rest, back into the previous measure from the first one.
+    func stepBackward() {
+        let measures = self.measures
+        guard currentMeasureIndex < measures.count else { return }
+        if let previous = Self.onsets(of: measures[currentMeasureIndex]).last(where: { $0 < cursorBeat - 0.001 }) {
+            seek(toMeasure: currentMeasureIndex, beat: previous)
+        } else if currentMeasureIndex > 0 {
+            seek(toMeasure: currentMeasureIndex - 1, beat: Self.onsets(of: measures[currentMeasureIndex - 1]).last ?? 1.0)
+        }
+    }
+
+    /// Back to the first note of the piece.
+    func restart() {
+        seek(toMeasure: 0, beat: 1.0)
+    }
+
+    private static func onsets(of measure: Measure) -> [Double] {
+        Set(measure.notes.map(\.position.beat)).sorted()
     }
     
     func nextMeasure() {

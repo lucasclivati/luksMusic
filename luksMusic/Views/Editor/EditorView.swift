@@ -66,14 +66,14 @@ struct EditorView: View {
                 
                 // Cursor & Position Indicator
                 HStack {
-                    Text("Measure \(viewModel.selectedMeasureIndex + 1) • Beat \(String(format: "%.1f", viewModel.selectedBeat))")
+                    Text("Compasso \(viewModel.selectedMeasureIndex + 1) • Tempo \(String(format: "%.1f", viewModel.selectedBeat))")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.accentColor)
                     
                     Spacer()
                     
-                    Text("Staff: \(viewModel.selectedStaff == .treble ? "Treble (RH)" : "Bass (LH)")")
+                    Text("Pauta: \(viewModel.selectedStaff == .treble ? "Clave de sol (mão dir.)" : "Clave de fá (mão esq.)")")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -88,7 +88,7 @@ struct EditorView: View {
                 
                 // Step-input Keyboard
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Tap Piano Key to Insert Note")
+                    Text("Toque numa tecla para inserir a nota")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 16)
@@ -99,17 +99,17 @@ struct EditorView: View {
                 .padding(.bottom, 8)
                 .background(Color(.secondarySystemBackground))
             }
-            .navigationTitle("Score Editor")
+            .navigationTitle("Editar partitura")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") {
+                    Button("Fechar") {
                         dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Save") {
+                    Button("Salvar") {
                         try? modelContext.save()
                         dismiss()
                     }

@@ -68,11 +68,11 @@ struct PracticeView: View {
                         .background(Color(.secondarySystemBackground))
                 }
             }
-            .navigationTitle("Piano Practice")
+            .navigationTitle("Modo Estudo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") {
+                    Button("Concluir") {
                         viewModel.stopPractice(modelContext: modelContext)
                         dismiss()
                     }
@@ -193,7 +193,7 @@ struct PracticeView: View {
             Button {
                 showStats = true
             } label: {
-                Label("Session Stats", systemImage: "chart.bar")
+                Label("Resumo do estudo", systemImage: "chart.bar")
             }
         } label: {
             Image(systemName: "slider.horizontal.3")
@@ -228,7 +228,7 @@ struct PracticeView: View {
     private func practiceHUD() -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Accuracy")
+                Text("Precisão")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Text(String(format: "%.0f%%", viewModel.accuracyPercentage))
@@ -243,7 +243,7 @@ struct PracticeView: View {
                     Image(systemName: "waveform")
                         .font(.caption2)
                         .foregroundColor(.green)
-                    Text("Mic: \(viewModel.microphoneService.detectedNoteName)")
+                    Text("Microfone: \(viewModel.microphoneService.detectedNoteName)")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(.green)
@@ -256,7 +256,7 @@ struct PracticeView: View {
             }
             
             VStack(alignment: .center, spacing: 2) {
-                Text("Streak")
+                Text("Sequência")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 HStack(spacing: 3) {
@@ -271,7 +271,7 @@ struct PracticeView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 2) {
-                Text("Mode")
+                Text("Modo")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Text(viewModel.practiceMode.displayName)
@@ -335,7 +335,7 @@ struct PracticeView: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
-                    Text("Tempo:")
+                    Text("Andamento:")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Text("\(viewModel.tempoBPM) BPM")
@@ -352,7 +352,7 @@ struct PracticeView: View {
                 )
             }
             
-            Text("M \(viewModel.currentMeasureIndex + 1)/\(max(1, viewModel.score.measureCount))")
+            Text("Compasso \(viewModel.currentMeasureIndex + 1)/\(max(1, viewModel.score.measureCount))")
                 .font(.caption)
                 .fontWeight(.bold)
                 .foregroundColor(.secondary)

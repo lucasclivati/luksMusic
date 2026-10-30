@@ -71,11 +71,11 @@ struct ImportScoreView: View {
                     errorView(message: message)
                 }
             }
-            .navigationTitle("Import Score")
+            .navigationTitle("Importar partitura")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancelar") { dismiss() }
                 }
             }
             .fileImporter(
@@ -107,7 +107,7 @@ struct ImportScoreView: View {
                             .font(.system(size: 44))
                             .foregroundStyle(.indigo)
 
-                        Text("Select a file to import")
+                        Text("Escolha um arquivo para importar")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -117,7 +117,7 @@ struct ImportScoreView: View {
             Button {
                 showFilePicker = true
             } label: {
-                Label("Choose File", systemImage: "folder")
+                Label("Escolher arquivo", systemImage: "folder")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -127,7 +127,7 @@ struct ImportScoreView: View {
             .padding(.horizontal, 40)
 
             VStack(spacing: 4) {
-                Text("Supported formats:")
+                Text("Formatos aceitos:")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                 Text(".xml  ·  .musicxml")
@@ -146,7 +146,7 @@ struct ImportScoreView: View {
             Spacer()
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Reading file…")
+            Text("Lendo o arquivo…")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Spacer()
@@ -164,21 +164,21 @@ struct ImportScoreView: View {
                         .foregroundStyle(.secondary)
                 }
             } header: {
-                Text("Selected File")
+                Text("Arquivo escolhido")
             }
 
             Section {
-                TextField("Title", text: $title)
-                TextField("Composer", text: $composer)
+                TextField("Título", text: $title)
+                TextField("Compositor", text: $composer)
                 Picker("Difficulty", selection: $difficulty) {
                     ForEach(Difficulty.allCases) { d in
                         Text(d.rawValue).tag(d)
                     }
                 }
             } header: {
-                Text("Score Details")
+                Text("Dados da partitura")
             } footer: {
-                Text("You can change these details later.")
+                Text("Você pode mudar estes dados depois.")
             }
 
             Section {
@@ -187,7 +187,7 @@ struct ImportScoreView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Label("Import Score", systemImage: "arrow.down.doc.fill")
+                        Label("Importar partitura", systemImage: "arrow.down.doc.fill")
                             .font(.headline)
                         Spacer()
                     }
@@ -203,7 +203,7 @@ struct ImportScoreView: View {
             Spacer()
 
             ProgressView {
-                Text("Importing…")
+                Text("Importando…")
                     .font(.subheadline.weight(.medium))
             }
 
@@ -224,7 +224,7 @@ struct ImportScoreView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.green)
 
-            Text("Import Successful!")
+            Text("Partitura importada!")
                 .font(.title3.weight(.semibold))
 
             Text("\"\(title)\" has been added to your library.")
@@ -233,7 +233,7 @@ struct ImportScoreView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
 
-            Button("Done") {
+            Button("Concluir") {
                 dismiss()
             }
             .buttonStyle(.borderedProminent)
@@ -253,7 +253,7 @@ struct ImportScoreView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.orange)
 
-            Text("Import Failed")
+            Text("Não foi possível importar")
                 .font(.title3.weight(.semibold))
 
             Text(message)
@@ -263,14 +263,14 @@ struct ImportScoreView: View {
                 .padding(.horizontal, 40)
 
             HStack(spacing: 16) {
-                Button("Try Again") {
+                Button("Tentar de novo") {
                     phase = .idle
                     selectedURL = nil
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.indigo)
 
-                Button("Cancel") {
+                Button("Cancelar") {
                     dismiss()
                 }
                 .buttonStyle(.bordered)

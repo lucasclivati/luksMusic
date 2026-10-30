@@ -23,6 +23,8 @@ final class ScoreStorageService {
     
     /// Preloads public-domain piano pieces into SwiftData if the library is empty.
     func preloadSampleScoresIfNeeded(modelContext: ModelContext) {
+        removeLegacyDarkDream(modelContext: modelContext)
+
         let descriptor = FetchDescriptor<Score>()
         let existingScores = (try? modelContext.fetch(descriptor)) ?? []
         guard existingScores.isEmpty else { return }
@@ -54,6 +56,19 @@ final class ScoreStorageService {
         try? modelContext.save()
     }
     
+    /// Builds before 1.0 seeded a hand-made transcription of Dark Dream; the song now lives in the online library
+    /// with its original MuseScore pages (private to its author), so the old copy is removed once.
+    private func removeLegacyDarkDream(modelContext: ModelContext) {
+        let key = "luksMusic_removedLegacyDarkDream"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        let scores = (try? modelContext.fetch(FetchDescriptor<Score>())) ?? []
+        for score in scores where score.title.contains("Dark Dream") && score.composer.contains("Curley Gao") {
+            modelContext.delete(score)
+        }
+        try? modelContext.save()
+        UserDefaults.standard.set(true, forKey: key)
+    }
+
     // MARK: - File Import
     
     /// Imports a score from a file URL (.musicxml, .xml, .mid).

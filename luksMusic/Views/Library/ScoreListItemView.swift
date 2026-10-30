@@ -43,7 +43,7 @@ struct ScoreListItemView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Thumbnail area
             thumbnailView
-                .frame(height: 140)
+                .frame(height: 190)
                 .clipped()
 
             // Info area
@@ -157,7 +157,7 @@ struct ScoreListItemView: View {
 
     // MARK: - Components
 
-    /// Thumbnail preview of the sheet music, or a placeholder.
+    /// Thumbnail of the sheet music, or a printed-edition cover with the title.
     @ViewBuilder
     private var thumbnailView: some View {
         if let data = score.thumbnailData,
@@ -166,37 +166,13 @@ struct ScoreListItemView: View {
                 .resizable()
                 .scaledToFill()
         } else {
-            // Placeholder with decorative staff lines and music note
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(.systemGray5),
-                        Color(.systemGray6)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-
-                // Faux staff lines
-                VStack(spacing: 6) {
-                    ForEach(0..<5, id: \.self) { _ in
-                        Rectangle()
-                            .fill(Color(.systemGray3).opacity(0.5))
-                            .frame(height: 1)
-                    }
-                }
-                .padding(.horizontal, 12)
-
-                Image(systemName: "music.note")
-                    .font(.title)
-                    .foregroundStyle(.indigo.opacity(0.6))
-            }
+            SheetCover(title: score.title, subtitle: score.composer)
         }
     }
 
     /// Color-coded difficulty badge.
     private var difficultyBadge: some View {
-        Text(score.difficulty.rawValue)
+        Text(score.difficulty.displayName)
             .font(.caption2.weight(.semibold))
             .lineLimit(1)
             .fixedSize()

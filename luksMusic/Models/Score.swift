@@ -17,6 +17,16 @@ enum Difficulty: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Name shown in the app (the raw value is what the library stores).
+    var displayName: String {
+        switch self {
+        case .beginner: return "Iniciante"
+        case .intermediate: return "Intermediário"
+        case .advanced: return "Avançado"
+        case .expert: return "Virtuoso"
+        }
+    }
+
     /// Display color name (used to resolve SwiftUI Color).
     var colorName: String {
         switch self {
@@ -35,6 +45,15 @@ enum ScoreSource: String, Codable, CaseIterable, Identifiable {
     case scanned = "Scanned"
 
     var id: String { rawValue }
+
+    /// Name shown in the app (the raw value is what the library stores).
+    var displayName: String {
+        switch self {
+        case .manual: return "Criadas no app"
+        case .imported: return "Importadas"
+        case .scanned: return "Digitalizadas"
+        }
+    }
 
     /// SF Symbol name for this source type.
     var iconName: String {

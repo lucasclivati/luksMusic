@@ -14,8 +14,8 @@ struct EditorToolbar: View {
             HStack(spacing: 12) {
                 // Staff Selector (Treble or Bass)
                 Picker("Staff", selection: $viewModel.selectedStaff) {
-                    Text("Treble 𝄞").tag(Staff.treble)
-                    Text("Bass 𝄢").tag(Staff.bass)
+                    Text("Sol 𝄞").tag(Staff.treble)
+                    Text("Fá 𝄢").tag(Staff.bass)
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 160)
@@ -49,7 +49,7 @@ struct EditorToolbar: View {
                 Button {
                     viewModel.addNewMeasure()
                 } label: {
-                    Label("Bar", systemImage: "plus")
+                    Label("Compasso", systemImage: "plus")
                         .font(.caption)
                 }
                 .buttonStyle(.bordered)

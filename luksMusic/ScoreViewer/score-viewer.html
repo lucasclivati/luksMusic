@@ -19,6 +19,17 @@
     body.horizontal {
       overflow-y: hidden;
     }
+    /* Player: the engraving on a sheet of paper over the dark app background, like the web player */
+    body.dark {
+      background: #0b1120;
+    }
+    body.dark #paper {
+      margin: 8px 6px 0;
+      padding-top: 18px;
+      background: #ffffff;
+      border-radius: 3px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+    }
     #header {
       padding: 0 20px 4px;
       text-align: center;
@@ -49,11 +60,13 @@
   <script src="opensheetmusicdisplay.min.js"></script>
 </head>
 <body>
-  <div id="header">
-    <h1 id="title"></h1>
-    <p id="composer"></p>
+  <div id="paper">
+    <div id="header">
+      <h1 id="title"></h1>
+      <p id="composer"></p>
+    </div>
+    <div id="score"></div>
   </div>
-  <div id="score"></div>
   <script>
     // Renders the app's MusicXML with OpenSheetMusicDisplay and keeps OSMD's note-by-note cursor on the
     // position the native player reports. The app drives it through luks.update(); taps on the score go
@@ -171,6 +184,7 @@
           measure: it.CurrentMeasureIndex,
           beat: 1 + (it.currentTimeStamp.RealValue - measureStart) * beatUnit,
           left: parseFloat(el.style.left) || 0,
+          width: parseFloat(el.style.width) || el.width || 0,
           top: parseFloat(el.style.top) || 0,
           height: parseFloat(el.style.height) || el.height || 0,
         });
@@ -238,7 +252,8 @@
       }
     }
 
-    // Tap: the closest cursor stop on the tapped system
+    // Tap: the closest cursor stop on the tapped system, measured from the middle of each stop's highlight
+    // (its left edge sits before the notehead, which made close triplet notes snap to the next one)
     container.addEventListener("click", (event) => {
       if (steps.length === 0) return;
       const rect = container.getBoundingClientRect();
@@ -248,7 +263,7 @@
       let bestDistance = Infinity;
       steps.forEach((s, i) => {
         const dy = y < s.top ? s.top - y : (y > s.top + s.height ? y - s.top - s.height : 0);
-        const distance = dy * 4 + Math.abs(x - s.left);
+        const distance = dy * 4 + Math.abs(x - (s.left + s.width / 2));
         if (distance < bestDistance) {
           bestDistance = distance;
           best = i;
@@ -269,6 +284,7 @@
             || next.fit !== state.fit;
           const moved = next.measure !== state.measure || next.beat !== state.beat;
           state = { ...state, ...next };
+          document.body.classList.toggle("dark", state.theme === "dark");
           document.getElementById("title").textContent = state.title || "";
           document.getElementById("composer").textContent = state.composer || "";
           document.getElementById("header").hidden = !state.title && !state.composer;

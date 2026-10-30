@@ -7,22 +7,38 @@
   <style>
     html, body {
       margin: 0;
-      background: #ffffff;
+      height: 100%;
+      overflow: hidden;
+      background: #0b1120;
       -webkit-user-select: none;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    body {
-      padding-top: var(--top-inset, 64px);
-      padding-bottom: var(--bottom-inset, 160px);
+    /* Scrolls in both directions itself, so a zoomed-in page never widens the document */
+    #viewport {
+      position: fixed;
+      inset: 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
     }
+    #pages {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 8px 6px 24px;
+    }
+    /* A page cropped to its music: the side margins of the engraving are cut so the staves fill the phone */
     .page {
       position: relative;
-      width: 100%;
-      margin: 0 auto 12px;
-      border-bottom: 1px solid #e5e7eb;
+      overflow: hidden;
+      margin: 0 0 10px;
+      background: #ffffff;
+      border-radius: 3px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
     }
-    .page img {
+    .sheet {
+      position: relative;
+    }
+    .sheet img {
       display: block;
       width: 100%;
       height: auto;
@@ -31,7 +47,7 @@
       position: absolute;
       display: none;
       background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.45);
+      border: 1px solid rgba(56, 189, 248, 0.5);
       border-radius: 3px;
       pointer-events: none;
     }
@@ -45,10 +61,23 @@
       border-radius: 1px;
       pointer-events: none;
     }
+    .cursor::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -6px;
+      width: 11px;
+      height: 11px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
+    }
   </style>
 </head>
 <body>
-  <div id="pages"></div>
+  <div id="viewport"><div id="pages"></div></div>
   <script>
     // Shows a score's original engraved pages (as on luksmusic.web.app) with the cursor on the notehead of the
     // current onset, using the score's MEASURE_LAYOUT and NOTE_COLUMNS. The app drives it through luks.update();
@@ -68,12 +97,26 @@
     let columns = {};
     let pages = [];
 
+    // Horizontal span of the music on the pages (percent), keeping room for the brace and measure numbers
+    function cropWindow() {
+      if (!layout.length) return { left: 0, right: 100 };
+      const left = Math.min(...layout.map((m) => m.left_pct));
+      const right = Math.max(...layout.map((m) => m.left_pct + m.width_pct));
+      return { left: Math.max(0, left - 6), right: Math.min(100, right + 1.5) };
+    }
+
     function build() {
       const root = document.getElementById("pages");
       root.innerHTML = "";
+      const crop = cropWindow();
+      const span = crop.right - crop.left;
       pages = (state.pages || []).map((url, i) => {
         const page = document.createElement("div");
         page.className = "page";
+        const sheet = document.createElement("div");
+        sheet.className = "sheet";
+        sheet.style.width = `${10000 / span}%`;
+        sheet.style.marginLeft = `${-100 * crop.left / span}%`;
         const img = document.createElement("img");
         img.src = url;
         img.alt = `Página ${i + 1}`;
@@ -82,10 +125,11 @@
         box.className = "measure-box";
         const cursor = document.createElement("div");
         cursor.className = "cursor";
-        page.append(img, box, cursor);
-        page.addEventListener("click", (event) => tap(i + 1, page, event));
+        sheet.append(img, box, cursor);
+        page.append(sheet);
+        sheet.addEventListener("click", (event) => tap(i + 1, sheet, event));
         root.append(page);
-        return { page, box, cursor };
+        return { page, sheet, box, cursor };
       });
     }
 
@@ -116,23 +160,34 @@
       const fraction = Math.max(0, Math.min(1, ((state.beat || 1) - 1) / (state.beatsPerMeasure || 4)));
       const left = col ? col[1] : m.left_pct + fraction * m.width_pct;
       Object.assign(p.cursor.style, { display: "block", left: `${left}%`, top: `${top}%`, height: `${height}%` });
-      if (scroll) keepInView(p.page, top, height);
+      if (scroll) keepInView(p.sheet, left, top, height);
     }
 
-    function keepInView(pageEl, topPct, heightPct) {
-      const rect = pageEl.getBoundingClientRect();
-      const y1 = rect.top + rect.height * topPct / 100;
-      const y2 = rect.top + rect.height * (topPct + heightPct) / 100;
-      const visibleTop = state.topInset || 0;
-      const visibleBottom = innerHeight - (state.bottomInset || 0);
-      if (y1 < visibleTop || y2 > visibleBottom) {
-        window.scrollTo({ top: Math.max(0, window.scrollY + y1 - visibleTop - 16), behavior: "smooth" });
+    // Scrolls just enough to show the current measure, and follows the cursor sideways when zoomed in
+    function keepInView(sheet, leftPct, topPct, heightPct) {
+      const viewport = document.getElementById("viewport");
+      const frame = viewport.getBoundingClientRect();
+      const rect = sheet.getBoundingClientRect();
+      const y1 = rect.top - frame.top + rect.height * topPct / 100;
+      const y2 = rect.top - frame.top + rect.height * (topPct + heightPct) / 100;
+      const x = rect.left - frame.left + rect.width * leftPct / 100;
+      const width = viewport.clientWidth;
+      let top = viewport.scrollTop;
+      let left = viewport.scrollLeft;
+      if (y1 < 8 || y2 > viewport.clientHeight - 8) {
+        top = Math.max(0, viewport.scrollTop + y1 - 12);
+      }
+      if (x < width * 0.15 || x > width * 0.8) {
+        left = Math.max(0, viewport.scrollLeft + x - width * 0.3);
+      }
+      if (top !== viewport.scrollTop || left !== viewport.scrollLeft) {
+        viewport.scrollTo({ top, left, behavior: "smooth" });
       }
     }
 
     // Tap: the system under the finger, the measure by x, then that measure's closest note
-    function tap(pageNumber, pageEl, event) {
-      const rect = pageEl.getBoundingClientRect();
+    function tap(pageNumber, sheet, event) {
+      const rect = sheet.getBoundingClientRect();
       const x = (event.clientX - rect.left) / rect.width * 100;
       const y = (event.clientY - rect.top) / rect.height * 100;
       const onPage = layout.filter((m) => m.page === pageNumber);
@@ -147,17 +202,21 @@
       post({ type: "seek", measure: m.number - 1, beat: col[0] });
     }
 
+    function applyZoom() {
+      document.getElementById("pages").style.width = `${(state.zoom || 1) * 100}%`;
+    }
+
     window.luks = {
       update(next) {
         const rebuild = next.pages !== undefined && JSON.stringify(next.pages) !== JSON.stringify(state.pages);
         if (next.layout) layout = next.layout;
         if (next.columns) columns = next.columns;
         const moved = next.measure !== state.measure || next.beat !== state.beat;
+        const zoomed = next.zoom !== undefined && next.zoom !== state.zoom;
         state = { ...state, ...next };
-        document.body.style.setProperty("--top-inset", `${state.topInset || 0}px`);
-        document.body.style.setProperty("--bottom-inset", `${state.bottomInset || 0}px`);
         if (rebuild) build();
-        if (rebuild || moved) place(!rebuild);
+        if (zoomed) applyZoom();
+        if (rebuild || moved || zoomed) place(!rebuild);
       },
     };
 

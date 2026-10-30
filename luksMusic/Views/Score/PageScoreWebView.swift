@@ -2,7 +2,8 @@
 // luksMusic
 //
 // A score's original engraved pages (from luksmusic.web.app) in a WKWebView, with the cursor on the notehead
-// of the onset the native player reports. Taps on a note seek to it.
+// of the onset the native player reports. Taps on a note seek to it; `zoom` widens the pages past the screen
+// (1 = the music fills the width) and the view then follows the cursor sideways.
 
 import SwiftUI
 import WebKit
@@ -13,8 +14,7 @@ struct PageScoreWebView: UIViewRepresentable {
     let beatsPerMeasure: Int
     let measureIndex: Int
     let cursorBeat: Double
-    var topInset: CGFloat = 64
-    var bottomInset: CGFloat = 160
+    var zoom: Double = 1.0
     var onSeek: (Int, Double) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -27,8 +27,8 @@ struct PageScoreWebView: UIViewRepresentable {
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.isOpaque = false
-        webView.backgroundColor = .white
-        webView.scrollView.backgroundColor = .white
+        webView.backgroundColor = UIColor(PlayerTheme.background)
+        webView.scrollView.backgroundColor = UIColor(PlayerTheme.background)
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.navigationDelegate = context.coordinator
         context.coordinator.webView = webView
@@ -42,7 +42,7 @@ struct PageScoreWebView: UIViewRepresentable {
     func updateUIView(_ webView: WKWebView, context: Context) {
         let coordinator = context.coordinator
         coordinator.onSeek = onSeek
-        // Pages, layout and note columns go once; the position and insets on every change
+        // Pages, layout and note columns go once; the position and zoom on every change
         coordinator.score = [
             "pages": pageURLs.map(\.absoluteString),
             "layout": content.layout,
@@ -52,8 +52,7 @@ struct PageScoreWebView: UIViewRepresentable {
         coordinator.position = [
             "measure": measureIndex,
             "beat": cursorBeat,
-            "topInset": Double(topInset),
-            "bottomInset": Double(bottomInset)
+            "zoom": zoom
         ]
         coordinator.flush()
     }
