@@ -1,8 +1,8 @@
 // luksMusic - library of the web player.
 // `id` names the score's Firestore docs (scoreSettings/{id}, scores/{id}); `slug` is its ?partitura= link.
 // `data` sets window.SCORE_DATA / MEASURE_LAYOUT / NOTE_COLUMNS for the engraved `pages`.
-// Scores without a scoreSettings doc use `defaultPrivacy`: copyrighted songs stay private to the author,
-// public-domain and openly licensed editions are public.
+// Scores without a scoreSettings doc use `defaultPrivacy`: copyrighted songs stay private to the author (who can
+// invite people by e-mail), public-domain and openly licensed editions are public.
 window.SCORE_CATALOG = [
     {
         id: "lotm",

@@ -2147,6 +2147,166 @@
             color: #94a3b8;
         }
 
+        .badge-access.shared {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-privacy-toggle.requests-pending {
+            border-color: #f59e0b;
+            color: #fcd34d;
+        }
+
+        .access-request-panel {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+            background: var(--panel-bg);
+            border: 1px solid rgba(168, 85, 247, 0.45);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+        }
+
+        .access-request-icon {
+            font-size: 28px;
+        }
+
+        .access-request-info {
+            flex: 1 1 240px;
+            min-width: 0;
+        }
+
+        .access-request-info h3 {
+            margin: 0 0 4px;
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+        .access-request-info p {
+            margin: 0;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .access-request-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-privacy-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .share-modal-sub {
+            margin: -8px 0 14px;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #94a3b8;
+        }
+
+        .share-form {
+            display: flex;
+            gap: 8px;
+        }
+
+        .share-email-input {
+            flex: 1;
+            min-height: 0;
+            resize: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .share-status {
+            min-height: 18px;
+            margin: 8px 0 4px;
+            font-size: 12px;
+            color: #4ade80;
+        }
+
+        .share-status.error {
+            color: #f87171;
+        }
+
+        .share-section-title {
+            margin: 12px 0 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .share-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .share-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #1c1c28;
+            border: 1px solid #2d2d42;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+
+        .share-item-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .share-item-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .share-item-email {
+            font-size: 12px;
+            color: #94a3b8;
+            overflow-wrap: anywhere;
+        }
+
+        .share-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .share-accept-btn {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #4ade80;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .share-empty {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .share-copy-btn {
+            width: 100%;
+            margin-top: 16px;
+        }
+
         .song-card-stats {
             display: flex;
             flex-wrap: wrap;
@@ -2778,6 +2938,19 @@
                 <p>Selecione uma música para abrir o reprodutor interativo com mixer de mãos e teclado.</p>
             </div>
 
+            <!-- Shown when a ?partitura= link points to a private score this visitor wasn't invited to -->
+            <div id="accessRequestPanel" class="access-request-panel" style="display: none;">
+                <div class="access-request-icon" id="accessRequestIcon">🔒</div>
+                <div class="access-request-info">
+                    <h3 id="accessRequestTitle"></h3>
+                    <p id="accessRequestText"></p>
+                </div>
+                <div class="access-request-actions">
+                    <button id="accessRequestBtn" class="btn-open-score"></button>
+                    <button id="accessRequestDismissBtn" class="btn-privacy-toggle">Fechar</button>
+                </div>
+            </div>
+
             <!-- Cards rendered from window.SCORE_CATALOG -->
             <div class="songs-grid" id="songsGrid"></div>
             <p id="libraryEmptyNotice" style="display: none; color: #94a3b8; font-size: 14px; text-align: center; padding: 40px 0;">
@@ -2908,9 +3081,12 @@
                                 <div class="privacy-sub" id="sidebarPrivacySub">Acessível exclusivamente por você (lukscli@gmail.com)</div>
                             </div>
                         </div>
-                        <button id="sidebarPrivacyToggleBtn" class="sidebar-privacy-btn" title="Alterar privacidade da partitura">
-                            <span id="sidebarPrivacyBtnText">Tornar Pública</span>
-                        </button>
+                        <div class="sidebar-privacy-actions">
+                            <button id="sidebarPrivacyToggleBtn" class="sidebar-privacy-btn" title="Alterar privacidade da partitura">
+                                <span id="sidebarPrivacyBtnText">Tornar Pública</span>
+                            </button>
+                            <button id="sidebarPeopleBtn" class="sidebar-privacy-btn" title="Convidar pessoas por e-mail e responder pedidos de acesso" style="display: none;">👥 Pessoas</button>
+                        </div>
                     </div>
 
                     <!-- Engagement Stats -->
@@ -3077,9 +3253,6 @@
             </div>
         </div>
 
-        <!-- TOAST NOTIFICATION -->
-        <div id="toastNotification" class="toast-notification hidden"></div>
-
         <!-- FLOATING HANDS MIXER HUD -->
         <div id="mixerHUD" class="mixer-hud hidden">
             <div class="mixer-hud-header">
@@ -3179,6 +3352,30 @@
         </div>
     </div>
 
+    <!-- SHARE A SCORE WITH SPECIFIC PEOPLE (author only) -->
+    <div id="shareModal" class="export-modal-backdrop hidden">
+        <div class="export-modal-card share-modal-card">
+            <div class="export-modal-header">
+                <h3>👥 Compartilhar partitura</h3>
+                <button id="closeShareModalBtn" class="close-modal-btn" title="Fechar">✕</button>
+            </div>
+            <p class="share-modal-sub" id="shareModalSub"></p>
+            <form id="shareForm" class="share-form">
+                <input type="email" id="shareEmailInput" class="comment-input share-email-input" placeholder="E-mail da conta Google do amigo" maxlength="254" autocomplete="off" required>
+                <button type="submit" class="btn-submit-comment">Convidar</button>
+            </form>
+            <div class="share-status" id="shareStatus"></div>
+            <div class="share-section-title" id="shareRequestsTitle">📩 Pedidos de acesso</div>
+            <div class="share-list" id="shareRequestsList"></div>
+            <div class="share-section-title">Pessoas com acesso</div>
+            <div class="share-list" id="shareMembersList"></div>
+            <button id="shareCopyLinkBtn" class="sidebar-action-btn share-copy-btn">🔗 Copiar link da partitura</button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastNotification" class="toast-notification hidden"></div>
+
     <!-- ============================================================
          JAVASCRIPT LOGIC: FIREBASE AUTH & APPLICATION STATE
          ============================================================ -->
@@ -3239,9 +3436,12 @@
             }
         }
 
+        function viewerEmail() {
+            return (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
+        }
+
         function isAuthorViewer() {
-            const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
-            return email === AUTHOR_EMAIL;
+            return viewerEmail() === AUTHOR_EMAIL;
         }
 
         function escapeHtml(str) {
@@ -3286,19 +3486,24 @@
             return (privacy === 'public' || privacy === 'private') ? privacy : (score.defaultPrivacy || 'private');
         }
 
-        // Private scores don't appear for anyone but the author
+        // Private scores only appear for the author and the people they invited
         function canOpenScore(score) {
-            return privacyOf(score) === 'public' || isAuthorViewer();
+            return privacyOf(score) === 'public' || isAuthorViewer() || !!sharedWithMe[score.id];
         }
 
         // Shared links (?partitura=<slug>) open the score once the visitor is signed in
         let pendingSharedSlug = new URLSearchParams(location.search).get('partitura');
 
         function openSharedScoreIfPending() {
-            if (!pendingSharedSlug || !currentUser || !privacyLoaded) return;
+            if (!pendingSharedSlug || !currentUser || !privacyLoaded || !sharesLoaded) return;
             const score = SCORE_CATALOG.find(s => s.slug === pendingSharedSlug);
             pendingSharedSlug = null;
-            if (score) openScore(score);
+            if (!score) return;
+            if (canOpenScore(score)) {
+                openScore(score);
+            } else {
+                showAccessRequest(score);
+            }
         }
 
         function ratingSummary(stats) {
@@ -3315,12 +3520,19 @@
                 const isPublic = privacyOf(score) === 'public';
                 const stats = scoreStats[score.id] || {};
                 const rating = ratingSummary(stats);
+                const members = (shareMembers[score.id] || []).length;
+                const requests = (shareRequests[score.id] || []).length;
                 const badge = isPublic
                     ? '<span class="badge-access public">🌐 Pública</span>'
-                    : '<span class="badge-access private">🔒 Privada (Sua Conta)</span>';
+                    : (isOwner
+                        ? '<span class="badge-access private">🔒 Privada (Sua Conta)</span>'
+                        : '<span class="badge-access shared">👥 Compartilhada com você</span>');
                 const toggle = isOwner
                     ? `<button class="btn-privacy-toggle" data-privacy-score="${escapeHtml(score.id)}" title="Alterar visibilidade da partitura (Pública / Privada)">
                            <span>${isPublic ? '🔒' : '🌐'}</span> <span>${isPublic ? 'Tornar Privada' : 'Tornar Pública'}</span>
+                       </button>
+                       <button class="btn-privacy-toggle${requests ? ' requests-pending' : ''}" data-share-score="${escapeHtml(score.id)}" title="Convidar pessoas por e-mail e responder pedidos de acesso">
+                           <span>${requests ? '📩' : '👥'}</span> <span>${requests ? `${requests} ${requests > 1 ? 'pedidos' : 'pedido'}` : `Compartilhar${members ? ` (${members})` : ''}`}</span>
                        </button>`
                     : '';
                 return `
@@ -3356,6 +3568,12 @@
 
         if (songsGrid) {
             songsGrid.addEventListener("click", (e) => {
+                const shareBtn = e.target.closest("[data-share-score]");
+                if (shareBtn) {
+                    const score = SCORE_CATALOG.find(s => s.id === shareBtn.dataset.shareScore);
+                    if (score) openShareModal(score);
+                    return;
+                }
                 const privacyBtn = e.target.closest("[data-privacy-score]");
                 if (privacyBtn) {
                     const score = SCORE_CATALOG.find(s => s.id === privacyBtn.dataset.privacyScore);
@@ -3373,6 +3591,7 @@
         function updateScorePrivacyUI() {
             renderLibrary();
             renderOtherScores();
+            renderAccessRequest();
             if (!currentScore) return;
 
             const isOwner = isAuthorViewer();
@@ -3395,22 +3614,31 @@
             if (sidebarPrivacyTitle) {
                 sidebarPrivacyTitle.textContent = isPublic ? 'Partitura Pública' : 'Partitura Privada';
             }
+            const invited = (shareMembers[currentScore.id] || []).length;
+            const requests = (shareRequests[currentScore.id] || []).length;
             if (sidebarPrivacySub) {
                 sidebarPrivacySub.textContent = isPublic
                     ? 'Qualquer usuário com acesso à biblioteca pode visualizar e tocar.'
-                    : (isOwner ? 'Acessível exclusivamente por você (lukscli@gmail.com).' : 'Acesso restrito ao proprietário.');
+                    : (isOwner
+                        ? (invited ? `Acessível por você e ${invited} ${invited > 1 ? 'pessoas convidadas' : 'pessoa convidada'}.` : 'Acessível exclusivamente por você (lukscli@gmail.com).')
+                        : 'Compartilhada com você pelo autor.');
             }
             if (sidebarPrivacyToggleBtn) {
                 sidebarPrivacyToggleBtn.style.display = isOwner ? 'inline-block' : 'none';
+            }
+            const sidebarPeopleBtn = document.getElementById('sidebarPeopleBtn');
+            if (sidebarPeopleBtn) {
+                sidebarPeopleBtn.style.display = isOwner ? 'inline-block' : 'none';
+                sidebarPeopleBtn.textContent = requests ? `📩 ${requests} ${requests > 1 ? 'pedidos' : 'pedido'}` : '👥 Pessoas';
             }
             if (sidebarPrivacyBtnText) {
                 sidebarPrivacyBtnText.textContent = isPublic ? 'Tornar Privada' : 'Tornar Pública';
             }
 
-            // Guard active player view if privacy changed to private while unauthorized
-            if (playerView.classList.contains("active-view") && !isPublic && !isOwner) {
+            // Guard active player view if the score became private or the visitor's invite was removed
+            if (playerView.classList.contains("active-view") && !canOpenScore(currentScore)) {
                 closePlayer();
-                showToast('A partitura foi definida como privada pelo autor.', '🔒');
+                showToast('Esta partitura não está mais disponível para você.', '🔒');
             }
         }
 
@@ -3441,6 +3669,283 @@
                 });
         }
 
+        // -------------------------------------------------------------
+        // SHARING A PRIVATE SCORE WITH SPECIFIC PEOPLE
+        // -------------------------------------------------------------
+        // scoreShares/{scoreId}/members/{email}: people the author invited; they open the score while it is private.
+        // scoreShares/{scoreId}/requests/{uid}: people who opened its link without an invite and asked for access.
+        const sharedWithMe = {};
+        const shareMembers = {};
+        const shareRequests = {};
+        let shareUnsubs = [];
+        let sharesLoaded = !db;
+
+        function shareDoc(score) {
+            return db.collection('scoreShares').doc(score.id);
+        }
+
+        function subscribeShares() {
+            shareUnsubs.forEach(unsub => unsub());
+            shareUnsubs = [];
+            [sharedWithMe, shareMembers, shareRequests].forEach(map => Object.keys(map).forEach(id => delete map[id]));
+            sharesLoaded = true;
+            if (!db || !currentUser) return;
+
+            // A shared link waits until every invite check has answered once
+            let pending = 0;
+            const watch = (query, onSnap) => {
+                let first = true;
+                pending++;
+                const loaded = () => {
+                    if (!first) return;
+                    first = false;
+                    if (--pending === 0) {
+                        sharesLoaded = true;
+                        openSharedScoreIfPending();
+                    }
+                };
+                shareUnsubs.push(query.onSnapshot(snap => {
+                    onSnap(snap);
+                    loaded();
+                    updateScorePrivacyUI();
+                    renderShareModal();
+                }, err => {
+                    console.warn("Share sync error:", err);
+                    loaded();
+                }));
+            };
+
+            SCORE_CATALOG.forEach(score => {
+                if (isAuthorViewer()) {
+                    watch(shareDoc(score).collection('members'), snap => {
+                        shareMembers[score.id] = snap.docs.map(d => d.id).sort();
+                    });
+                    watch(shareDoc(score).collection('requests').orderBy('createdAt'), snap => {
+                        shareRequests[score.id] = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+                    });
+                } else if (currentUser.emailVerified && viewerEmail()) {
+                    watch(shareDoc(score).collection('members').doc(viewerEmail()), snap => {
+                        sharedWithMe[score.id] = snap.exists;
+                    });
+                }
+            });
+            sharesLoaded = pending === 0;
+        }
+
+        // Panel for a link to a private score the visitor wasn't invited to: ask the author for access
+        const accessRequestPanel = document.getElementById("accessRequestPanel");
+        const accessRequestIcon = document.getElementById("accessRequestIcon");
+        const accessRequestTitle = document.getElementById("accessRequestTitle");
+        const accessRequestText = document.getElementById("accessRequestText");
+        const accessRequestBtn = document.getElementById("accessRequestBtn");
+        const accessRequestDismissBtn = document.getElementById("accessRequestDismissBtn");
+        let accessScore = null;
+        let accessRequested = false;
+        let accessRequestUnsub = null;
+
+        function showAccessRequest(score) {
+            closeAccessRequest();
+            accessScore = score;
+            history.replaceState(null, '', `${location.pathname}?partitura=${encodeURIComponent(score.slug)}`);
+            accessRequestUnsub = shareDoc(score).collection('requests').doc(currentUser.uid).onSnapshot(snap => {
+                accessRequested = snap.exists;
+                renderAccessRequest();
+            }, err => console.warn("Access request sync error:", err));
+            accessRequestPanel.style.display = '';
+            renderAccessRequest();
+            showView(libraryView);
+        }
+
+        function closeAccessRequest() {
+            if (accessRequestUnsub) accessRequestUnsub();
+            accessRequestUnsub = null;
+            accessScore = null;
+            accessRequested = false;
+            if (accessRequestPanel) accessRequestPanel.style.display = 'none';
+        }
+
+        function renderAccessRequest() {
+            if (!accessScore) return;
+            const title = accessScore.sidebarTitle;
+            if (canOpenScore(accessScore)) {
+                accessRequestIcon.textContent = '✅';
+                accessRequestTitle.textContent = 'Acesso liberado';
+                accessRequestText.textContent = `O proprietário liberou "${title}" para você.`;
+                accessRequestBtn.innerHTML = '<span>▶</span> <span>Abrir partitura</span>';
+            } else if (accessRequested) {
+                accessRequestIcon.textContent = '📩';
+                accessRequestTitle.textContent = 'Solicitação enviada';
+                accessRequestText.textContent = `O proprietário de "${title}" vai ver seu pedido. Quando ele aceitar, o acesso aparece aqui e na sua biblioteca.`;
+                accessRequestBtn.innerHTML = '<span>Cancelar solicitação</span>';
+            } else {
+                accessRequestIcon.textContent = '🔒';
+                accessRequestTitle.textContent = 'Partitura privada';
+                accessRequestText.textContent = `"${title}" só abre para quem o proprietário convidou. Solicite acesso: ele recebe seu nome e e-mail (${viewerEmail()}) e decide se aceita.`;
+                accessRequestBtn.innerHTML = '<span>📩</span> <span>Solicitar acesso</span>';
+            }
+        }
+
+        if (accessRequestBtn) {
+            accessRequestBtn.addEventListener("click", async () => {
+                const score = accessScore;
+                if (!score || !currentUser || !db) return;
+                const requestRef = shareDoc(score).collection('requests').doc(currentUser.uid);
+                if (canOpenScore(score)) {
+                    closeAccessRequest();
+                    openScore(score);
+                    return;
+                }
+                accessRequestBtn.disabled = true;
+                try {
+                    if (accessRequested) {
+                        await requestRef.delete();
+                        showToast('Solicitação cancelada.', '↩️');
+                    } else {
+                        // The rules compare name and e-mail with the sign-in token
+                        const token = await currentUser.getIdTokenResult();
+                        await requestRef.set({
+                            email: viewerEmail(),
+                            name: token.claims.name || '',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        showToast('Pedido de acesso enviado ao proprietário!', '📩');
+                    }
+                } catch (err) {
+                    console.error("Access request error:", err);
+                    showToast('Não foi possível enviar o pedido agora. Tente novamente.', '⚠️');
+                }
+                accessRequestBtn.disabled = false;
+            });
+        }
+
+        if (accessRequestDismissBtn) {
+            accessRequestDismissBtn.addEventListener("click", () => {
+                closeAccessRequest();
+                history.replaceState(null, '', location.pathname);
+            });
+        }
+
+        // Author's dialog: invite e-mails, answer access requests, remove people, copy the link
+        const shareModal = document.getElementById("shareModal");
+        const shareModalSub = document.getElementById("shareModalSub");
+        const shareForm = document.getElementById("shareForm");
+        const shareEmailInput = document.getElementById("shareEmailInput");
+        const shareStatus = document.getElementById("shareStatus");
+        const shareRequestsTitle = document.getElementById("shareRequestsTitle");
+        const shareRequestsList = document.getElementById("shareRequestsList");
+        const shareMembersList = document.getElementById("shareMembersList");
+        let shareModalScore = null;
+
+        function setShareStatus(text, isError = false) {
+            shareStatus.textContent = text;
+            shareStatus.classList.toggle("error", isError);
+        }
+
+        function openShareModal(score) {
+            if (!isAuthorViewer() || !db) return;
+            shareModalScore = score;
+            setShareStatus('');
+            renderShareModal();
+            shareModal.classList.remove("hidden");
+        }
+
+        function renderShareModal() {
+            if (!shareModalScore || !shareModal) return;
+            const score = shareModalScore;
+            shareModalSub.textContent = privacyOf(score) === 'public'
+                ? `"${score.sidebarTitle}" está pública: qualquer pessoa logada pode abrir. Os convites valem quando ela estiver privada.`
+                : `"${score.sidebarTitle}" está privada: só você e as pessoas abaixo podem abrir. Quem abrir o link sem convite pode pedir acesso.`;
+
+            const requests = shareRequests[score.id] || [];
+            shareRequestsTitle.style.display = requests.length ? '' : 'none';
+            shareRequestsList.innerHTML = requests.map(r => `
+                <div class="share-item">
+                    <div class="share-item-info">
+                        <span class="share-item-name">${escapeHtml(r.name || r.email)}</span>
+                        <span class="share-item-email">${escapeHtml(r.email)}</span>
+                    </div>
+                    <div class="share-item-actions">
+                        <button class="share-accept-btn" data-accept-uid="${escapeHtml(r.uid)}">Aceitar</button>
+                        <button class="comment-delete-btn" data-decline-uid="${escapeHtml(r.uid)}">Recusar</button>
+                    </div>
+                </div>`).join('');
+
+            const members = shareMembers[score.id] || [];
+            shareMembersList.innerHTML = members.length
+                ? members.map(email => `
+                    <div class="share-item">
+                        <div class="share-item-info"><span class="share-item-email">${escapeHtml(email)}</span></div>
+                        <button class="comment-delete-btn" data-remove-email="${escapeHtml(email)}">Remover</button>
+                    </div>`).join('')
+                : '<div class="share-empty">Ninguém convidado ainda.</div>';
+        }
+
+        if (shareForm) {
+            shareForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const score = shareModalScore;
+                const email = shareEmailInput.value.trim().toLowerCase();
+                if (!score) return;
+                if (!/^[^@\s\/]+@[^@\s\/]+\.[^@\s\/]+$/.test(email)) {
+                    setShareStatus('Digite um e-mail válido.', true);
+                    return;
+                }
+                if (email === AUTHOR_EMAIL) {
+                    setShareStatus('Você já tem acesso como autor.', true);
+                    return;
+                }
+                shareDoc(score).collection('members').doc(email).set({ addedAt: firebase.firestore.FieldValue.serverTimestamp() })
+                    .then(() => {
+                        shareEmailInput.value = '';
+                        setShareStatus(`${email} já pode abrir a partitura. Envie o link para essa pessoa.`);
+                    })
+                    .catch(err => {
+                        console.error("Invite error:", err);
+                        setShareStatus('Não foi possível convidar agora. Tente novamente.', true);
+                    });
+            });
+        }
+
+        if (shareModal) {
+            shareModal.addEventListener("click", (e) => {
+                const score = shareModalScore;
+                if (e.target === shareModal || e.target.id === 'closeShareModalBtn') {
+                    shareModal.classList.add("hidden");
+                    return;
+                }
+                if (!score) return;
+                const members = shareDoc(score).collection('members');
+                const requests = shareDoc(score).collection('requests');
+                const accept = e.target.closest("[data-accept-uid]");
+                const decline = e.target.closest("[data-decline-uid]");
+                const remove = e.target.closest("[data-remove-email]");
+                if (accept) {
+                    const req = (shareRequests[score.id] || []).find(r => r.uid === accept.dataset.acceptUid);
+                    if (!req) return;
+                    const batch = db.batch();
+                    batch.set(members.doc(req.email), { addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    batch.delete(requests.doc(req.uid));
+                    batch.commit()
+                        .then(() => setShareStatus(`${req.email} agora tem acesso.`))
+                        .catch(err => { console.error("Accept error:", err); setShareStatus('Não foi possível aceitar agora.', true); });
+                } else if (decline) {
+                    requests.doc(decline.dataset.declineUid).delete()
+                        .then(() => setShareStatus('Pedido recusado.'))
+                        .catch(err => { console.error("Decline error:", err); setShareStatus('Não foi possível recusar agora.', true); });
+                } else if (remove) {
+                    const email = remove.dataset.removeEmail;
+                    members.doc(email).delete()
+                        .then(() => setShareStatus(`${email} não tem mais acesso.`))
+                        .catch(err => { console.error("Remove error:", err); setShareStatus('Não foi possível remover agora.', true); });
+                } else if (e.target.closest("#shareCopyLinkBtn")) {
+                    const url = `${location.origin}/?partitura=${encodeURIComponent(score.slug)}`;
+                    navigator.clipboard.writeText(url)
+                        .then(() => setShareStatus('Link copiado! Envie para quem você convidou.'))
+                        .catch(() => setShareStatus(`Link: ${url}`));
+                }
+            });
+        }
+
         function updateAuthState(user) {
             const userChanged = (currentUser ? currentUser.uid : null) !== (user ? user.uid : null);
             currentUser = user;
@@ -3448,6 +3953,8 @@
                 // Not authenticated -> show login view
                 pausePlayback();
                 unsubscribeViewerData();
+                subscribeShares();
+                closeAccessRequest();
                 showView(loginView);
                 return;
             }
@@ -3467,7 +3974,11 @@
                 userAvatarFallback.innerText = (email.charAt(0) || "U").toUpperCase();
             }
 
-            if (userChanged) subscribeViewerData();
+            if (userChanged) {
+                closeAccessRequest();
+                subscribeViewerData();
+                subscribeShares();
+            }
             updateScorePrivacyUI();
             updateEngagementUI();
 
@@ -4439,6 +4950,14 @@
 
         let lastPlayedScrubChord = "";
 
+        // The notes box above the cursor only shows while paused or while the user drags the cursor
+        function hideCursorTooltips() {
+            for (let p = 1; p <= PAGE_COUNT; p++) {
+                const tip = document.getElementById(`cursorTooltip${p}`);
+                if (tip) tip.style.display = "none";
+            }
+        }
+
         function updateActiveNotesUI(playSound = false) {
             // Keys of the notes under the cursor (the onset it rests on plus notes still held)
             const col = cursorColumnAt(currentMeasureIdx, currentBeat);
@@ -4583,10 +5102,7 @@
             document.body.style.userSelect = '';
             updateActiveNotesUI(false);
             setTimeout(() => {
-                for (let p = 1; p <= PAGE_COUNT; p++) {
-                    const tip = document.getElementById(`cursorTooltip${p}`);
-                    if (tip && !isScrubbing && isPlaying) tip.style.display = 'none';
-                }
+                if (!isScrubbing && isPlaying) hideCursorTooltips();
             }, 2500);
         }
 
@@ -4667,6 +5183,7 @@
         function startPlayback() {
             if (!TOTAL_MEASURES) return;
             isPlaying = true;
+            hideCursorTooltips();
             playBtn.innerHTML = "⏸";
             const fsPlayIcon = document.getElementById("fsPlayIcon");
             if (fsPlayIcon) fsPlayIcon.textContent = "⏸";
@@ -5921,6 +6438,14 @@
         }
 
 
+
+        const sidebarPeopleBtn = document.getElementById('sidebarPeopleBtn');
+        if (sidebarPeopleBtn) {
+            sidebarPeopleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (currentScore) openShareModal(currentScore);
+            });
+        }
 
         const sidebarPrivacyToggleBtn = document.getElementById('sidebarPrivacyToggleBtn');
         if (sidebarPrivacyToggleBtn) {

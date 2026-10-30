@@ -120,6 +120,35 @@ service cloud.firestore {
       }
     }
 
+    // Who may open a private score besides the author: invites (doc id = the guest's e-mail in lowercase) and
+    // access requests from people who opened its link (doc id = their uid). The author manages both lists;
+    // everyone else can only read their own invite and send or withdraw their own request.
+    match /scoreShares/{scoreId} {
+      match /members/{email} {
+        allow get: if isAuthor()
+          || (signedIn() && request.auth.token.email_verified == true && request.auth.token.email.lower() == email);
+        allow list, delete: if isAuthor();
+        allow create: if isAuthor()
+          && email == email.lower()
+          && email.matches('[^@/ ]+@[^@/ ]+[.][^@/ ]+')
+          && request.resource.data.keys().hasOnly(['addedAt'])
+          && request.resource.data.addedAt == request.time;
+      }
+
+      match /requests/{userId} {
+        allow get: if isAuthor() || (signedIn() && request.auth.uid == userId);
+        allow list: if isAuthor();
+        allow delete: if isAuthor() || (signedIn() && request.auth.uid == userId);
+        allow create: if signedIn() && request.auth.uid == userId
+          && scoreId.matches('[a-z0-9-]{1,64}')
+          && request.auth.token.email_verified == true
+          && request.resource.data.keys().hasOnly(['email', 'name', 'createdAt'])
+          && request.resource.data.email == request.auth.token.email.lower()
+          && request.resource.data.name == request.auth.token.get('name', '')
+          && request.resource.data.createdAt == request.time;
+      }
+    }
+
     // Followers of an arranger: each follower only sees and changes their own follow
     match /authors/{authorId}/followers/{userId} {
       allow read, delete: if signedIn() && request.auth.uid == userId;
