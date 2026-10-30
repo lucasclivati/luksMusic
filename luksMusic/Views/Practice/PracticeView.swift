@@ -164,6 +164,8 @@ struct PracticeView: View {
             }
         )
         .frame(height: height)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("practiceKeyboard")
     }
     
     @ViewBuilder

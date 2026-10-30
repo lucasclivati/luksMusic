@@ -93,9 +93,12 @@ final class ScreenshotTests: XCTestCase {
         return true
     }
 
-    /// Taps the `index`-th piano key (from the left) whose label is `name`.
+    /// Taps the `index`-th key (from the left) labelled `name` on the practice keyboard; the score screen's
+    /// keyboard stays in the element tree behind the practice sheet, so the search is limited to the sheet's.
     private func tapKey(_ name: String, index: Int) {
-        let keys = app.staticTexts.matching(NSPredicate(format: "label == %@", name)).allElementsBoundByIndex
+        let keyboard = app.otherElements["practiceKeyboard"]
+        guard keyboard.waitForExistence(timeout: 5) else { return }
+        let keys = keyboard.staticTexts.matching(NSPredicate(format: "label == %@", name)).allElementsBoundByIndex
             .sorted { $0.frame.minX < $1.frame.minX }
         guard index < keys.count else { return }
         keys[index].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
