@@ -1,0 +1,85 @@
+name: App Store Screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  screenshots:
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          for v in 26.3 26.2 26.1.1 26.0.1 26; do
+            if [ -d "/Applications/Xcode_$v.app" ]; then
+              sudo xcode-select -s "/Applications/Xcode_$v.app"
+              break
+            fi
+          done
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Boot a 6.9-inch iPhone simulator
+        run: |
+          # Newest iOS runtime's "Pro Max" iPhone (1320x2868 screenshots, the App Store 6.9" size)
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          runtimes = sorted((r for r in devices if "iOS" in r), key=lambda r: [int(x) for x in r.split("iOS-")[-1].split("-")])
+          for runtime in reversed(runtimes):
+              matches = [d for d in devices[runtime] if "Pro Max" in d["name"]]
+              if matches:
+                  print(sorted(matches, key=lambda d: d["name"])[-1]["udid"])
+                  break
+          ')
+          xcrun simctl list devices | grep "$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
+            --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+          for service in microphone camera photos; do
+            xcrun simctl privacy "$UDID" grant "$service" com.lukstrike.luksMusic || true
+          done
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+
+      - name: Run screenshot walkthrough
+        run: |
+          xcodebuild test \
+            -project luksMusic.xcodeproj \
+            -scheme luksMusic \
+            -destination "id=$UDID" \
+            -only-testing:luksMusicUITests/ScreenshotTests \
+            -resultBundlePath build/Screenshots.xcresult \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+      - name: Export screenshots
+        if: always()
+        run: |
+          mkdir -p build/attachments build/screenshots
+          xcrun xcresulttool export attachments --path build/Screenshots.xcresult --output-path build/attachments
+          python3 - <<'EOF'
+          import json, pathlib, shutil
+          src = pathlib.Path("build/attachments")
+          for test in json.loads((src / "manifest.json").read_text()):
+              for a in test.get("attachments", []):
+                  name = a.get("suggestedHumanReadableName", a["exportedFileName"])
+                  shutil.copy(src / a["exportedFileName"], pathlib.Path("build/screenshots") / name)
+          EOF
+          ls -la build/screenshots
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-store-screenshots
+          path: build/screenshots

@@ -113,6 +113,7 @@ struct ScoreView: View {
                                 )
                                 .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
                         }
+                        .accessibilityIdentifier("practiceModeButton")
                         
                         // 3. Settings Button (Opens authentic MuseScore Settings Sheet)
                         Button {
@@ -128,6 +129,7 @@ struct ScoreView: View {
                                 )
                                 .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
                         }
+                        .accessibilityIdentifier("scoreSettingsButton")
                         
                         // 4. Menu Expander Button (Image 4)
                         Button {
@@ -473,6 +475,7 @@ struct ScoreView: View {
                         .offset(x: viewModel.isPlaying ? 0 : 1.5)
                 }
             }
+            .accessibilityIdentifier("playPauseButton")
             
             // 4. Hands Mixer / Volumes Button
             Button {
@@ -493,6 +496,7 @@ struct ScoreView: View {
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.white)
             }
+            .accessibilityIdentifier("drawerToggleButton")
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 8)

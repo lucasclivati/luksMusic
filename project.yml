@@ -80,11 +80,28 @@ targets:
       - package: AudioKit
       - package: Tonic
 
+  luksMusicUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: luksMusicUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lukstrike.luksMusicUITests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: luksMusic
+
 schemes:
   luksMusic:
     build:
       targets:
         luksMusic: all
+    test:
+      config: Debug
+      targets:
+        - luksMusicUITests
     run:
       config: Debug
       commandLineArguments:

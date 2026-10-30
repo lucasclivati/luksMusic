@@ -70,9 +70,9 @@ struct ScoreSettingsView: View {
                         )
                     }
                     
-                    // MARK: - Section 2: MUSESCORE HQ+ SETTINGS
+                    // MARK: - Section 2: HQ+ SOUND SETTINGS
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("MUSESCORE HQ+ SETTINGS")
+                        Text("HQ+ SOUND SETTINGS")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(Color.black.opacity(0.45))
                             .tracking(0.5)
@@ -123,6 +123,7 @@ struct ScoreSettingsView: View {
                             Toggle("", isOn: $showKeyboard)
                                 .labelsHidden()
                                 .tint(musePurple)
+                                .accessibilityIdentifier("displayKeyboardToggle")
                         }
                     }
                     
