@@ -208,7 +208,9 @@ struct MeasureView: View {
                     useBeatColors: false,
                     isBeamed: isBeamed
                 )
-                // Zero-width frame centers the notehead on xPos regardless of lyric/accidental width
+                // Zero-width frame centers the notehead on xPos regardless of lyric/accidental width;
+                // fixedSize keeps the lyric from being squeezed into that zero width
+                .fixedSize()
                 .frame(width: 0)
                 .offset(x: xPos)
             }
@@ -218,7 +220,8 @@ struct MeasureView: View {
                 renderBeam(for: group)
             }
         }
-        .frame(width: measureWidth, height: lineSpacing * 4)
+        // Leading alignment: x offsets are measured from the measure's left edge, not from a centered stack
+        .frame(width: measureWidth, height: lineSpacing * 4, alignment: .leading)
     }
     
     private func findBeamedGroups(in notes: [Note]) -> [[Note]] {

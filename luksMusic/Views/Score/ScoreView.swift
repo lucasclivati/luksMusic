@@ -259,10 +259,14 @@ struct ScoreView: View {
                     ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
                         let isCurrent = (index == viewModel.currentMeasureIndex)
                         let isFirstMeasure = (index == 0)
-                        let leftWidth: CGFloat = isFirstMeasure ? 64.0 : 48.0
+                        let lineSpacing: CGFloat = (displayMode == .portraitView ? 8.5 : 9.5) * zoomScale
+                        let leftWidth = StaffView.preferredWidth(
+                            lineSpacing: lineSpacing,
+                            keySignatureValue: viewModel.currentKeySignatureValue,
+                            showTimeSignature: isFirstMeasure
+                        )
                         let systemWidth = max(260.0, geometry.size.width - 24.0)
                         let measureWidth = systemWidth - leftWidth
-                        let lineSpacing: CGFloat = (displayMode == .portraitView ? 6.4 : 7.2) * zoomScale
                         
                         HStack(alignment: .top, spacing: 0) {
                             // Left Clefs, Signatures & Grand Staff Brace
@@ -335,9 +339,13 @@ struct ScoreView: View {
                         ForEach(Array(viewModel.score.measures.enumerated()), id: \.element.id) { index, measure in
                             let isCurrent = (index == viewModel.currentMeasureIndex)
                             let isFirstMeasure = (index == 0)
-                            let leftWidth: CGFloat = isFirstMeasure ? 64.0 : 44.0
-                            let measureWidth: CGFloat = 280.0 * zoomScale
-                            let lineSpacing: CGFloat = 7.0 * zoomScale
+                            let lineSpacing: CGFloat = 8.5 * zoomScale
+                            let leftWidth = StaffView.preferredWidth(
+                                lineSpacing: lineSpacing,
+                                keySignatureValue: viewModel.currentKeySignatureValue,
+                                showTimeSignature: isFirstMeasure
+                            )
+                            let measureWidth: CGFloat = 340.0 * zoomScale
                             
                             HStack(alignment: .top, spacing: 0) {
                                 StaffView(

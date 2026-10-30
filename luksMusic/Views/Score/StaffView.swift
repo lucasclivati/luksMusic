@@ -28,12 +28,12 @@ struct StaffView: View {
                 .padding(.horizontal, 2)
             }
             
-            // Continuous 5-line staff backdrop
+            // Continuous 5-line staff backdrop, filling any room left up to the first measure
             VStack(spacing: lineSpacing * 3.5) {
                 singleStaffLines()
                 singleStaffLines()
             }
-            .frame(width: 3)
+            .frame(minWidth: 3, maxWidth: .infinity)
         }
     }
     
@@ -86,39 +86,38 @@ struct StaffView: View {
     }
     
     // MARK: - Key Signature Accidentals
-    
+
+    /// Staff steps above the bottom line for each accidental, in key-signature order.
+    private func accidentalSteps(staff: Staff, sharps: Bool) -> [Int] {
+        switch (staff, sharps) {
+        case (.treble, true): return [8, 5, 9, 6, 3, 7, 4]   // F C G D A E B
+        case (.treble, false): return [4, 7, 3, 6, 2, 5, 1]  // B E A D G C F
+        case (.bass, true): return [6, 3, 7, 4, 1, 5, 2]
+        case (.bass, false): return [2, 5, 1, 4, 0, 3, -1]
+        }
+    }
+
     @ViewBuilder
     private func renderKeySignatureAccidentals(staff: Staff) -> some View {
+        let isSharp = keySignatureValue > 0
+        let steps = accidentalSteps(staff: staff, sharps: isSharp)
         HStack(spacing: 2) {
-            if keySignatureValue == -3 || keySignatureValue == -2 {
-                // 1st flat: B♭
-                Text("♭")
+            ForEach(0..<min(7, abs(keySignatureValue)), id: \.self) { i in
+                // Step 4 is the middle line, where the staff block is centered
+                Text(isSharp ? "♯" : "♭")
                     .font(.system(size: lineSpacing * 1.45, weight: .bold))
-                    .offset(y: staff == .treble ? 0 : lineSpacing * 1.0) // Line 3 for treble, Line 2 for bass
-                
-                // 2nd flat: E♭
-                Text("♭")
-                    .font(.system(size: lineSpacing * 1.45, weight: .bold))
-                    .offset(y: staff == .treble ? -lineSpacing * 1.5 : -lineSpacing * 0.5) // Space 4 for treble, Space 3 for bass
-                
-                if keySignatureValue == -3 {
-                    // 3rd flat: A♭
-                    Text("♭")
-                        .font(.system(size: lineSpacing * 1.45, weight: .bold))
-                        .offset(y: staff == .treble ? lineSpacing * 0.5 : lineSpacing * 2.0) // Space 2 for treble, Line 1 for bass
-                }
-            } else if keySignatureValue != 0 {
-                // Generic fallback for other keys
-                let count = abs(keySignatureValue)
-                let isSharp = keySignatureValue > 0
-                ForEach(0..<min(7, count), id: \.self) { _ in
-                    Text(isSharp ? "♯" : "♭")
-                        .font(.system(size: lineSpacing * 1.4, weight: .bold))
-                }
+                    .offset(y: -CGFloat(steps[i] - 4) * lineSpacing * 0.5)
             }
         }
     }
-    
+
+    /// Width the brace, clef, key signature and optional time signature need at this staff size.
+    static func preferredWidth(lineSpacing: CGFloat, keySignatureValue: Int, showTimeSignature: Bool) -> CGFloat {
+        let accidentals = CGFloat(min(7, abs(keySignatureValue)))
+        let timeSignature = showTimeSignature ? lineSpacing * 1.4 + 5 : 0
+        return 10 + 4 + lineSpacing * 2.6 + 5 + accidentals * (lineSpacing * 0.9 + 2) + timeSignature + 8
+    }
+
     // MARK: - Grand Staff Brace
     
     @ViewBuilder
