@@ -7,6 +7,7 @@
     <!-- Firebase SDK Compat -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <!-- Tone.js for Sampled Concert Grand Piano -->
     <script src="Tone.js"></script>
     <!-- Score Data & Measure Layout (Measures 1 to 56) -->
@@ -1000,6 +1001,7 @@
         .playback-cursor-line {
             position: absolute;
             width: 3px;
+            transform: translateX(-50%);
             background: #2563eb;
             box-shadow: 0 0 10px rgba(37, 99, 235, 0.9), 0 0 3px #38bdf8;
             pointer-events: auto !important;
@@ -2747,6 +2749,9 @@
                     </button>
                 </div>
             </div>
+            <p id="libraryEmptyNotice" style="display: none; color: #94a3b8; font-size: 14px; text-align: center; padding: 40px 0;">
+                Nenhuma partitura pública disponível no momento.
+            </p>
         </main>
     </div>
 
@@ -3356,6 +3361,8 @@
 
         const auth = firebase.auth ? firebase.auth() : null;
         const googleProvider = firebase.auth ? new firebase.auth.GoogleAuthProvider() : null;
+        const db = firebase.firestore ? firebase.firestore() : null;
+        const LOTM_PRIVACY_DOC = db ? db.collection('scoreSettings').doc('lotm') : null;
 
         // View Management
         const loginView = document.getElementById("loginView");
@@ -3390,7 +3397,15 @@
         // -------------------------------------------------------------
         // SCORE PRIVACY: PUBLIC VS PRIVATE MANAGEMENT
         // -------------------------------------------------------------
-        let scorePrivacy = localStorage.getItem('luksmusic_score_privacy_lotm') || 'private';
+        // Visibility lives in Firestore (scoreSettings/lotm) so every visitor sees the author's choice;
+        // the score stays private until that document says otherwise.
+        let scorePrivacy = 'private';
+        if (LOTM_PRIVACY_DOC) {
+            LOTM_PRIVACY_DOC.onSnapshot(snap => {
+                scorePrivacy = (snap.exists && snap.data().privacy === 'public') ? 'public' : 'private';
+                updateScorePrivacyUI();
+            }, err => console.warn("Privacy sync error:", err));
+        }
 
         function updateScorePrivacyUI() {
             const email = (currentUser && currentUser.email ? currentUser.email : "").toLowerCase().trim();
@@ -3444,6 +3459,12 @@
                 }
             }
 
+            // Private scores don't appear for anyone but the author
+            const hiddenForViewer = !isPublic && !isOwner;
+            lotmSongCard.style.display = hiddenForViewer ? 'none' : '';
+            const libraryEmptyNotice = document.getElementById('libraryEmptyNotice');
+            if (libraryEmptyNotice) libraryEmptyNotice.style.display = hiddenForViewer ? 'block' : 'none';
+
             // Player Sidebar Elements
             const sidebarPrivacyCard = document.getElementById('sidebarPrivacyCard');
             const sidebarPrivacyIcon = document.getElementById('sidebarPrivacyIcon');
@@ -3489,16 +3510,26 @@
                 return;
             }
 
-            scorePrivacy = (scorePrivacy === 'public') ? 'private' : 'public';
-            localStorage.setItem('luksmusic_score_privacy_lotm', scorePrivacy);
-            updateScorePrivacyUI();
-            if (typeof updateEngagementUI === 'function') updateEngagementUI();
-
-            if (scorePrivacy === 'public') {
-                showToast('Partitura definida como PÚBLICA! Qualquer pessoa agora pode acessar.', '🌐');
-            } else {
-                showToast('Partitura definida como PRIVADA! Acesso restrito apenas à sua conta.', '🔒');
+            if (!LOTM_PRIVACY_DOC) {
+                showToast('Não foi possível salvar a visibilidade agora.', '⚠️');
+                return;
             }
+
+            // The snapshot listener updates the UI (immediately, then again once the server confirms)
+            const nextPrivacy = (scorePrivacy === 'public') ? 'private' : 'public';
+            LOTM_PRIVACY_DOC.set({ privacy: nextPrivacy, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+                .then(() => {
+                    if (typeof updateEngagementUI === 'function') updateEngagementUI();
+                    if (nextPrivacy === 'public') {
+                        showToast('Partitura definida como PÚBLICA! Qualquer pessoa agora pode acessar.', '🌐');
+                    } else {
+                        showToast('Partitura definida como PRIVADA! Só você vê esta partitura.', '🔒');
+                    }
+                })
+                .catch(err => {
+                    console.error("Privacy save error:", err);
+                    showToast('Não foi possível salvar a visibilidade. Tente novamente.', '⚠️');
+                });
         }
 
         function updateAuthState(user) {
@@ -3638,6 +3669,19 @@
         // -------------------------------------------------------------
         const SCORE_DATA = window.SCORE_DATA || [];
         const MEASURE_LAYOUT = window.MEASURE_LAYOUT || [];
+        // Notehead x (page %) of every onset, measured on the engraved SVG pages: { measure: [[beat, xPct], ...] }
+        const NOTE_COLUMNS = window.NOTE_COLUMNS || {};
+
+        // Column of the latest onset at or before `beat`, so the cursor always rests on a notehead
+        function cursorColumnAt(mIdx, beat) {
+            const cols = NOTE_COLUMNS[mIdx + 1];
+            if (!cols || !cols.length) return null;
+            let col = cols[0];
+            for (const c of cols) {
+                if (c[0] <= beat + 0.001) col = c;
+            }
+            return col;
+        }
 
         class ScoreAudioEngine {
             constructor() {
@@ -4419,7 +4463,10 @@
         let lastPlayedScrubChord = "";
 
         function updateActiveNotesUI(playSound = false) {
-            const active = getNotesActiveAt(currentMeasureIdx, currentBeat);
+            // Keys of the notes under the cursor (the onset it rests on plus notes still held)
+            const col = cursorColumnAt(currentMeasureIdx, currentBeat);
+            const cursorBeat = col ? col[0] : currentBeat;
+            const active = getNotesActiveAt(currentMeasureIdx, cursorBeat);
             
             // Keep keys pressed down on the piano keyboard!
             holdActiveKeysOnPiano(active.trebleMidi, active.bassMidi);
@@ -4444,7 +4491,7 @@
             if (tooltip) {
                 const rhShort = active.trebleMidi.map(m => midiToNoteName(m).split(" ")[0]).join(", ") || "—";
                 const lhShort = active.bassMidi.map(m => midiToNoteName(m).split(" ")[0]).join(", ") || "—";
-                tooltip.textContent = `C.${mNum} (T.${currentBeat.toFixed(1)}) • RH: ${rhShort} | LH: ${lhShort}`;
+                tooltip.textContent = `C.${mNum} (T.${cursorBeat.toFixed(1)}) • RH: ${rhShort} | LH: ${lhShort}`;
                 tooltip.style.display = isScrubbing || !isPlaying ? "block" : "none";
             }
 
@@ -4507,8 +4554,12 @@
 
             if (!matchM) return null;
 
+            // Snap to the note closest to the click
+            const cols = NOTE_COLUMNS[matchM.number];
             const beatFrac = Math.max(0, Math.min(1.0, (clickXPct - matchM.left_pct) / matchM.width_pct));
-            const beat = 1.0 + beatFrac * 4.0;
+            const beat = (cols && cols.length)
+                ? cols.reduce((best, c) => Math.abs(c[1] - clickXPct) < Math.abs(best[1] - clickXPct) ? c : best)[0]
+                : 1.0 + beatFrac * 4.0;
             return {
                 measure: matchM,
                 measureIdx: matchM.number - 1,
@@ -4818,8 +4869,9 @@
             box.style.width = `${mDef.width_pct}%`;
             box.style.height = `${mDef.height_pct + padH}%`;
 
+            const col = cursorColumnAt(currentMeasureIdx, currentBeat);
             const beatFrac = Math.max(0, Math.min(1.0, (currentBeat - 1.0) / 4.0));
-            const curLeftPct = mDef.left_pct + beatFrac * mDef.width_pct;
+            const curLeftPct = col ? col[1] : mDef.left_pct + beatFrac * mDef.width_pct;
             cur.style.left = `${curLeftPct}%`;
             cur.style.top = `${Math.max(0, mDef.top_pct - padTop)}%`;
             cur.style.height = `${mDef.height_pct + padH}%`;
