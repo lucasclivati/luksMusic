@@ -55,8 +55,19 @@ final class ScreenshotTests: XCTestCase {
             }
 
             if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["menuPracticeButton"]) {
-                pause(3)
+                // Let the engraved strip render in the web view
+                pause(5)
                 capture("04-practice")
+
+                // Guided practice: playing the opening E5 D#5 E5 D#5 moves the score's cursor to the fifth note.
+                // Für Elise's practice keyboard starts at C2, so the fourth E and D# from the left are in octave 5.
+                tapIfExists(app.buttons["practicePlayButton"])
+                for name in ["E", "D#", "E", "D#"] {
+                    tapKey(name, index: 3)
+                    pause(0.6)
+                }
+                pause(2)
+                capture("07-practice-progress")
                 tapIfExists(app.buttons["Done"])
             }
         }
@@ -80,6 +91,14 @@ final class ScreenshotTests: XCTestCase {
         guard element.waitForExistence(timeout: 5) else { return false }
         element.tap()
         return true
+    }
+
+    /// Taps the `index`-th piano key (from the left) whose label is `name`.
+    private func tapKey(_ name: String, index: Int) {
+        let keys = app.staticTexts.matching(NSPredicate(format: "label == %@", name)).allElementsBoundByIndex
+            .sorted { $0.frame.minX < $1.frame.minX }
+        guard index < keys.count else { return }
+        keys[index].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     private func waitForLabel(_ element: XCUIElement, _ label: String) {

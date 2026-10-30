@@ -35,6 +35,8 @@ final class PracticeViewModel {
     // Active / Expected notes
     var expectedNotes: [Note] = []
     var activeTargetMidiNotes: Set<Int> = []
+    // Onset of the expected notes in the current measure (drives the engraved score's cursor)
+    var cursorBeat: Double = 1.0
     var correctKeyFeedback: Set<Int> = []
     var incorrectKeyFeedback: Set<Int> = []
     
@@ -50,11 +52,16 @@ final class PracticeViewModel {
     private let audioEngine = AudioEngineService.shared
     private let midiService = MIDIService.shared
     private var practiceTimer: Timer?
+    // Keys of the expected chord already played (guided mode waits for all of them)
+    private var playedTargetNotes: Set<Int> = []
+    // Decoded once: `score.measures` decodes JSON on every access and the practice clock reads it every step
+    private let measures: [Measure]
     
     // MARK: - Initialization
     
     init(score: Score, practiceMode: PracticeMode = .guided) {
         self.score = score
+        self.measures = score.measures
         self.practiceMode = practiceMode
         self.tempoBPM = practiceMode == .slowPractice ? max(40, Int(Double(score.tempo) * 0.7)) : score.tempo
         self.practiceEndMeasure = max(1, score.measureCount)
@@ -170,9 +177,12 @@ final class PracticeViewModel {
                 self?.correctKeyFeedback.remove(midiNote)
             }
             
-            // In guided mode, if all target notes for current beat are hit, advance!
+            // In guided mode, once every note of the expected chord is played, move on to the next note
             if practiceMode == .guided {
-                advancePracticeBeat()
+                playedTargetNotes.insert(midiNote)
+                if activeTargetMidiNotes.isSubset(of: playedTargetNotes) {
+                    advanceToNextNote()
+                }
             }
         } else {
             incorrectNotes += 1
@@ -204,11 +214,10 @@ final class PracticeViewModel {
         }
     }
     
-    private func advancePracticeBeat(step: Double = 0.5) {
+    private func advancePracticeBeat(step: Double) {
         currentBeat += step
-        let maxBeats = Double(score.timeSignatureTop)
-        
-        if currentBeat > maxBeats {
+        // Beats count from 1, so the measure's last beat ends at timeSignatureTop + 1
+        if currentBeat >= Double(score.timeSignatureTop) + 1.0 {
             currentBeat = 1.0
             if currentMeasureIndex + 1 < practiceEndMeasure {
                 currentMeasureIndex += 1
@@ -221,17 +230,65 @@ final class PracticeViewModel {
         updateExpectedNotes()
     }
     
+    /// Guided mode: steps past the expected notes; `updateExpectedNotes` lands on the next onset.
+    private func advanceToNextNote() {
+        currentBeat += 0.01
+        updateExpectedNotes()
+    }
+    
+    /// Moves practice to a note tapped on the engraved score.
+    func seek(toMeasure index: Int, beat: Double) {
+        guard index >= 0 && index < measures.count else { return }
+        currentMeasureIndex = index
+        currentBeat = beat
+        updateExpectedNotes()
+    }
+    
+    /// Re-targets the expected notes (hand filter, guided stepping) and the timer after the mode changes.
+    func practiceModeChanged() {
+        practiceTimer?.invalidate()
+        practiceTimer = nil
+        if isRunning && !isPaused {
+            startPracticeTimer()
+        }
+        updateExpectedNotes()
+    }
+    
     private func updateExpectedNotes() {
-        guard currentMeasureIndex < score.measures.count else {
+        playedTargetNotes = []
+        // Guided mode waits on the next note to play, even when it is a few measures ahead
+        if practiceMode == .guided, let next = nextNoteOnset(measure: currentMeasureIndex, from: currentBeat) {
+            currentMeasureIndex = next.measure
+            currentBeat = next.beat
+        }
+        
+        guard currentMeasureIndex < measures.count else {
             expectedNotes = []
             activeTargetMidiNotes = []
             return
         }
         
-        let currentMeasure = score.measures[currentMeasureIndex]
+        let currentMeasure = measures[currentMeasureIndex]
+        let candidates = practiceNotes(in: currentMeasure)
         
-        // Filter notes by practice mode
-        let candidates = currentMeasure.notes.filter { note in
+        // The latest onset reached; timed modes accept it one timer step early
+        let reach = currentBeat + (practiceMode == .guided ? 0.001 : 0.25)
+        let onset = candidates.map(\.position.beat).filter { $0 <= reach }.max()
+        expectedNotes = onset.map { beat in candidates.filter { abs($0.position.beat - beat) < 0.001 } } ?? []
+        
+        let targets = Set(expectedNotes.map { Int($0.midiNote) })
+        if targets != activeTargetMidiNotes {
+            activeTargetMidiNotes = targets
+        }
+        let cursorOnset = onset ?? currentMeasure.cursorBeat(at: currentBeat)
+        if cursorOnset != cursorBeat {
+            cursorBeat = cursorOnset
+        }
+    }
+    
+    /// Notes the current mode asks for in `measure` (one hand only in the hands-separate modes).
+    private func practiceNotes(in measure: Measure) -> [Note] {
+        measure.notes.filter { note in
             guard !note.isRest else { return false }
             switch practiceMode {
             case .handsSeparateRight:
@@ -242,11 +299,24 @@ final class PracticeViewModel {
                 return true
             }
         }
-        
-        // Find notes on or near current beat
-        let active = candidates.filter { abs($0.position.beat - currentBeat) < 0.35 }
-        expectedNotes = active.isEmpty ? candidates.prefix(2).map { $0 } : active
-        activeTargetMidiNotes = Set(expectedNotes.map { Int($0.midiNote) })
+    }
+    
+    /// First onset of a note to practice at or after `beat`, moving on through the practice range and back to its start.
+    private func nextNoteOnset(measure index: Int, from beat: Double) -> (measure: Int, beat: Double)? {
+        let first = max(0, practiceStartMeasure - 1)
+        let end = min(practiceEndMeasure, measures.count)
+        var measureIndex = index
+        var fromBeat = beat
+        for _ in 0...max(0, end - first) {
+            guard measureIndex < measures.count else { break }
+            let onsets = practiceNotes(in: measures[measureIndex]).map(\.position.beat)
+            if let onset = onsets.filter({ $0 >= fromBeat - 0.001 }).min() {
+                return (measureIndex, onset)
+            }
+            measureIndex = measureIndex + 1 < end ? measureIndex + 1 : first
+            fromBeat = 0
+        }
+        return nil
     }
     
     var accuracyPercentage: Double {

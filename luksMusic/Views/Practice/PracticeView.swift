@@ -15,6 +15,9 @@ struct PracticeView: View {
     @State private var keyboardVM = PianoKeyboardViewModel()
     @State private var showStats: Bool = false
     
+    // Engraved score source for the staff strip
+    @State private var musicXML: String = ""
+    
     init(score: Score) {
         let vm = PracticeViewModel(score: score)
         _viewModel = State(initialValue: vm)
@@ -41,9 +44,9 @@ struct PracticeView: View {
                     
                     Divider()
                     
-                    // 1. Sheet Music on Top (Authentic white paper score)
+                    // 1. Engraved score on one line, its cursor on the notes to play
                     sheetMusicTopSection
-                        .frame(height: 140)
+                        .frame(height: 150)
                         .background(Color.white)
                     
                     Divider()
@@ -89,7 +92,13 @@ struct PracticeView: View {
             .sheet(isPresented: $showStats) {
                 statsSheet
             }
-            .onChange(of: viewModel.activeTargetMidiNotes) { _, targets in
+            .onAppear {
+                musicXML = MusicXMLExporter.export(viewModel.score)
+            }
+            .onChange(of: viewModel.practiceMode) { _, _ in
+                viewModel.practiceModeChanged()
+            }
+            .onChange(of: viewModel.activeTargetMidiNotes, initial: true) { _, targets in
                 keyboardVM.targetNoteKeys = targets
             }
             .onChange(of: viewModel.correctKeyFeedback) { _, correct in
@@ -108,42 +117,21 @@ struct PracticeView: View {
     
     // MARK: - Sections
     
+    /// OpenSheetMusicDisplay line scaled to the strip; tapping a note moves practice there.
     @ViewBuilder
     private var sheetMusicTopSection: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .center, spacing: 0) {
-                    // Left Grand Staff Clefs and Signatures
-                    StaffView(
-                        lineSpacing: 9.0,
-                        keySignatureValue: viewModel.score.keySignatureValue,
-                        timeSignatureTop: viewModel.score.timeSignatureTop,
-                        timeSignatureBottom: viewModel.score.timeSignatureBottom,
-                        showClefsAndSignatures: true
-                    )
-                    .padding(.leading, 8)
-                    
-                    // Measures with proportional note spacing
-                    ForEach(viewModel.score.measures) { measure in
-                        let isCurrent = measure.number == (viewModel.currentMeasureIndex + 1)
-                        MeasureView(
-                            measure: measure,
-                            isCurrent: isCurrent,
-                            currentBeat: viewModel.currentBeat,
-                            lineSpacing: 9.0,
-                            measureWidth: 260.0
-                        )
-                        .id(measure.number)
-                    }
-                }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 4)
-            }
-            .onChange(of: viewModel.currentMeasureIndex) { _, newIndex in
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    proxy.scrollTo(newIndex + 1, anchor: .center)
-                }
-            }
+        ScoreWebView(
+            title: "",
+            composer: "",
+            musicXML: musicXML,
+            measureIndex: viewModel.currentMeasureIndex,
+            cursorBeat: viewModel.cursorBeat,
+            horizontal: true,
+            fitsHeight: true,
+            topInset: 0,
+            bottomInset: 0
+        ) { measure, beat in
+            viewModel.seek(toMeasure: measure, beat: beat)
         }
     }
     
@@ -318,6 +306,7 @@ struct PracticeView: View {
                     .background(Color.accentColor)
                     .clipShape(Circle())
             }
+            .accessibilityIdentifier("practicePlayButton")
             
             Button {
                 viewModel.stopPractice(modelContext: modelContext)

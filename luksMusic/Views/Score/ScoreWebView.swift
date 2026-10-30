@@ -16,6 +16,8 @@ struct ScoreWebView: UIViewRepresentable {
     var zoom: Double = 1.0
     var transposition: Int = 0
     var horizontal: Bool = false
+    /// Scales the single line to fill the view's height (practice strip) instead of using `zoom`.
+    var fitsHeight: Bool = false
     var topInset: CGFloat = 64
     var bottomInset: CGFloat = 160
     var onSeek: (Int, Double) -> Void
@@ -54,6 +56,7 @@ struct ScoreWebView: UIViewRepresentable {
             "zoom": zoom,
             "transpose": transposition,
             "mode": horizontal ? "singleLine" : "portraitView",
+            "fit": fitsHeight,
             "topInset": Double(topInset),
             "bottomInset": Double(bottomInset)
         ])

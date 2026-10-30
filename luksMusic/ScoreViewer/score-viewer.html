@@ -42,6 +42,9 @@
     #score {
       position: relative;
     }
+    #score.fit {
+      overflow-y: clip;
+    }
   </style>
   <script src="opensheetmusicdisplay.min.js"></script>
 </head>
@@ -68,7 +71,7 @@
     let stepIndex = -1;
     let rendering = Promise.resolve();
 
-    function createOSMD(horizontal) {
+    function createOSMD(horizontal, fit) {
       container.innerHTML = "";
       const instance = new opensheetmusicdisplay.OpenSheetMusicDisplay(container, {
         backend: "svg",
@@ -82,7 +85,8 @@
         drawPartNames: false,
         drawPartAbbreviations: false,
         drawMeasureNumbers: true,
-        drawMetronomeMarks: true,
+        // The practice strip sets its own tempo, so its line leaves the score's metronome mark out
+        drawMetronomeMarks: !fit,
         autoBeam: true,
         followCursor: false,
         renderSingleHorizontalStaffline: horizontal,
@@ -99,8 +103,12 @@
 
     async function render() {
       const horizontal = state.mode === "singleLine";
+      const fit = horizontal && !!state.fit;
       document.body.classList.toggle("horizontal", horizontal);
-      osmd = createOSMD(horizontal);
+      container.classList.toggle("fit", fit);
+      container.style.marginTop = "";
+      container.style.height = "";
+      osmd = createOSMD(horizontal, fit);
       await osmd.load(state.xml);
       osmd.Sheet.Transpose = state.transpose || 0;
       osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = horizontal ? 0 : measuresPerLine(state.zoom || 1);
@@ -108,10 +116,42 @@
       osmd.zoom = state.zoom || 1;
       osmd.updateGraphic();
       osmd.render();
+      if (fit) fitToHeight();
       collectSteps();
       stepIndex = -1;
       moveCursor(state.measure || 0, state.beat || 1, false);
       post({ type: "ready", steps: steps.length });
+    }
+
+    // Practice strip: scales the line to the view's height and crops the empty page margins around it
+    function fitToHeight() {
+      const available = innerHeight - (state.topInset || 0) - (state.bottomInset || 0)
+        - document.getElementById("header").offsetHeight;
+      let box = contentBox();
+      if (!box || available < 40) return;
+      const zoom = Math.min(1.6, Math.max(0.4, osmd.zoom * (available - 8) / Math.max(1, box.height)));
+      if (Math.abs(zoom - osmd.zoom) > 0.01) {
+        osmd.zoom = zoom;
+        osmd.render();
+        box = contentBox();
+      }
+      const margin = Math.max(0, (available - box.height) / 2);
+      container.style.marginTop = `${margin - box.top}px`;
+      container.style.height = `${box.top + box.height + margin}px`;
+    }
+
+    // Drawn area of the engraving in px, relative to the score container
+    function contentBox() {
+      const svg = container.querySelector("svg");
+      if (!svg) return null;
+      const drawn = svg.getBBox();
+      const rect = svg.getBoundingClientRect();
+      const viewBox = svg.viewBox && svg.viewBox.baseVal;
+      const scale = viewBox && viewBox.height ? rect.height / viewBox.height : 1;
+      return {
+        top: rect.top - container.getBoundingClientRect().top + drawn.y * scale,
+        height: drawn.height * scale,
+      };
     }
 
     // Every cursor stop of the score with its measure, beat and on-screen box
@@ -225,11 +265,13 @@
           const needsRender = (next.xml !== undefined && next.xml !== state.xml)
             || next.zoom !== state.zoom
             || next.transpose !== state.transpose
-            || next.mode !== state.mode;
+            || next.mode !== state.mode
+            || next.fit !== state.fit;
           const moved = next.measure !== state.measure || next.beat !== state.beat;
           state = { ...state, ...next };
           document.getElementById("title").textContent = state.title || "";
           document.getElementById("composer").textContent = state.composer || "";
+          document.getElementById("header").hidden = !state.title && !state.composer;
           document.body.style.setProperty("--top-inset", `${state.topInset || 0}px`);
           document.body.style.setProperty("--bottom-inset", `${state.bottomInset || 0}px`);
           if (!state.xml) return;
