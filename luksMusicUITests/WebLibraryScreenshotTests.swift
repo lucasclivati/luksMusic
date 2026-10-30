@@ -23,11 +23,12 @@ final class WebLibraryScreenshotTests: XCTestCase {
         if onlineButton.waitForExistence(timeout: 15) {
             onlineButton.tap()
 
-            let firstScore = app.cells.firstMatch
-            if firstScore.waitForExistence(timeout: 30) {
+            // A short public-domain score (two pages) from the site's catalog
+            let score = app.staticTexts["October (Autumn Song) – Tchaikovsky"]
+            if score.waitForExistence(timeout: 40) {
                 pause(1)
                 capture("08-online-library")
-                firstScore.tap()
+                score.tap()
 
                 // Pages come from the web, so give them time to download and draw
                 pause(10)

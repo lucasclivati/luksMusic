@@ -59,17 +59,18 @@ final class OnlineLibraryService {
         do {
             let globals = try await Self.evaluate(scriptAt: URL(string: "scores/catalog.js", relativeTo: Self.siteURL)!, names: ["SCORE_CATALOG"])
             let entries = globals["SCORE_CATALOG"] as? [[String: Any]] ?? []
-            var visible: [OnlineScore] = []
-            for var score in entries.compactMap(Self.score(from:)) {
-                let privacy = (await privacySetting(for: score.id)) ?? score.defaultPrivacy
-                score.isPrivate = privacy != "public"
-                if !score.isPrivate {
-                    visible.append(score)
-                } else if await isAllowedPrivate(score) {
-                    visible.append(score)
+            let candidates = entries.compactMap(Self.score(from:))
+            // Check every score at once, keeping the catalog's order
+            var allowed: [Int: OnlineScore] = [:]
+            await withTaskGroup(of: (Int, OnlineScore?).self) { group in
+                for (index, candidate) in candidates.enumerated() {
+                    group.addTask { (index, await self.checked(candidate)) }
+                }
+                for await (index, score) in group {
+                    allowed[index] = score
                 }
             }
-            scores = visible
+            scores = allowed.keys.sorted().compactMap { allowed[$0] }
         } catch {
             errorMessage = "Não foi possível carregar a biblioteca online: \(error.localizedDescription)"
         }
@@ -87,6 +88,17 @@ final class OnlineLibraryService {
     }
 
     // MARK: - Access
+    
+    /// The score with its current visibility, or nil when this account may not open it.
+    private func checked(_ candidate: OnlineScore) async -> OnlineScore? {
+        var score = candidate
+        let privacy = (await privacySetting(for: score.id)) ?? score.defaultPrivacy
+        score.isPrivate = privacy != "public"
+        if score.isPrivate, !(await isAllowedPrivate(score)) {
+            return nil
+        }
+        return score
+    }
 
     /// The visibility the author chose on the web (`scoreSettings/{id}`), or nil when they never changed it.
     private func privacySetting(for scoreId: String) async -> String? {
