@@ -3036,13 +3036,6 @@
                                 <option value="rhodes">🎹 Electric Piano</option>
                             </select>
                         </div>
-                        <div class="selector-box">
-                            <div class="selector-header">
-                                <span>Advanced</span>
-                                <span class="chevron">▾</span>
-                            </div>
-                        </div>
-                        <div class="selector-subtext">No other options available for this score</div>
                     </div>
 
                     <!-- Main Action Buttons -->
@@ -3077,48 +3070,6 @@
                             </svg>
                             <span>Share</span>
                         </button>
-                        <button id="sidebarAddToSetBtn" class="sidebar-action-btn full-width" title="Adicionar à lista / set">
-                            <span style="font-size: 18px; line-height: 1;">+</span>
-                            <span>Add to Set</span>
-                        </button>
-                    </div>
-
-                    <!-- Learn Piano Card -->
-                    <div class="sidebar-section">
-                        <div class="sidebar-section-title">Learn piano</div>
-                        <div class="sidebar-card">
-                            <div class="sidebar-card-cover piano-book-cover">
-                                <div class="book-badge-free">Free</div>
-                                <div class="book-title-art">PIANO</div>
-                            </div>
-                            <div class="sidebar-card-content">
-                                <div class="sidebar-card-title">All About Piano book</div>
-                                <div class="sidebar-card-sub">by Mark Harrison</div>
-                                <div class="sidebar-card-rating">⭐ 5</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Other versions of this score -->
-                    <div class="sidebar-section">
-                        <div class="sidebar-section-title">Other versions of this score</div>
-                        <div class="sidebar-card">
-                            <div class="sidebar-card-cover score-preview-cover">
-                                <img src="score_page_1.svg" alt="Miniatura">
-                            </div>
-                            <div class="sidebar-card-content">
-                                <div class="sidebar-card-title">Dark Dream – Curley Gao</div>
-                                <div class="sidebar-card-sub">Solo Piano</div>
-                                <div class="sidebar-card-rating">⭐ 5</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Audio to MSCZ Promo Capsule -->
-                    <div class="sidebar-promo-pill" id="promoAudioConvert">
-                        <span class="wave-icon">|||</span>
-                        <span>Convert your audio to MSCZ</span>
-                        <span class="promo-badge-beta">Beta</span>
                     </div>
 
                     <!-- Please rate this score -->
@@ -3410,11 +3361,24 @@
         // Visibility lives in Firestore (scoreSettings/lotm) so every visitor sees the author's choice;
         // the score stays private until that document says otherwise.
         let scorePrivacy = 'private';
+        let privacyLoaded = !LOTM_PRIVACY_DOC;
         if (LOTM_PRIVACY_DOC) {
             LOTM_PRIVACY_DOC.onSnapshot(snap => {
                 scorePrivacy = (snap.exists && snap.data().privacy === 'public') ? 'public' : 'private';
+                privacyLoaded = true;
                 updateScorePrivacyUI();
+                openSharedScoreIfPending();
             }, err => console.warn("Privacy sync error:", err));
+        }
+
+        // Shared links (?partitura=dark-dream) open the score once the visitor is signed in
+        const LOTM_SCORE_SLUG = 'dark-dream';
+        let pendingSharedScore = new URLSearchParams(location.search).get('partitura') === LOTM_SCORE_SLUG;
+
+        function openSharedScoreIfPending() {
+            if (!pendingSharedScore || !currentUser || !privacyLoaded) return;
+            pendingSharedScore = false;
+            openLotmBtn.click();
         }
 
         function updateScorePrivacyUI() {
@@ -3578,6 +3542,7 @@
                 pausePlayback();
                 showView(libraryView);
             }
+            openSharedScoreIfPending();
         }
 
         // Firebase Auth State Listener & Redirect Handling
@@ -4914,7 +4879,6 @@
         const sidebarShareBtn = document.getElementById('sidebarShareBtn');
         const sidebarPrintBtn = document.getElementById('sidebarPrintBtn');
         const sidebarDownloadBtn = document.getElementById('sidebarDownloadBtn');
-        const sidebarAddToSetBtn = document.getElementById('sidebarAddToSetBtn');
         const exportModal = document.getElementById('exportModal');
         const closeExportModalBtn = document.getElementById('closeExportModalBtn');
         const exportPdfBtn = document.getElementById('exportPdfBtn');
@@ -4931,7 +4895,6 @@
         const ratingModalSubtext = document.getElementById('ratingModalSubtext');
         const ratingModalCount = document.getElementById('ratingModalCount');
         const toastNotification = document.getElementById('toastNotification');
-        const promoAudioConvert = document.getElementById('promoAudioConvert');
 
         let isSidebarCollapsed = false;
         let toastTimer = null;
@@ -5713,7 +5676,15 @@
         // Share
         if (sidebarShareBtn) {
             sidebarShareBtn.addEventListener('click', async () => {
-                const url = window.location.href;
+                const url = `${location.origin}/?partitura=${LOTM_SCORE_SLUG}`;
+                if (navigator.share) {
+                    try {
+                        await navigator.share({ title: 'Dark Dream – luksMusic', url });
+                        return;
+                    } catch (e) {
+                        if (e.name === 'AbortError') return;
+                    }
+                }
                 try {
                     await navigator.clipboard.writeText(url);
                     showToast('Link da partitura copiado!', '🔗');
@@ -5760,19 +5731,6 @@
             });
         }
 
-        // Add to Set
-        if (sidebarAddToSetBtn) {
-            sidebarAddToSetBtn.addEventListener('click', () => {
-                showToast('Partitura adicionada ao repertório de estudo!', '📁');
-            });
-        }
-
-        // MSCZ Beta Promo
-        if (promoAudioConvert) {
-            promoAudioConvert.addEventListener('click', () => {
-                showToast('Conversão de Áudio para MSCZ ativada!', '✨');
-            });
-        }
 
 
         const cardPrivacyToggleBtn = document.getElementById('cardPrivacyToggleBtn');
