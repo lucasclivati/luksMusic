@@ -30,12 +30,6 @@ struct ScoreListItemView: View {
         }
         .contextMenu {
             Button {
-                score.isPublic.toggle()
-            } label: {
-                Label(score.isPublic ? "Tornar Privada" : "Tornar Pública", systemImage: score.isPublic ? "lock" : "globe")
-            }
-            
-            Button {
                 score.isFavorite.toggle()
             } label: {
                 Label(score.isFavorite ? "Remover dos Favoritos" : "Favoritar", systemImage: score.isFavorite ? "star.slash" : "star")
@@ -77,8 +71,6 @@ struct ScoreListItemView: View {
                     difficultyBadge
 
                     Spacer()
-
-                    privacyBadge
 
                     Image(systemName: score.source.iconName)
                         .font(.caption2)
@@ -130,8 +122,6 @@ struct ScoreListItemView: View {
 
                 HStack(spacing: 8) {
                     difficultyBadge
-
-                    privacyBadge
 
                     if score.estimatedDuration > 0 {
                         Label(durationString, systemImage: "clock")
@@ -208,24 +198,12 @@ struct ScoreListItemView: View {
     private var difficultyBadge: some View {
         Text(score.difficulty.rawValue)
             .font(.caption2.weight(.semibold))
+            .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
             .background(difficultyColor.opacity(0.2), in: Capsule())
             .foregroundStyle(difficultyColor)
-    }
-
-    /// Public vs Private visibility badge.
-    private var privacyBadge: some View {
-        HStack(spacing: 3) {
-            Image(systemName: score.isPublic ? "globe" : "lock.fill")
-                .font(.system(size: 8))
-            Text(score.isPublic ? "Pública" : "Privada")
-                .font(.system(size: 9, weight: .semibold))
-        }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2.5)
-        .background(score.isPublic ? Color.green.opacity(0.18) : Color.purple.opacity(0.18), in: Capsule())
-        .foregroundStyle(score.isPublic ? Color.green : Color.purple)
     }
 
     /// The SwiftUI Color matching the score's difficulty.

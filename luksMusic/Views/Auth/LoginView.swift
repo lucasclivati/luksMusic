@@ -57,7 +57,6 @@ struct LoginView: View {
                     // Features Highlights
                     VStack(spacing: 12) {
                         featureRow(icon: "icloud.fill", color: .blue, title: "Firebase Cloud Sync", subtitle: "Sincronização em nuvem com o projeto luksMusic")
-                        featureRow(icon: "camera.viewfinder", color: .purple, title: "Music OCR Scanner", subtitle: "Digitalização e conversão de partituras impressas")
                         featureRow(icon: "waveform", color: .green, title: "Piano Interativo e Prática", subtitle: "Teclado interativo, metrônomo e partitura conectada")
                     }
                     .padding(.horizontal, 24)

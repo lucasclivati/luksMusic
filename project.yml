@@ -36,6 +36,10 @@ targets:
       - path: luksMusic
         excludes:
           - Info.plist
+          - ScoreViewer
+      # Score renderer page and OpenSheetMusicDisplay, loaded into a WKWebView from the bundle
+      - path: luksMusic/ScoreViewer
+        buildPhase: resources
     info:
       path: luksMusic/Info.plist
       properties:
@@ -54,10 +58,7 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
-        NSCameraUsageDescription: "luksMusic needs access to the camera to scan and digitize printed sheet music using OCR."
         NSMicrophoneUsageDescription: "luksMusic needs access to the microphone to listen to your instrument for practice feedback and tuning."
-        NSPhotoLibraryUsageDescription: "luksMusic needs access to your photo library to import images of sheet music for OCR scanning."
-        NSPhotoLibraryAddUsageDescription: "luksMusic needs permission to save exported score images to your photo library."
         NSDocumentsFolderUsageDescription: "luksMusic needs access to your documents to import and export MusicXML score files."
         UILaunchScreen: {}
         LSSupportsOpeningDocumentsInPlace: true

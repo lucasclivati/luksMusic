@@ -29,27 +29,26 @@ final class ScreenshotTests: XCTestCase {
 
         let playButton = app.buttons["playPauseButton"]
         if playButton.waitForExistence(timeout: 15) {
-            tapIfExists(app.buttons["drawerToggleButton"])
-
-            if tapIfExists(app.buttons["scoreSettingsButton"]) {
-                let keyboardToggle = app.switches["displayKeyboardToggle"]
-                if keyboardToggle.waitForExistence(timeout: 5) {
-                    pause(1)
-                    capture("03-score-settings")
-                    keyboardToggle.coordinate(withNormalizedOffset: CGVector(dx: 0.8, dy: 0.5)).tap()
-                    pause(1)
-                }
-                app.swipeDown(velocity: .fast)
-                pause(1)
-            }
-
+            // Let the engraved score render in the web view
+            pause(5)
             playButton.tap()
             pause(4)
             playButton.tap()
-            pause(1)
+            pause(2)
             capture("02-score")
 
-            if tapIfExists(app.buttons["practiceModeButton"]) {
+            if tapIfExists(app.buttons["scoreMenuButton"]) {
+                pause(1)
+                capture("06-score-menu")
+                if tapIfExists(app.buttons["menuSettingsButton"]) {
+                    pause(2)
+                    capture("03-score-settings")
+                    app.swipeDown(velocity: .fast)
+                    pause(1)
+                }
+            }
+
+            if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["menuPracticeButton"]) {
                 pause(3)
                 capture("04-practice")
                 tapIfExists(app.buttons["Done"])

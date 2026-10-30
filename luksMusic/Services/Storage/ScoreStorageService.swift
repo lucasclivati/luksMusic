@@ -112,8 +112,8 @@ final class ScoreStorageService {
             Note(pitch: Pitch(noteName: .D, octave: 5, accidental: .sharp), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 2.5)),
             Note(pitch: Pitch(noteName: .E, octave: 5), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.0)),
             Note(pitch: Pitch(noteName: .B, octave: 4), duration: .sixteenth, staff: .treble, position: NotePosition(beat: 3.5)),
-            // Left hand rest in measure 1
-            Note.rest(duration: .half, staff: .bass, position: NotePosition(beat: 1.0))
+            // Left hand rest for the whole 3/8 measure
+            Note.rest(duration: .dottedQuarter, staff: .bass, position: NotePosition(beat: 1.0))
         ]
         measures.append(Measure(number: 1, notes: m1Notes))
         

@@ -25,6 +25,15 @@ final class ScoreViewModel {
     // Keys under the playback cursor for the interactive keyboard (kept while paused)
     var activeMidiNotes: Set<Int> = []
     
+    // Onset the cursor rests on in the current measure (drives the engraved score's cursor)
+    var cursorBeat: Double = 1.0
+    
+    // Hands mixer
+    var trebleVolume: Double = 0.95
+    var bassVolume: Double = 0.9
+    var trebleMuted: Bool = false
+    var bassMuted: Bool = false
+    
     // Looping
     var isLooping: Bool = false
     var loopStartMeasure: Int = 1
@@ -126,7 +135,11 @@ final class ScoreViewModel {
             return
         }
         let measure = measures[currentMeasureIndex]
-        let notes = measure.soundingNotes(at: measure.cursorBeat(at: currentBeat))
+        let onset = measure.cursorBeat(at: currentBeat)
+        if onset != cursorBeat {
+            cursorBeat = onset
+        }
+        let notes = measure.soundingNotes(at: onset)
         let midi = Set(notes.map { Int($0.midiNote) + transpositionSemitones })
         if midi != activeMidiNotes {
             activeMidiNotes = midi
@@ -186,7 +199,7 @@ final class ScoreViewModel {
         let currentMeasure = score.measures[currentMeasureIndex]
         let bpm = Double(score.tempo) * playbackSpeed
         
-        for note in currentMeasure.notes where !note.isRest {
+        for note in currentMeasure.notes where !note.isRest && !isMuted(note.staff) {
             if note.position.beat > startBeat && note.position.beat <= endBeat {
                 if !playedNoteIds.contains(note.id) {
                     playedNoteIds.insert(note.id)
@@ -195,7 +208,7 @@ final class ScoreViewModel {
                     
                     audioEngine.playNote(
                         midiNote: transposedMidi,
-                        velocity: UInt8(note.velocity),
+                        velocity: UInt8(clamping: Int(Double(note.velocity) * volume(for: note.staff))),
                         duration: durationSeconds
                     )
                 }
@@ -208,7 +221,7 @@ final class ScoreViewModel {
         let currentMeasure = score.measures[currentMeasureIndex]
         let bpm = Double(score.tempo) * playbackSpeed
         
-        for note in currentMeasure.notes where !note.isRest {
+        for note in currentMeasure.notes where !note.isRest && !isMuted(note.staff) {
             if abs(note.position.beat - beat) <= 0.08 {
                 if !playedNoteIds.contains(note.id) {
                     playedNoteIds.insert(note.id)
@@ -217,12 +230,20 @@ final class ScoreViewModel {
                     
                     audioEngine.playNote(
                         midiNote: transposedMidi,
-                        velocity: UInt8(note.velocity),
+                        velocity: UInt8(clamping: Int(Double(note.velocity) * volume(for: note.staff))),
                         duration: durationSeconds
                     )
                 }
             }
         }
+    }
+    
+    private func isMuted(_ staff: Staff) -> Bool {
+        staff == .treble ? trebleMuted : bassMuted
+    }
+    
+    private func volume(for staff: Staff) -> Double {
+        staff == .treble ? trebleVolume : bassVolume
     }
     
     deinit {

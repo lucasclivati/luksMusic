@@ -19,7 +19,6 @@ final class LibraryViewModel {
     
     var showImportSheet: Bool = false
     var showCreateSheet: Bool = false
-    var showScannerTab: Bool = false
     
     private let storageService = ScoreStorageService.shared
     

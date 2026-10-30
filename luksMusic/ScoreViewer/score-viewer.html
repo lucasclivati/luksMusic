@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>luksMusic Score</title>
+  <style>
+    html, body {
+      margin: 0;
+      background: #ffffff;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      padding-top: var(--top-inset, 96px);
+      padding-bottom: var(--bottom-inset, 160px);
+    }
+    body.horizontal {
+      overflow-y: hidden;
+    }
+    #header {
+      padding: 0 20px 4px;
+      text-align: center;
+      font-family: "Times New Roman", Georgia, serif;
+      color: #111;
+    }
+    #title {
+      margin: 0;
+      font-size: 24px;
+      font-weight: normal;
+      line-height: 1.2;
+    }
+    #composer {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: #555;
+    }
+    body.horizontal #header {
+      text-align: left;
+    }
+    #score {
+      position: relative;
+    }
+  </style>
+  <script src="opensheetmusicdisplay.min.js"></script>
+</head>
+<body>
+  <div id="header">
+    <h1 id="title"></h1>
+    <p id="composer"></p>
+  </div>
+  <div id="score"></div>
+  <script>
+    // Renders the app's MusicXML with OpenSheetMusicDisplay and keeps OSMD's note-by-note cursor on the
+    // position the native player reports. The app drives it through luks.update(); taps on the score go
+    // back to the app as {type: "seek", measure, beat}.
+    const post = (message) => {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.luks) {
+        window.webkit.messageHandlers.luks.postMessage(message);
+      }
+    };
+
+    const container = document.getElementById("score");
+    let osmd = null;
+    let state = {};
+    let steps = [];
+    let stepIndex = -1;
+    let rendering = Promise.resolve();
+
+    function createOSMD(horizontal) {
+      container.innerHTML = "";
+      const instance = new opensheetmusicdisplay.OpenSheetMusicDisplay(container, {
+        backend: "svg",
+        autoResize: false,
+        // Title and composer are HTML (#header) so long titles wrap on a phone
+        drawTitle: false,
+        drawComposer: false,
+        drawSubtitle: false,
+        drawLyricist: false,
+        drawCredits: false,
+        drawPartNames: false,
+        drawPartAbbreviations: false,
+        drawMeasureNumbers: true,
+        drawMetronomeMarks: true,
+        autoBeam: true,
+        followCursor: false,
+        renderSingleHorizontalStaffline: horizontal,
+        cursorsOptions: [{ type: 0, color: "#2563EB", alpha: 0.45, follow: false }],
+      });
+      instance.TransposeCalculator = new opensheetmusicdisplay.TransposeCalculator();
+      return instance;
+    }
+
+    function measuresPerLine(zoom) {
+      // One measure per system reads like a phone score; zooming out fits more per line
+      return zoom >= 0.95 ? 1 : 2;
+    }
+
+    async function render() {
+      const horizontal = state.mode === "singleLine";
+      document.body.classList.toggle("horizontal", horizontal);
+      osmd = createOSMD(horizontal);
+      await osmd.load(state.xml);
+      document.getElementById("title").textContent = osmd.Sheet.TitleString || "";
+      document.getElementById("composer").textContent = osmd.Sheet.ComposerString || "";
+      osmd.Sheet.Transpose = state.transpose || 0;
+      osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = horizontal ? 0 : measuresPerLine(state.zoom || 1);
+      osmd.EngravingRules.HorizontalBetweenLyricsDistance = 0.6;
+      osmd.zoom = state.zoom || 1;
+      osmd.updateGraphic();
+      osmd.render();
+      collectSteps();
+      stepIndex = -1;
+      moveCursor(state.measure || 0, state.beat || 1, false);
+      post({ type: "ready", steps: steps.length });
+    }
+
+    // Every cursor stop of the score with its measure, beat and on-screen box
+    function collectSteps() {
+      steps = [];
+      const cursor = osmd.cursor;
+      cursor.show();
+      cursor.reset();
+      while (!cursor.iterator.EndReached) {
+        const it = cursor.iterator;
+        const measureStart = it.CurrentMeasure.AbsoluteTimestamp.RealValue;
+        // The app counts beats in the time signature's unit (eighths in 3/8, quarters in 4/4)
+        const signature = it.CurrentMeasure.ActiveTimeSignature;
+        const beatUnit = (signature && signature.Denominator) || 4;
+        const el = cursor.cursorElement;
+        steps.push({
+          measure: it.CurrentMeasureIndex,
+          beat: 1 + (it.currentTimeStamp.RealValue - measureStart) * beatUnit,
+          left: parseFloat(el.style.left) || 0,
+          top: parseFloat(el.style.top) || 0,
+          height: parseFloat(el.style.height) || el.height || 0,
+        });
+        cursor.next();
+      }
+      cursor.reset();
+    }
+
+    function stepFor(measure, beat) {
+      let found = -1;
+      for (let i = 0; i < steps.length; i++) {
+        const s = steps[i];
+        if (s.measure < measure || (s.measure === measure && s.beat <= beat + 0.001)) {
+          found = i;
+        } else {
+          break;
+        }
+      }
+      if (found >= 0 && steps[found].measure === measure) return found;
+      // Measure starts after a rest or tie: show its first note instead of the previous measure's last
+      const first = steps.findIndex((s) => s.measure === measure);
+      return first >= 0 ? first : Math.max(0, found);
+    }
+
+    function moveCursor(measure, beat, smooth) {
+      if (!osmd || steps.length === 0) return;
+      const target = stepFor(measure, beat);
+      if (target === stepIndex) return;
+      const cursor = osmd.cursor;
+      if (target < stepIndex || stepIndex < 0) {
+        cursor.reset();
+        stepIndex = 0;
+      }
+      while (stepIndex < target) {
+        cursor.next();
+        stepIndex++;
+      }
+      cursor.show();
+      keepInView(steps[target], smooth);
+    }
+
+    function keepInView(step, smooth) {
+      const behavior = smooth ? "smooth" : "auto";
+      const rect = container.getBoundingClientRect();
+      if (state.mode === "singleLine") {
+        const x = rect.left + window.scrollX + step.left;
+        if (x < window.scrollX + innerWidth * 0.2 || x > window.scrollX + innerWidth * 0.7) {
+          window.scrollTo({ left: Math.max(0, x - innerWidth * 0.35), behavior });
+        }
+        return;
+      }
+      const top = rect.top + window.scrollY + step.top;
+      const bottom = top + step.height;
+      const topInset = state.topInset || 0;
+      const bottomInset = state.bottomInset || 0;
+      const visibleTop = window.scrollY + topInset;
+      const visibleBottom = window.scrollY + innerHeight - bottomInset;
+      if (top < visibleTop || bottom > visibleBottom) {
+        window.scrollTo({ top: Math.max(0, top - topInset - 24), behavior });
+      }
+    }
+
+    // Tap: the closest cursor stop on the tapped system
+    container.addEventListener("click", (event) => {
+      if (steps.length === 0) return;
+      const rect = container.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      let best = -1;
+      let bestDistance = Infinity;
+      steps.forEach((s, i) => {
+        const dy = y < s.top ? s.top - y : (y > s.top + s.height ? y - s.top - s.height : 0);
+        const distance = dy * 4 + Math.abs(x - s.left);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = i;
+        }
+      });
+      if (best >= 0) {
+        post({ type: "seek", measure: steps[best].measure, beat: steps[best].beat });
+      }
+    });
+
+    window.luks = {
+      update(next) {
+        rendering = rendering.then(async () => {
+          const needsRender = (next.xml !== undefined && next.xml !== state.xml)
+            || next.zoom !== state.zoom
+            || next.transpose !== state.transpose
+            || next.mode !== state.mode;
+          const moved = next.measure !== state.measure || next.beat !== state.beat;
+          state = { ...state, ...next };
+          document.body.style.setProperty("--top-inset", `${state.topInset || 0}px`);
+          document.body.style.setProperty("--bottom-inset", `${state.bottomInset || 0}px`);
+          if (!state.xml) return;
+          if (needsRender) {
+            try {
+              await render();
+            } catch (error) {
+              post({ type: "error", message: String(error && error.message || error) });
+            }
+          } else if (moved) {
+            moveCursor(state.measure, state.beat, true);
+          }
+        });
+      },
+    };
+
+    // Rotation or a new width reflows the systems, which moves every cursor stop
+    let resizeTimer = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!state.xml) return;
+        rendering = rendering.then(() => render().catch((error) => {
+          post({ type: "error", message: String(error && error.message || error) });
+        }));
+      }, 250);
+    });
+
+    post({ type: "loaded" });
+  </script>
+</body>
+</html>

@@ -44,15 +44,11 @@ struct ImportScoreView: View {
     @State private var composer = ""
     @State private var difficulty: Difficulty = .beginner
 
-    // Progress
-    @State private var importProgress: Double = 0
 
     // Allowed file types
     private let allowedTypes: [UTType] = [
         .xml,
         .musicXML,
-        .mxl,
-        .midi,
     ]
 
     // MARK: Body
@@ -134,7 +130,7 @@ struct ImportScoreView: View {
                 Text("Supported formats:")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
-                Text(".xml  ·  .musicxml  ·  .mxl  ·  .mid  ·  .midi")
+                Text(".xml  ·  .musicxml")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -206,16 +202,10 @@ struct ImportScoreView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            ProgressView(value: importProgress) {
+            ProgressView {
                 Text("Importing…")
                     .font(.subheadline.weight(.medium))
-            } currentValueLabel: {
-                Text("\(Int(importProgress * 100))%")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
-            .progressViewStyle(.linear)
-            .padding(.horizontal, 60)
 
             Text(detectedFileName)
                 .font(.caption)
@@ -311,15 +301,7 @@ struct ImportScoreView: View {
                 .replacingOccurrences(of: "_", with: " ")
                 .replacingOccurrences(of: "-", with: " ")
 
-            phase = .loading
-
-            // Simulate brief parsing delay
-            Task {
-                try? await Task.sleep(for: .milliseconds(800))
-                await MainActor.run {
-                    phase = .previewing
-                }
-            }
+            phase = .previewing
 
         case .failure(let error):
             phase = .failure("Could not open file: \(error.localizedDescription)")
@@ -329,7 +311,6 @@ struct ImportScoreView: View {
     /// Perform the actual import and create a Score object.
     private func performImport() {
         phase = .importing
-        importProgress = 0
 
         Task {
             guard let url = selectedURL else {
@@ -349,14 +330,6 @@ struct ImportScoreView: View {
                 // Verify file exists and is readable
                 guard FileManager.default.isReadableFile(atPath: url.path) else {
                     throw ImportError.fileNotReadable
-                }
-
-                // Simulate progressive import
-                for step in 1...5 {
-                    try await Task.sleep(for: .milliseconds(300))
-                    await MainActor.run {
-                        importProgress = Double(step) / 5.0
-                    }
                 }
 
                 // Determine source type
@@ -409,7 +382,7 @@ enum ImportError: LocalizedError {
         case .fileNotReadable:
             return "The selected file could not be read. Please check permissions and try again."
         case .unsupportedFormat:
-            return "This file format is not supported. Please use MusicXML (.xml, .musicxml, .mxl) or MIDI (.mid, .midi) files."
+            return "This file format is not supported. Please use uncompressed MusicXML (.xml or .musicxml) files."
         case .parsingFailed(let detail):
             return "Failed to parse the file: \(detail)"
         case .invalidData:

@@ -40,13 +40,6 @@ struct ContentView: View {
                 }
                 .tag(0)
             
-            // Tab 2: Scanner (OMR)
-            ScannerView()
-                .tabItem {
-                    Label("Scanner", systemImage: "camera.viewfinder")
-                }
-                .tag(1)
-            
             // Tab 3: History & Stats
             PracticeHistoryView()
                 .tabItem {
@@ -180,10 +173,6 @@ struct SettingsView: View {
     
     @State private var authService = AuthService.shared
     @State private var cloudSync = CloudSyncService.shared
-    @State private var selectedSoundFont = "Concert Grand Piano"
-    @State private var keyboardOctaves = 3
-    @State private var showNoteLabels = true
-    @State private var hapticFeedbackEnabled = true
     @State private var showDeleteAccount = false
 
     private var appVersion: String {
@@ -238,17 +227,6 @@ struct SettingsView: View {
                             }
                         }
                         
-                        HStack {
-                            Text("Projeto Firebase:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(FirebaseConfig.projectId)
-                                .font(.caption2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.blue)
-                        }
-                        
                         Button("Sign Out", role: .destructive) {
                             authService.signOut()
                         }
@@ -266,21 +244,6 @@ struct SettingsView: View {
                             }
                         }
                     }
-                }
-                
-                Section("Piano Audio Engine") {
-                    Picker("Sound Instrument", selection: $selectedSoundFont) {
-                        Text("Concert Grand Piano").tag("Concert Grand Piano")
-                        Text("Upright Acoustic Piano").tag("Upright Acoustic Piano")
-                        Text("Electric Grand Piano").tag("Electric Grand Piano")
-                        Text("Vintage Electric Piano").tag("Vintage Electric Piano")
-                    }
-                }
-                
-                Section("Interactive Piano Keyboard") {
-                    Stepper("Keyboard Range: \(keyboardOctaves) Octaves", value: $keyboardOctaves, in: 2...5)
-                    Toggle("Show Note Names on Keys", isOn: $showNoteLabels)
-                    Toggle("Haptic Touch Feedback", isOn: $hapticFeedbackEnabled)
                 }
                 
                 Section("External MIDI Connection") {

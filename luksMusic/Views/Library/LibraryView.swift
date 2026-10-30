@@ -155,11 +155,6 @@ struct LibraryView: View {
                         listLayout
                     }
                 }
-                .refreshable {
-                    // Pull-to-refresh: SwiftData auto-updates, but this is a hook
-                    // for future sync operations.
-                    try? await Task.sleep(for: .milliseconds(500))
-                }
             }
         }
     }
@@ -370,30 +365,12 @@ struct LibraryView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Import File")
                                     .font(.body.weight(.medium))
-                                Text("MusicXML, MIDI files")
+                                Text("MusicXML files")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                         } icon: {
                             Image(systemName: "arrow.down.doc")
-                                .foregroundStyle(.indigo)
-                        }
-                    }
-
-                    Button {
-                        showAddSheet = false
-                        // Scanner navigation handled elsewhere
-                    } label: {
-                        Label {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Scan from Image")
-                                    .font(.body.weight(.medium))
-                                Text("Use camera or photo library")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        } icon: {
-                            Image(systemName: "camera")
                                 .foregroundStyle(.indigo)
                         }
                     }
