@@ -63,7 +63,7 @@ struct OnlineLibraryView: View {
         .refreshable {
             await library.refresh()
         }
-        .task {
+        .task(id: library.account) {
             await library.refresh()
         }
     }

@@ -147,10 +147,8 @@ struct LibraryView: View {
             .sheet(isPresented: $showImportSheet) {
                 ImportScoreView()
             }
-            .task {
-                if online.scores.isEmpty {
-                    await online.refresh()
-                }
+            .task(id: online.account) {
+                await online.refreshIfNeeded()
             }
             .refreshable {
                 await online.refresh()

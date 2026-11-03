@@ -57,10 +57,29 @@ final class OnlineLibraryService {
 
     private let authService = AuthService.shared
 
+    /// The account `scores` was checked for, so another account never sees the previous one's private scores
+    private var loadedAccount: String?
+
     private init() {}
+
+    /// Who the private scores are checked for: the signed-in e-mail, or "guest".
+    var account: String {
+        guard let user = authService.currentUser, user.authProvider != .guest, !user.email.isEmpty else { return "guest" }
+        return user.email.lowercased()
+    }
+
+    /// Loads the catalog the first time and again whenever the account changes (sign-in, sign-out, deletion).
+    func refreshIfNeeded() async {
+        guard scores.isEmpty || loadedAccount != account else { return }
+        if loadedAccount != account {
+            scores.removeAll { $0.isPrivate }
+        }
+        await refresh()
+    }
 
     /// Reloads the catalog and keeps the scores this account can open.
     func refresh() async {
+        let account = self.account
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -79,7 +98,10 @@ final class OnlineLibraryService {
                     allowed[index] = score
                 }
             }
+            // The account changed while checking: the reload started for the new one keeps its own list
+            guard account == self.account else { return }
             scores = allowed.keys.sorted().compactMap { allowed[$0] }
+            loadedAccount = account
         } catch {
             errorMessage = "Não foi possível carregar a biblioteca online: \(error.localizedDescription)"
         }
