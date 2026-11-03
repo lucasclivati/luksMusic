@@ -386,6 +386,13 @@ struct Note: Identifiable, Codable, Hashable {
     /// The rhythmic position of this note within its measure.
     var position: NotePosition
 
+    /// How long the key is held, in the time signature's beat, when read from a file: exact for any tuplet and
+    /// including the notes tied to it. `nil` derives it from `duration` (quarters) and `isTriplet`.
+    var length: Double?
+
+    /// Continues a tie from the previous note of the same pitch: its key stays down, it is not struck again.
+    var isTieContinuation: Bool?
+
     /// The MIDI note number (0–127) computed from the pitch.
     ///
     /// Returns 0 for rests.
@@ -448,7 +455,9 @@ struct Note: Identifiable, Codable, Hashable {
         fingerNumber: Int? = nil,
         lyric: String? = nil,
         isTriplet: Bool = false,
-        position: NotePosition = NotePosition(beat: 1.0)
+        position: NotePosition = NotePosition(beat: 1.0),
+        length: Double? = nil,
+        isTieContinuation: Bool? = nil
     ) {
         self.id = id
         self.pitch = pitch
@@ -464,6 +473,13 @@ struct Note: Identifiable, Codable, Hashable {
         self.lyric = lyric
         self.isTriplet = isTriplet
         self.position = position
+        self.length = length
+        self.isTieContinuation = isTieContinuation
+    }
+
+    /// How long the key is held in the time signature's beat (`beatUnit` is its denominator: 8 in 3/8).
+    func heldBeats(beatUnit: Int) -> Double {
+        length ?? duration.beats * (isTriplet ? 2.0 / 3.0 : 1.0) * Double(beatUnit) / 4.0
     }
 
     /// Creates a rest of the specified duration.

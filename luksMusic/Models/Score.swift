@@ -107,6 +107,10 @@ final class Score {
     /// JSON-encoded array of `Measure` objects for persistence.
     var measuresData: Data?
 
+    /// The MusicXML file this score was read from, drawn as is by the score viewer. Editing the notes drops it,
+    /// and the viewer then draws the edited measures.
+    @Attribute(.externalStorage) var musicXMLData: Data?
+
     init(
         title: String = "Untitled Piano Piece",
         composer: String = "Anonymous",
@@ -148,8 +152,14 @@ final class Score {
         }
         set {
             measuresData = try? JSONEncoder().encode(newValue)
+            musicXMLData = nil
             lastModified = Date()
         }
+    }
+
+    /// The original MusicXML when the notes were not edited since it was read.
+    var originalMusicXML: String? {
+        musicXMLData.flatMap { String(data: $0, encoding: .utf8) }
     }
 
     /// Total note count across all measures and staves.

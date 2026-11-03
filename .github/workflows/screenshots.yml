@@ -51,12 +51,13 @@ jobs:
           done
           echo "UDID=$UDID" >> "$GITHUB_ENV"
 
-      - name: Run screenshot walkthrough
+      - name: Run unit tests and the screenshot walkthrough
         run: |
           xcodebuild test \
             -project luksMusic.xcodeproj \
             -scheme luksMusic \
             -destination "id=$UDID" \
+            -only-testing:luksMusicTests \
             -only-testing:luksMusicUITests \
             -resultBundlePath build/Screenshots.xcresult \
             CODE_SIGNING_ALLOWED=NO \

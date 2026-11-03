@@ -91,11 +91,12 @@ struct ScoreView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        // The file the score was read from when its notes were not edited, else the edited measures
         .onAppear {
-            musicXML = MusicXMLExporter.export(viewModel.score)
+            musicXML = viewModel.score.originalMusicXML ?? MusicXMLExporter.export(viewModel.score)
         }
         .onChange(of: viewModel.score.lastModified) { _, _ in
-            musicXML = MusicXMLExporter.export(viewModel.score)
+            musicXML = viewModel.score.originalMusicXML ?? MusicXMLExporter.export(viewModel.score)
         }
         .onChange(of: viewModel.transpositionSemitones) { _, _ in
             viewModel.refreshActiveNotes()

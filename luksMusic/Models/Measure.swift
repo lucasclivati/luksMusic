@@ -65,7 +65,16 @@ struct Measure: Identifiable, Codable, Hashable {
     /// Optional rehearsal mark displayed above this measure (e.g., "A", "B", "Coda").
     var rehearsalMark: String?
 
+    /// Actual length in the time signature's beat when shorter or longer than the signature (a pickup, the
+    /// half measure before a repeat). `nil` means a full measure.
+    var length: Double?
+
     // MARK: - Computed Properties
+
+    /// Beats this measure lasts, given the score's time signature numerator.
+    func beats(timeSignatureTop: Int) -> Double {
+        length ?? Double(max(1, timeSignatureTop))
+    }
 
     /// Notes belonging to the treble (upper) staff.
     var trebleNotes: [Note] {
@@ -141,9 +150,10 @@ struct Measure: Identifiable, Codable, Hashable {
     }
 
     /// Notes (excluding rests) held down at `beat`, including ones that started earlier and are still ringing.
-    func soundingNotes(at beat: Double) -> [Note] {
+    /// `beatUnit` is the time signature's denominator, the unit of `beat`.
+    func soundingNotes(at beat: Double, beatUnit: Int) -> [Note] {
         notes.filter { note in
-            let length = note.duration.beats * (note.isTriplet ? 2.0 / 3.0 : 1.0)
+            let length = note.heldBeats(beatUnit: beatUnit)
             return !note.isRest && note.position.beat <= beat + 0.001 && beat < note.position.beat + length - 0.001
         }
     }
@@ -157,7 +167,8 @@ struct Measure: Identifiable, Codable, Hashable {
         keySignature: KeySignature? = nil,
         tempo: Int? = nil,
         barlineType: BarlineType = .single,
-        rehearsalMark: String? = nil
+        rehearsalMark: String? = nil,
+        length: Double? = nil
     ) {
         self.id = id
         self.number = number
@@ -168,6 +179,7 @@ struct Measure: Identifiable, Codable, Hashable {
         self.tempo = tempo
         self.barlineType = barlineType
         self.rehearsalMark = rehearsalMark
+        self.length = length
     }
 
     /// Creates an empty measure with the given number.

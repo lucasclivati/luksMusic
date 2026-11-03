@@ -170,9 +170,9 @@ struct ImportScoreView: View {
             Section {
                 TextField("Título", text: $title)
                 TextField("Compositor", text: $composer)
-                Picker("Difficulty", selection: $difficulty) {
+                Picker("Dificuldade", selection: $difficulty) {
                     ForEach(Difficulty.allCases) { d in
-                        Text(d.rawValue).tag(d)
+                        Text(d.displayName).tag(d)
                     }
                 }
             } header: {

@@ -76,19 +76,22 @@ final class PracticeViewModel {
     
     /// Score notes as falling bars: beats count from 1 at the first measure, lengths in the time signature's beat.
     private static func makeFallingNotes(in measures: [Measure], score: Score) -> [FallingNote] {
-        let beatsPerMeasure = Double(score.timeSignatureTop)
-        // Note durations count quarters; positions count the time signature's beat (eighths in 3/8)
-        let beatsPerQuarter = Double(score.timeSignatureBottom) / 4.0
-        return measures.enumerated().flatMap { index, measure in
-            measure.notes.filter { !$0.isRest }.map { note in
+        // The held end of a tie is part of the bar of the note it continues
+        measures.enumerated().flatMap { index, measure in
+            measure.notes.filter { !$0.isRest && $0.isTieContinuation != true }.map { note in
                 FallingNote(
                     midiNote: Int(note.midiNote),
-                    startBeat: Double(index) * beatsPerMeasure + note.position.beat,
-                    durationBeats: note.duration.beats * (note.isTriplet ? 2.0 / 3.0 : 1.0) * beatsPerQuarter,
+                    startBeat: beatsBefore(measure: index, in: measures, score: score) + note.position.beat,
+                    durationBeats: note.heldBeats(beatUnit: score.timeSignatureBottom),
                     hand: note.staff == .treble ? .right : .left
                 )
             }
         }
+    }
+
+    /// Beats from the start of the piece to measure `index` (a pickup counts only its own beats).
+    private static func beatsBefore(measure index: Int, in measures: [Measure], score: Score) -> Double {
+        measures.prefix(index).reduce(0) { $0 + $1.beats(timeSignatureTop: score.timeSignatureTop) }
     }
     
     private func setupMicrophoneListener() {
@@ -241,8 +244,11 @@ final class PracticeViewModel {
     
     private func advancePracticeBeat(step: Double) {
         currentBeat += step
-        // Beats count from 1, so the measure's last beat ends at timeSignatureTop + 1
-        if currentBeat >= Double(score.timeSignatureTop) + 1.0 {
+        // Beats count from 1, so the measure's last beat ends at its length + 1
+        let measureBeats = currentMeasureIndex < measures.count
+            ? measures[currentMeasureIndex].beats(timeSignatureTop: score.timeSignatureTop)
+            : Double(score.timeSignatureTop)
+        if currentBeat >= measureBeats + 1.0 {
             currentBeat = 1.0
             if currentMeasureIndex + 1 < practiceEndMeasure {
                 currentMeasureIndex += 1
@@ -316,7 +322,7 @@ final class PracticeViewModel {
     /// Keeps the falling notes on the practice position. Guided mode holds them at the expected notes; timed modes
     /// let them fall on their own clock and only snap back after a jump (start, loop, a tapped note).
     private func syncFallingNotes() {
-        let beat = Double(currentMeasureIndex * score.timeSignatureTop) + currentBeat
+        let beat = Self.beatsBefore(measure: currentMeasureIndex, in: measures, score: score) + currentBeat
         fallingNotes.isPlaying = isRunning && !isPaused
         fallingNotes.tempo = Double(tempoBPM)
         if practiceMode == .guided {
@@ -336,7 +342,8 @@ final class PracticeViewModel {
     /// Notes the current mode asks for in `measure` (one hand only in the hands-separate modes).
     private func practiceNotes(in measure: Measure) -> [Note] {
         measure.notes.filter { note in
-            guard !note.isRest else { return false }
+            // The held end of a tie is not played again
+            guard !note.isRest, note.isTieContinuation != true else { return false }
             switch practiceMode {
             case .handsSeparateRight:
                 return note.staff == .treble

@@ -91,12 +91,17 @@ final class ScoreViewModel {
 
     /// Position of the cursor in the piece, in seconds at the written tempo.
     var elapsedSeconds: Double {
-        (Double(currentMeasureIndex) * beatsPerMeasure + currentBeat - 1) * 60 / Double(max(1, score.tempo))
+        (beatsBefore(measure: currentMeasureIndex) + currentBeat - 1) * 60 / Double(max(1, score.tempo))
     }
 
     /// Length of the piece in seconds at the written tempo.
     var totalSeconds: Double {
-        Double(score.measureCount) * beatsPerMeasure * 60 / Double(max(1, score.tempo))
+        beatsBefore(measure: measures.count) * 60 / Double(max(1, score.tempo))
+    }
+
+    /// Beats from the start of the piece to measure `index` (a pickup counts only its own beats).
+    private func beatsBefore(measure index: Int) -> Double {
+        measures.prefix(index).reduce(0) { $0 + $1.beats(timeSignatureTop: score.timeSignatureTop) }
     }
 
     // MARK: - Initialization
@@ -174,7 +179,7 @@ final class ScoreViewModel {
         if onset != cursorBeat {
             cursorBeat = onset
         }
-        let notes = measure.soundingNotes(at: onset)
+        let notes = measure.soundingNotes(at: onset, beatUnit: score.timeSignatureBottom)
         let treble = notes.filter { $0.staff == .treble }
         let bass = notes.filter { $0.staff == .bass }
         let trebleMidi = Set(treble.map { Int($0.midiNote) + transpositionSemitones })
@@ -272,7 +277,11 @@ final class ScoreViewModel {
         
         let prevBeat = currentBeat
         let newBeat = currentBeat + beatsDelta
-        let maxBeats = Double(score.timeSignatureTop) + 1.0
+        let measures = self.measures
+        let measureBeats = currentMeasureIndex < measures.count
+            ? measures[currentMeasureIndex].beats(timeSignatureTop: score.timeSignatureTop)
+            : beatsPerMeasure
+        let maxBeats = measureBeats + 1.0
         
         if newBeat >= maxBeats {
             // Reached barline: advance to next measure
@@ -301,11 +310,11 @@ final class ScoreViewModel {
         let currentMeasure = measures[currentMeasureIndex]
         let bpm = Double(score.tempo) * playbackSpeed
         
-        for note in currentMeasure.notes where !note.isRest && !isMuted(note.staff) {
+        for note in currentMeasure.notes where isStruck(note) {
             if note.position.beat > startBeat && note.position.beat <= endBeat {
                 if !playedNoteIds.contains(note.id) {
                     playedNoteIds.insert(note.id)
-                    let durationSeconds = max(0.12, (note.duration.beats * 60.0) / bpm)
+                    let durationSeconds = max(0.12, (note.heldBeats(beatUnit: score.timeSignatureBottom) * 60.0) / bpm)
                     let transposedMidi = UInt8(clamping: Int(note.midiNote) + transpositionSemitones)
                     
                     audioEngine.playNote(
@@ -324,11 +333,11 @@ final class ScoreViewModel {
         let currentMeasure = measures[currentMeasureIndex]
         let bpm = Double(score.tempo) * playbackSpeed
         
-        for note in currentMeasure.notes where !note.isRest && !isMuted(note.staff) {
+        for note in currentMeasure.notes where isStruck(note) {
             if abs(note.position.beat - beat) <= 0.08 {
                 if !playedNoteIds.contains(note.id) {
                     playedNoteIds.insert(note.id)
-                    let durationSeconds = max(0.12, (note.duration.beats * 60.0) / bpm)
+                    let durationSeconds = max(0.12, (note.heldBeats(beatUnit: score.timeSignatureBottom) * 60.0) / bpm)
                     let transposedMidi = UInt8(clamping: Int(note.midiNote) + transpositionSemitones)
                     
                     audioEngine.playNote(
@@ -341,6 +350,11 @@ final class ScoreViewModel {
         }
     }
     
+    /// Notes the player strikes: not rests, not the held end of a tie, and not on a muted hand.
+    private func isStruck(_ note: Note) -> Bool {
+        !note.isRest && note.isTieContinuation != true && !isMuted(note.staff)
+    }
+
     private func isMuted(_ staff: Staff) -> Bool {
         staff == .treble ? trebleMuted : bassMuted
     }

@@ -34,7 +34,9 @@ final class ScreenshotTests: XCTestCase {
             pause(5)
             playButton.tap()
             waitForLabel(playButton, "Pausar")
-            pause(1)
+            // A few measures in, with both hands playing
+            pause(8)
+            capture("13-score-playing")
             playButton.tap()
             waitForLabel(playButton, "Tocar")
             // Back to the first note so the title and the opening notes are on screen

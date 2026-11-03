@@ -37,8 +37,12 @@ targets:
         excludes:
           - Info.plist
           - ScoreViewer
+          - SampleScores
       # Score renderer page and OpenSheetMusicDisplay, loaded into a WKWebView from the bundle
       - path: luksMusic/ScoreViewer
+        buildPhase: resources
+      # Public-domain pieces seeded into a new library (CC0 MusicXML editions, repeats written out)
+      - path: luksMusic/SampleScores
         buildPhase: resources
     info:
       path: luksMusic/Info.plist
@@ -96,6 +100,19 @@ targets:
     dependencies:
       - target: luksMusic
 
+  luksMusicTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: luksMusicTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lukstrike.luksMusicTests
+        GENERATE_INFOPLIST_FILE: true
+    dependencies:
+      - target: luksMusic
+
 schemes:
   luksMusic:
     build:
@@ -104,6 +121,7 @@ schemes:
     test:
       config: Debug
       targets:
+        - luksMusicTests
         - luksMusicUITests
     run:
       config: Debug

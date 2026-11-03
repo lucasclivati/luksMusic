@@ -59,7 +59,7 @@ struct MeasureView: View {
     /// Notes under the cursor, matching what the keyboard dock highlights.
     private var activeNoteIds: Set<UUID> {
         guard isCurrent else { return [] }
-        return Set(measure.soundingNotes(at: measure.cursorBeat(at: currentBeat)).map(\.id))
+        return Set(measure.soundingNotes(at: measure.cursorBeat(at: currentBeat), beatUnit: 4).map(\.id))
     }
     
     /// Beat under a horizontal position inside the measure (inverse of the note layout).
