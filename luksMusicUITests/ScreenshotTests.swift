@@ -69,10 +69,11 @@ final class ScreenshotTests: XCTestCase {
                 capture("04-practice")
 
                 // Guided practice: playing the opening E5 D#5 E5 D#5 moves the score's cursor to the fifth note.
-                // Für Elise's practice keyboard starts at C2, so the fourth E and D# from the left are in octave 5.
+                // Für Elise goes down to A1, so its practice keyboard starts at C1 and the fifth E and D# from the left
+                // are in octave 5.
                 tapIfExists(app.buttons["practicePlayButton"])
                 for name in ["E", "D#", "E", "D#"] {
-                    tapKey(name, index: 3)
+                    tapKey(name, index: 4)
                     pause(0.6)
                 }
                 pause(2)
