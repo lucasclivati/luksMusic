@@ -86,8 +86,10 @@ struct ReadingStaffView: View {
         let low = positions.min() ?? 0
         let high = positions.max() ?? 0
         let stemUp = low + high < 0
-        // Stems are three and a half spaces long and reach at least the middle line
-        let stemTip = stemUp ? max(high + 7, 0) : min(low - 7, 0)
+        // Stems are three and a half spaces long (four with two flags) and reach at least the middle line
+        let duration = step.notes.first?.duration ?? .quarter
+        let length = [NoteDuration.sixteenth, .dottedSixteenth, .thirtySecond].contains(duration) ? 8 : 7
+        let stemTip = stemUp ? max(high + length, 0) : min(low - length, 0)
         return Column(x: x, positions: positions, displaced: displaced, stemUp: stemUp, stemTip: stemTip)
     }
 
@@ -232,14 +234,9 @@ struct ReadingStaffView: View {
                 case .sixteenth, .dottedSixteenth, .thirtySecond: flags = 2
                 default: flags = 0
                 }
-                if flags > 0 {
-                    let flagHeight = space * (flags == 2 ? 2.4 : 1.8)
-                    let tipY = layout.y(column.stemTip)
-                    // The shape draws from its own origin, so it is moved onto the stem's tip
-                    let flag = NoteFlagShape(stemUp: column.stemUp, isSixteenth: flags == 2)
-                        .path(in: CGRect(x: 0, y: 0, width: space * 0.9, height: flagHeight))
-                        .offsetBy(dx: stemX, dy: column.stemUp ? tipY : tipY - flagHeight)
-                    context.fill(flag, with: .color(stepColor))
+                for flag in 0..<flags {
+                    let tip = CGPoint(x: stemX, y: layout.y(column.stemTip))
+                    context.fill(flagPath(at: tip, space: space, stemUp: column.stemUp, index: flag), with: .color(stepColor))
                 }
             }
 
@@ -279,6 +276,23 @@ struct ReadingStaffView: View {
             return Self.currentColor
         }
         return Self.ink
+    }
+
+    /// An engraved flag hanging from the stem's tip toward the notehead: thick at the stem, tapering to a point.
+    /// `index` 1 is the second flag of a sixteenth, three quarters of a space nearer the notehead.
+    private func flagPath(at tip: CGPoint, space: CGFloat, stemUp: Bool, index: Int) -> Path {
+        // Drawn for a stem going up (the flag goes down from the tip); mirrored for a stem going down
+        let direction: CGFloat = stemUp ? 1 : -1
+        let start = tip.y + direction * CGFloat(index) * space * 0.8
+        func point(_ dx: CGFloat, _ dy: CGFloat) -> CGPoint {
+            CGPoint(x: tip.x + dx * space, y: start + direction * dy * space)
+        }
+        var path = Path()
+        path.move(to: point(0, 0))
+        path.addCurve(to: point(0.95, 2.5), control1: point(0.15, 0.95), control2: point(1.3, 1.3))
+        path.addCurve(to: point(0, 0.8), control1: point(0.95, 1.6), control2: point(0.4, 1.15))
+        path.closeSubpath()
+        return path
     }
 
     /// Draws a music symbol from the system fonts with its ink `inkHeight` points tall, the ink's left edge at
