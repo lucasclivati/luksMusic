@@ -12,15 +12,26 @@ struct PianoKey: Identifiable, Equatable {
     /// Solfège label for the key.
     var solfegeLabel: String {
         switch noteName {
-        case "C": return "Do"
-        case "D": return "Re"
+        case "C": return "Dó"
+        case "D": return "Ré"
         case "E": return "Mi"
-        case "F": return "Fa"
+        case "F": return "Fá"
         case "G": return "Sol"
-        case "A": return "La"
+        case "A": return "Lá"
         case "B": return "Si"
         default: return noteName
         }
+    }
+
+    /// The text written on the key for a label style; with `marksOctave`, each C also shows its octave ("Dó4").
+    func label(style: KeyLabelStyle, marksOctave: Bool) -> String? {
+        let name: String? = switch style {
+        case .hidden: nil
+        case .letter: noteName
+        case .solfege: solfegeLabel
+        }
+        guard marksOctave, noteName == "C" else { return name }
+        return "\(name ?? solfegeLabel)\(octave)"
     }
     
     /// Full display name including octave.
@@ -69,6 +80,8 @@ final class PianoKeyboardViewModel {
     var isSustainActive: Bool = false
     /// Key label display style.
     var labelStyle: KeyLabelStyle = .letter
+    /// Writes the octave on every C ("Dó4"), even when the other keys have no label.
+    var marksOctaves: Bool = false
     /// Starting MIDI note of the keyboard range.
     var rangeStart: Int = 48 // C3
     /// Ending MIDI note of the keyboard range.
@@ -198,6 +211,7 @@ struct PianoKeyboardView: View {
                             height: whiteKeyHeight,
                             highlightColor: viewModel.keyColor(for: key),
                             labelStyle: viewModel.labelStyle,
+                            marksOctave: viewModel.marksOctaves,
                             isSustainActive: viewModel.isSustainActive,
                             onPress: {
                                 viewModel.keyPressed(key)
@@ -290,12 +304,13 @@ struct WhiteKeyView: View {
     let height: CGFloat
     let highlightColor: Color?
     let labelStyle: KeyLabelStyle
+    var marksOctave: Bool = false
     let isSustainActive: Bool
     let onPress: () -> Void
     let onRelease: () -> Void
-    
+
     @State private var isPressed = false
-    
+
     var body: some View {
         ZStack(alignment: .bottom) {
             // Key shape
@@ -309,12 +324,14 @@ struct WhiteKeyView: View {
                     color: highlightColor?.opacity(0.6) ?? .clear,
                     radius: highlightColor != nil ? 8 : 0
                 )
-            
+
             // Note label
-            if labelStyle != .hidden {
-                Text(labelStyle == .solfege ? key.solfegeLabel : key.noteName)
+            if let label = key.label(style: labelStyle, marksOctave: marksOctave) {
+                Text(label)
                     .font(.system(size: min(width * 0.35, 14), weight: .medium, design: .rounded))
                     .foregroundStyle(highlightColor ?? .gray)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                     .padding(.bottom, 8)
             }
         }

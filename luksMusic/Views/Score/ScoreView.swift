@@ -10,6 +10,7 @@ import SwiftUI
 struct ScoreView: View {
     @State var viewModel: ScoreViewModel
     @State private var showPracticeMode: Bool = false
+    @State private var showReadingTrainer: Bool = false
     @State private var showEditorMode: Bool = false
     @State private var showMixerSheet: Bool = false
     @State private var showSettingsSheet: Bool = false
@@ -63,6 +64,12 @@ struct ScoreView: View {
                 }
                 .accessibilityLabel(isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos")
 
+                Button(action: openReadingTrainer) {
+                    PlayerMenuLabel(systemName: "music.quarternote.3")
+                }
+                .accessibilityLabel("Treino de leitura")
+                .accessibilityIdentifier("readingTrainerButton")
+
                 menu
             }
 
@@ -104,6 +111,9 @@ struct ScoreView: View {
         .sheet(isPresented: $showPracticeMode) {
             PracticeView(score: viewModel.score)
         }
+        .fullScreenCover(isPresented: $showReadingTrainer) {
+            ReadingTrainerView(score: viewModel.score, storageKey: viewModel.score.id.uuidString)
+        }
         .sheet(isPresented: $showEditorMode) {
             EditorView(score: viewModel.score)
         }
@@ -140,6 +150,11 @@ struct ScoreView: View {
                     Label("Modo Estudo", systemImage: "graduationcap")
                 }
                 .accessibilityIdentifier("menuPracticeButton")
+
+                Button(action: openReadingTrainer) {
+                    Label("Treino de leitura", systemImage: "music.quarternote.3")
+                }
+                .accessibilityIdentifier("menuReadingButton")
 
                 Button {
                     showMixerSheet = true
@@ -191,6 +206,11 @@ struct ScoreView: View {
     private func close() {
         viewModel.stop()
         dismiss()
+    }
+
+    private func openReadingTrainer() {
+        viewModel.pause()
+        showReadingTrainer = true
     }
 
     private func exportScore() {

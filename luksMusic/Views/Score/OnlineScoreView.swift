@@ -14,6 +14,7 @@ struct OnlineScoreView: View {
     @State private var errorMessage: String?
     @State private var showKeyboard: Bool = true
     @State private var showMixer: Bool = false
+    @State private var showReadingTrainer: Bool = false
     @State private var zoom: Double = 1.0
     @Environment(\.dismiss) private var dismiss
 
@@ -40,6 +41,13 @@ struct OnlineScoreView: View {
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(PlayerTheme.muted)
                         .accessibilityLabel("Partitura privada")
+                }
+                if viewModel != nil {
+                    Button(action: openReadingTrainer) {
+                        PlayerMenuLabel(systemName: "music.quarternote.3")
+                    }
+                    .accessibilityLabel("Treino de leitura")
+                    .accessibilityIdentifier("readingTrainerButton")
                 }
                 menu
             }
@@ -102,10 +110,26 @@ struct OnlineScoreView: View {
                     .presentationDetents([.fraction(0.42)])
             }
         }
+        .fullScreenCover(isPresented: $showReadingTrainer) {
+            if let viewModel {
+                // The site's data only has MIDI numbers, so the drill names the notes for the piece's likely key
+                ReadingTrainerView(score: viewModel.score, storageKey: "online-\(score.id)", spellsFromKey: true)
+            }
+        }
+    }
+
+    private func openReadingTrainer() {
+        viewModel?.pause()
+        showReadingTrainer = true
     }
 
     private var menu: some View {
         Menu {
+            if viewModel != nil {
+                Button(action: openReadingTrainer) {
+                    Label("Treino de leitura", systemImage: "music.quarternote.3")
+                }
+            }
             Picker("Zoom", selection: $zoom) {
                 ForEach(Self.zoomLevels, id: \.self) { level in
                     Text(Self.zoomLabel(level)).tag(level)

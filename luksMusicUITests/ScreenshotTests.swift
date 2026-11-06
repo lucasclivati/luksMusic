@@ -80,6 +80,25 @@ final class ScreenshotTests: XCTestCase {
                 capture("07-practice-progress")
                 tapIfExists(app.buttons["Concluir"])
             }
+
+            if tapIfExists(app.buttons["readingTrainerButton"]) {
+                // Reading drill, right hand from the start: Für Elise opens with E5 D#5 E5
+                pause(2)
+                capture("14-reading")
+                // A wrong key (G5) shows faintly where it would be written
+                tapReadingKey("Sol", rightOf: "Dó5")
+                pause(0.4)
+                capture("15-reading-wrong")
+                for name in ["Mi", "D#", "Mi"] {
+                    tapReadingKey(name, rightOf: "Dó5")
+                    pause(0.5)
+                }
+                pause(0.5)
+                capture("16-reading-done")
+                tapIfExists(app.buttons["readingLeftHand"])
+                pause(1.5)
+                capture("17-reading-left")
+            }
         }
 
         // Element tree for fixing the walkthrough when a step above didn't find its element
@@ -117,6 +136,19 @@ final class ScreenshotTests: XCTestCase {
             .sorted { $0.frame.minX < $1.frame.minX }
         guard index < keys.count else { return }
         keys[index].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    }
+
+    /// Taps the first key labelled `name` to the right of the key labelled `anchor` on the reading drill's keyboard
+    /// (its C keys show their octave, so "Dó5" finds the octave above middle C wherever the keyboard starts).
+    private func tapReadingKey(_ name: String, rightOf anchor: String) {
+        let keyboard = app.otherElements["readingKeyboard"]
+        guard keyboard.waitForExistence(timeout: 5) else { return }
+        let anchorKey = keyboard.staticTexts[anchor]
+        guard anchorKey.waitForExistence(timeout: 2) else { return }
+        let key = keyboard.staticTexts.matching(NSPredicate(format: "label == %@", name)).allElementsBoundByIndex
+            .filter { $0.frame.minX > anchorKey.frame.minX }
+            .min { $0.frame.minX < $1.frame.minX }
+        key?.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     private func waitForLabel(_ element: XCUIElement, _ label: String) {
