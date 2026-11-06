@@ -157,12 +157,17 @@ final class ReadingTrainerViewModel {
     var segmentNumber: Int { segmentStart / max(1, segmentSize) + 1 }
     var segmentCount: Int { ReadingDrill.segmentCount(stepCount: steps.count, size: segmentSize) }
 
-    /// "Compassos 3–4" for the shown segment.
+    /// "Compassos 3–4" for the shown segment ("Anacruse" for a pickup, measure 0).
     var measuresLabel: String {
-        guard let first = segment.steps.first, let last = segment.steps.last else { return "" }
-        return first.measureNumber == last.measureNumber
-            ? "Compasso \(first.measureNumber)"
-            : "Compassos \(first.measureNumber)–\(last.measureNumber)"
+        guard let first = segment.steps.first?.measureNumber, let last = segment.steps.last?.measureNumber else { return "" }
+        if first == 0 {
+            switch last {
+            case 0: return "Anacruse"
+            case 1: return "Anacruse e compasso 1"
+            default: return "Anacruse e compassos 1–\(last)"
+            }
+        }
+        return first == last ? "Compasso \(first)" : "Compassos \(first)–\(last)"
     }
 
     var canGoBack: Bool { order == .sequential && segmentStart > 0 }

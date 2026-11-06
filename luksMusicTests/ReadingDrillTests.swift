@@ -33,8 +33,13 @@ final class ReadingDrillTests: XCTestCase {
         ]
         let right = ReadingDrill.steps(in: measures, hand: .right, timeSignatureTop: 4, beatUnit: 4)
         XCTAssertEqual(right.map(\.midiNotes), [[76], [67, 72, 76], [74]])
-        // Measures numbered 0 (pickups, older data) count from their position, as in the exporter
-        XCTAssertEqual(right.map(\.measureNumber), [1, 1, 1])
+        // A short first measure numbered 0 is a pickup
+        XCTAssertEqual(right.map(\.measureNumber), [0, 1, 1])
+        // Other unnumbered measures (older data) count from their position
+        let unnumbered = ReadingDrill.steps(in: [Measure(number: 0, notes: [note(.C, 5, beat: 1)]),
+                                                 Measure(number: 0, notes: [note(.D, 5, beat: 1)])],
+                                            hand: .right, timeSignatureTop: 4, beatUnit: 4)
+        XCTAssertEqual(unnumbered.map(\.measureNumber), [1, 2])
         // The pickup lasts one beat, so the next measure starts on beat 1 of the piece
         XCTAssertEqual(right.map(\.globalBeat), [0, 1, 4])
         XCTAssertEqual(right[1].notes.map(\.midiNote), [67, 72, 76], "lowest first")

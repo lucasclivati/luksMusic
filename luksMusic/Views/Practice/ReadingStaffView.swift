@@ -5,7 +5,9 @@
 // the segment's notes, each colored by how it was read. A wrong key shows faintly where it would be written, and
 // a note's name appears under it once it was found.
 
+import CoreText
 import SwiftUI
+import UIKit
 
 struct ReadingStaffView: View {
     let steps: [ReadingStep]
@@ -111,7 +113,7 @@ struct ReadingStaffView: View {
         let namedLines = steps.indices.filter(showsName).map { steps[$0].notes.count }.max() ?? 0
         let topPad: CGFloat = 16
         let bottomPad: CGFloat = CGFloat(max(1, namedLines)) * 13 + 6
-        let unit = min(7, max(3, (size.height - topPad - bottomPad) / CGFloat(highest - lowest)))
+        let unit = min(9, max(3, (size.height - topPad - bottomPad) / CGFloat(highest - lowest)))
         let usedHeight = CGFloat(highest - lowest) * unit
         let originY = topPad + max(0, (size.height - topPad - bottomPad - usedHeight) / 2)
         let layout = Layout(unit: unit, topPosition: highest, originY: originY)
@@ -144,12 +146,15 @@ struct ReadingStaffView: View {
             context.stroke(path, with: .color(Self.ink.opacity(0.85)), lineWidth: 1.1)
         }
 
-        // Clef and key signature
-        let clef = staff == .treble ? "𝄞" : "𝄢"
-        let clefSize = staff == .treble ? space * 3.6 : space * 2.7
-        let clefLift = staff == .treble ? space * 0.22 : space * 0.1
-        context.draw(Text(clef).font(.system(size: clefSize)).foregroundColor(Self.ink),
-                     at: CGPoint(x: left + space * 1.5, y: layout.y(0) - clefLift), anchor: .center)
+        // Clef, sized and placed by its ink as an engraving font would: the treble clef's curl around the G line,
+        // the bass clef's dots around the F line
+        if staff == .treble {
+            drawSymbol("𝄞", in: &context, inkHeight: space * 7.0, left: left + space * 0.3,
+                       bottom: layout.y(-7) + unit * 0.3)
+        } else {
+            drawSymbol("𝄢", in: &context, inkHeight: space * 3.6, left: left + space * 0.3,
+                       bottom: layout.y(-3) + unit * 0.1)
+        }
         let keySymbol = keySignature > 0 ? "♯" : "♭"
         for index in 0..<keyCount {
             let position = keyAccidentalSteps[index] - 4
@@ -169,8 +174,11 @@ struct ReadingStaffView: View {
                     bar.addLine(to: CGPoint(x: boundary, y: layout.y(-4)))
                     context.stroke(bar, with: .color(Self.ink.opacity(0.85)), lineWidth: 1.1)
                 }
-                context.draw(Text("\(step.measureNumber)").font(.system(size: 10, weight: .semibold)).foregroundColor(.gray),
-                             at: CGPoint(x: boundary + 3, y: 2), anchor: .topLeading)
+                // A pickup (measure 0) has no number
+                if step.measureNumber > 0 {
+                    context.draw(Text("\(step.measureNumber)").font(.system(size: 10, weight: .semibold)).foregroundColor(.gray),
+                                 at: CGPoint(x: boundary + 3, y: 2), anchor: .topLeading)
+                }
             }
         }
 
@@ -227,8 +235,11 @@ struct ReadingStaffView: View {
                 if flags > 0 {
                     let flagHeight = space * (flags == 2 ? 2.4 : 1.8)
                     let tipY = layout.y(column.stemTip)
-                    let rect = CGRect(x: stemX, y: column.stemUp ? tipY : tipY - flagHeight, width: space * 0.9, height: flagHeight)
-                    context.fill(NoteFlagShape(stemUp: column.stemUp, isSixteenth: flags == 2).path(in: rect), with: .color(stepColor))
+                    // The shape draws from its own origin, so it is moved onto the stem's tip
+                    let flag = NoteFlagShape(stemUp: column.stemUp, isSixteenth: flags == 2)
+                        .path(in: CGRect(x: 0, y: 0, width: space * 0.9, height: flagHeight))
+                        .offsetBy(dx: stemX, dy: column.stemUp ? tipY : tipY - flagHeight)
+                    context.fill(flag, with: .color(stepColor))
                 }
             }
 
@@ -268,6 +279,33 @@ struct ReadingStaffView: View {
             return Self.currentColor
         }
         return Self.ink
+    }
+
+    /// Draws a music symbol from the system fonts with its ink `inkHeight` points tall, the ink's left edge at
+    /// `left` and its lowest point at `bottom`. A Text's frame follows the font's line height, not the glyph,
+    /// so music symbols drawn as Text land off their staff lines.
+    private func drawSymbol(_ symbol: String, in context: inout GraphicsContext, inkHeight: CGFloat, left: CGFloat, bottom: CGFloat) {
+        func line(size: CGFloat) -> CTLine {
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: size),
+                NSAttributedString.Key(rawValue: kCTForegroundColorAttributeName as String): UIColor(Self.ink).cgColor
+            ]
+            return CTLineCreateWithAttributedString(NSAttributedString(string: symbol, attributes: attributes))
+        }
+        let probe = CTLineGetBoundsWithOptions(line(size: 100), .useGlyphPathBounds)
+        guard probe.height > 0 else { return }
+        let drawn = line(size: 100 * inkHeight / probe.height)
+        let ink = CTLineGetBoundsWithOptions(drawn, .useGlyphPathBounds)
+        context.withCGContext { cg in
+            cg.saveGState()
+            // Core Text draws with y up from the baseline
+            cg.translateBy(x: left - ink.minX, y: bottom + ink.minY)
+            cg.scaleBy(x: 1, y: -1)
+            cg.textMatrix = .identity
+            cg.textPosition = .zero
+            CTLineDraw(drawn, cg)
+            cg.restoreGState()
+        }
     }
 
     private func drawHead(in context: inout GraphicsContext, at center: CGPoint, width: CGFloat, height: CGFloat,

@@ -222,7 +222,7 @@ struct ReadingTrainerView: View {
     private var controls: some View {
         let done = viewModel.segment.isComplete && !viewModel.segment.steps.isEmpty
         return HStack(spacing: 8) {
-            controlButton("backward.fill", label: "Trecho anterior", identifier: "readingPreviousButton") {
+            controlButton("backward.fill", label: "Anterior", identifier: "readingPreviousButton") {
                 viewModel.previousSegment()
             }
             .disabled(!viewModel.canGoBack)

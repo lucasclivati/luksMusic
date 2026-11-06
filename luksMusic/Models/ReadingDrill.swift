@@ -35,7 +35,7 @@ enum ReadingOrder: String, CaseIterable, Identifiable {
 struct ReadingStep: Equatable {
     /// Index of the measure in the score
     let measureIndex: Int
-    /// The measure's printed number
+    /// The measure's printed number (0 for a pickup)
     let measureNumber: Int
     /// Onset in the measure, in the time signature's beat (from 1)
     let beat: Double
@@ -126,6 +126,8 @@ enum ReadingDrill {
         var steps: [ReadingStep] = []
         var measureStart = 0.0
         for (index, measure) in measures.enumerated() {
+            // A short first measure numbered 0 is a pickup; other unnumbered measures count from their position
+            let number = measure.number > 0 ? measure.number : (index == 0 && measure.length != nil ? 0 : index + 1)
             let struck = measure.notes.filter { $0.staff == hand.staff && !$0.isRest && $0.isTieContinuation != true }
             // Onsets a rounding error apart (triplets) are one moment
             let byOnset = Dictionary(grouping: struck) { ($0.position.beat * 1000).rounded() / 1000 }
@@ -136,7 +138,7 @@ enum ReadingDrill {
                     .filter { seen.insert(Int($0.midiNote)).inserted }
                 steps.append(ReadingStep(
                     measureIndex: index,
-                    measureNumber: measure.number > 0 ? measure.number : index + 1,
+                    measureNumber: number,
                     beat: beat,
                     globalBeat: measureStart + beat - 1,
                     notes: notes,
