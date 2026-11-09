@@ -36,10 +36,23 @@ struct MIDINote: Equatable, Sendable {
 }
 
 /// Represents the types of MIDI messages this service handles.
-private enum MIDIMessageType {
+enum MIDIMessageType: Equatable {
     case noteOn(note: UInt8, velocity: UInt8, channel: UInt8)
     case noteOff(note: UInt8, channel: UInt8)
     case controlChange(controller: UInt8, value: UInt8, channel: UInt8)
+}
+
+// MARK: - Key Input
+
+/// Delivers a connected MIDI keyboard's keys to one screen while that screen is open.
+final class MIDIKeyInput {
+    private var subscriptions = Set<AnyCancellable>()
+
+    func start(onNoteOn: @escaping (Int) -> Void, onNoteOff: @escaping (Int) -> Void) {
+        subscriptions.removeAll()
+        MIDIService.shared.noteOnPublisher.sink { onNoteOn(Int($0.note)) }.store(in: &subscriptions)
+        MIDIService.shared.noteOffPublisher.sink { onNoteOff(Int($0)) }.store(in: &subscriptions)
+    }
 }
 
 // MARK: - MIDIService
@@ -279,85 +292,71 @@ final class MIDIService {
     
     // MARK: - Private: MIDI Message Parsing
     
-    /// Handles incoming MIDI event lists (MIDI 1.0 protocol).
+    /// Handles incoming MIDI event lists (MIDI 1.0 messages inside Universal MIDI Packets).
     private func handleMIDIEventList(_ eventListPointer: UnsafePointer<MIDIEventList>) {
-        let eventList = eventListPointer.pointee
-        var packet = eventList.packet
-        
-        for _ in 0..<eventList.numPackets {
-            let words = Mirror(reflecting: packet.words).children.map { $0.value as! UInt32 }
-            
-            // Process each word in the packet
-            for word in words {
-                guard word != 0 else { continue }
-                
-                // MIDI 1.0 Channel Voice Message (UMP format):
-                // Bits [31:28] = message type (0x2 for MIDI 1.0 channel voice)
-                // Bits [27:24] = group
-                // Bits [23:20] = status
-                // Bits [19:16] = channel
-                // Bits [15:8]  = data byte 1 (note number / controller number)
-                // Bits [7:0]   = data byte 2 (velocity / controller value)
-                let messageType = (word >> 28) & 0x0F
-                
-                if messageType == 0x2 { // MIDI 1.0 Channel Voice
-                    let status = (word >> 20) & 0x0F
-                    let channel = UInt8((word >> 16) & 0x0F)
-                    let data1 = UInt8((word >> 8) & 0xFF)
-                    let data2 = UInt8(word & 0xFF)
-                    
-                    if let message = parseMIDIStatus(status: UInt8(status), channel: channel, data1: data1, data2: data2) {
-                        dispatchMIDIMessage(message)
-                    }
-                } else {
-                    // Legacy format fallback: try parsing as raw MIDI bytes
-                    let statusByte = UInt8((word >> 16) & 0xFF)
-                    let data1 = UInt8((word >> 8) & 0xFF)
-                    let data2 = UInt8(word & 0xFF)
-                    
-                    if statusByte >= 0x80 {
-                        let status = (statusByte >> 4) & 0x0F
-                        let channel = statusByte & 0x0F
-                        
-                        if let message = parseMIDIStatus(status: status, channel: channel, data1: data1, data2: data2) {
-                            dispatchMIDIMessage(message)
-                        }
-                    }
-                }
+        let packetCount = eventListPointer.pointee.numPackets
+        guard packetCount > 0,
+              let packetOffset = MemoryLayout<MIDIEventList>.offset(of: \.packet),
+              let wordsOffset = MemoryLayout<MIDIEventPacket>.offset(of: \.words) else { return }
+
+        var packet = (UnsafeRawPointer(eventListPointer) + packetOffset).assumingMemoryBound(to: MIDIEventPacket.self)
+        for index in 0..<packetCount {
+            // Only the packet's own words are valid; the rest of its fixed-size array is undefined
+            let words = UnsafeBufferPointer(
+                start: (UnsafeRawPointer(packet) + wordsOffset).assumingMemoryBound(to: UInt32.self),
+                count: Int(packet.pointee.wordCount)
+            )
+            for message in Self.messages(in: Array(words)) {
+                dispatchMIDIMessage(message)
             }
-            
-            packet = MIDIEventPacketNext(&packet).pointee
+            if index + 1 < packetCount {
+                packet = UnsafePointer(MIDIEventPacketNext(packet))
+            }
         }
     }
-    
+
+    /// The note and controller messages among Universal MIDI Packet words.
+    static func messages(in words: [UInt32]) -> [MIDIMessageType] {
+        var messages: [MIDIMessageType] = []
+        var index = 0
+        while index < words.count {
+            let word = words[index]
+            // Bits 31-28: message type; 0x2 is a MIDI 1.0 channel voice message
+            let messageType = (word >> 28) & 0x0F
+            if messageType == 0x2 {
+                let status = UInt8((word >> 20) & 0x0F)
+                let channel = UInt8((word >> 16) & 0x0F)
+                let data1 = UInt8((word >> 8) & 0xFF)
+                let data2 = UInt8(word & 0xFF)
+                if let message = parseMIDIStatus(status: status, channel: channel, data1: data1, data2: data2) {
+                    messages.append(message)
+                }
+            }
+            // Longer message types take more than one word
+            switch messageType {
+            case 0x3, 0x4: index += 2
+            case 0x5: index += 4
+            default: index += 1
+            }
+        }
+        return messages
+    }
+
     /// Parses a MIDI status nibble into a typed message.
-    ///
-    /// - Parameters:
-    ///   - status: The status nibble (upper 4 bits of status byte).
-    ///   - channel: The MIDI channel (0–15).
-    ///   - data1: The first data byte.
-    ///   - data2: The second data byte.
-    /// - Returns: A parsed `MIDIMessageType`, or nil if the message type is not handled.
-    private func parseMIDIStatus(status: UInt8, channel: UInt8, data1: UInt8, data2: UInt8) -> MIDIMessageType? {
+    private static func parseMIDIStatus(status: UInt8, channel: UInt8, data1: UInt8, data2: UInt8) -> MIDIMessageType? {
         switch status {
         case 0x9: // Note On
-            if data2 == 0 {
-                // Note On with velocity 0 is equivalent to Note Off
-                return .noteOff(note: data1, channel: channel)
-            }
-            return .noteOn(note: data1, velocity: data2, channel: channel)
-            
+            // Note On with velocity 0 is equivalent to Note Off
+            return data2 == 0 ? .noteOff(note: data1, channel: channel) : .noteOn(note: data1, velocity: data2, channel: channel)
         case 0x8: // Note Off
             return .noteOff(note: data1, channel: channel)
-            
         case 0xB: // Control Change
             return .controlChange(controller: data1, value: data2, channel: channel)
-            
         default:
             return nil
         }
     }
-    
+
     /// Dispatches a parsed MIDI message to the appropriate Combine subject.
     private func dispatchMIDIMessage(_ message: MIDIMessageType) {
         DispatchQueue.main.async { [weak self] in

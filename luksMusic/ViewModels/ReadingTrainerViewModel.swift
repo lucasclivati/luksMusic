@@ -69,6 +69,7 @@ final class ReadingTrainerViewModel {
     @ObservationIgnored private var advanceToken = 0
     @ObservationIgnored private var listenToken = 0
     private let audioEngine = AudioEngineService.shared
+    @ObservationIgnored private let midiInput = MIDIKeyInput()
 
     // MARK: - Setup
 
@@ -102,6 +103,15 @@ final class ReadingTrainerViewModel {
 
         applyKeyLabels()
         loadSteps(resume: true)
+        midiInput.start(
+            onNoteOn: { [weak self] midi in
+                self?.keyboard.midiActiveKeys.insert(midi)
+                self?.keyPressed(midi, fromInstrument: true)
+            },
+            onNoteOff: { [weak self] midi in
+                self?.keyboard.midiActiveKeys.remove(midi)
+            }
+        )
     }
 
     // MARK: - Settings
@@ -201,8 +211,11 @@ final class ReadingTrainerViewModel {
 
     // MARK: - Keys
 
-    func keyPressed(_ midi: Int) {
-        audioEngine.playNote(midiNote: UInt8(clamping: midi), velocity: 85)
+    func keyPressed(_ midi: Int, fromInstrument: Bool = false) {
+        // A real instrument makes its own sound
+        if !fromInstrument {
+            audioEngine.playNote(midiNote: UInt8(clamping: midi), velocity: 85)
+        }
         guard !segment.isComplete, let step = segment.currentStep else { return }
 
         switch segment.press(midi) {

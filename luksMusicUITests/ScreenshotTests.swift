@@ -20,6 +20,9 @@ final class ScreenshotTests: XCTestCase {
             guestButton.tap()
         }
 
+        walkThroughALesson()
+        tapIfExists(app.tabBars.buttons["Tocar"])
+
         let furElise = element(containing: "Für Elise (Bagatelle No. 25)")
         if furElise.waitForExistence(timeout: 15) {
             // Let the online scores row load above the user's scores
@@ -106,6 +109,58 @@ final class ScreenshotTests: XCTestCase {
         tree.name = "ui-tree"
         tree.lifetime = .keepAlways
         add(tree)
+    }
+
+    /// Lesson 2 (Dó, Ré, Mi): two explanations, an exercise with help and one without, with a wrong key.
+    private func walkThroughALesson() {
+        guard app.buttons["treble-2"].waitForExistence(timeout: 15) else { return }
+        capture("18-learn")
+        app.buttons["treble-2"].tap()
+        pause(1)
+        capture("19-lesson-explain")
+        tapIfExists(app.buttons["lessonContinueButton"])
+        pause(0.5)
+        tapIfExists(app.buttons["lessonContinueButton"])
+        pause(1)
+        capture("20-lesson-guided")
+        for offset in 0...2 {
+            tapLessonKey(whiteKeysAboveMiddleC: offset)
+            pause(0.5)
+        }
+        capture("21-lesson-guided-done")
+        pause(1.5)
+        capture("22-lesson-alone")
+        tapLessonKey(whiteKeysAboveMiddleC: 4)
+        pause(0.4)
+        capture("23-lesson-wrong")
+        for offset in [2, 1, 0] {
+            tapLessonKey(whiteKeysAboveMiddleC: offset)
+            pause(0.5)
+        }
+        capture("24-lesson-step-done")
+        tapIfExists(app.buttons["lessonContinueButton"])
+        pause(0.5)
+        for offset in [1, 2, 0, 1] {
+            tapLessonKey(whiteKeysAboveMiddleC: offset)
+            pause(0.5)
+        }
+        pause(2)
+        capture("25-lesson-finished")
+        tapIfExists(app.buttons["Voltar"])
+        pause(1)
+    }
+
+    /// Taps a white key counted from "Dó4" on the lesson's keyboard, whose other keys may have no label.
+    private func tapLessonKey(whiteKeysAboveMiddleC offset: Int) {
+        let keyboard = app.otherElements["lessonKeyboard"]
+        guard keyboard.waitForExistence(timeout: 5) else { return }
+        let middleC = keyboard.staticTexts["Dó4"]
+        let nextC = keyboard.staticTexts["Dó5"]
+        guard middleC.waitForExistence(timeout: 2), nextC.exists else { return }
+        let keyWidth = (nextC.frame.midX - middleC.frame.midX) / 7
+        middleC.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            .withOffset(CGVector(dx: keyWidth * CGFloat(offset), dy: 0))
+            .tap()
     }
 
     /// The first element whose label contains `text` (a card's texts may be merged into its button's label).

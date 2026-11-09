@@ -19,6 +19,11 @@ final class WebLibraryScreenshotTests: XCTestCase {
             guestButton.tap()
         }
 
+        let playTab = app.tabBars.buttons["Tocar"]
+        if playTab.waitForExistence(timeout: 15) {
+            playTab.tap()
+        }
+
         // A short public-domain score (two pages) from the site's catalog
         let score = app.descendants(matching: .any)
             .matching(NSPredicate(format: "label CONTAINS %@", "October (Autumn Song)")).firstMatch

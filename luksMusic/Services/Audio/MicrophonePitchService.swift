@@ -1,12 +1,11 @@
 // MicrophonePitchService.swift
 // luksMusic
 //
-// Real-time acoustic pitch detection service using AVAudioEngine and autocorrelation.
+// Real-time acoustic note detection using AVAudioEngine; the analysis itself is in PitchDetection.swift.
 // Listens to acoustic or digital pianos via device microphone to verify notes played in real life.
 
 import Foundation
 import AVFoundation
-import Accelerate
 import Observation
 import os.log
 
@@ -34,18 +33,15 @@ final class MicrophonePitchService: @unchecked Sendable {
     
     private let audioEngine = AVAudioEngine()
     private let logger = Logger(subsystem: "com.luksMusic.audio", category: "MicrophonePitchService")
-    
-    // Audio configuration
     private let bufferSize: AVAudioFrameCount = 2048
-    private var sampleRate: Double = 44100.0
     
-    // Debounce & onset detection
-    private var lastEmittedMidiNote: Int? = nil
-    private var lastEmittedTime: Date = .distantPast
-    private let minNoteInterval: TimeInterval = 0.12 // 120ms debounce
-    private let minimumRMSThreshold: Float = 0.015 // Ignore ambient noise
+    // Only touched on the audio tap's queue, or before the tap is installed
+    private var reader = MicrophoneNoteReader(sampleRate: 44100)
     
-    // Note names lookup
+    // Time until which the microphone is deaf, while the app itself is making sound
+    private let deafLock = NSLock()
+    private var deafUntil: Date = .distantPast
+    
     private let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     
     private init() {}
@@ -88,12 +84,12 @@ final class MicrophonePitchService: @unchecked Sendable {
         
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .mixWithOthers, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .mixWithOthers, .allowBluetoothA2DP])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
             
             let inputNode = audioEngine.inputNode
             let inputFormat = inputNode.outputFormat(forBus: 0)
-            sampleRate = inputFormat.sampleRate > 0 ? inputFormat.sampleRate : 44100.0
+            reader = MicrophoneNoteReader(sampleRate: inputFormat.sampleRate > 0 ? inputFormat.sampleRate : 44100.0)
             
             inputNode.removeTap(onBus: 0)
             inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: inputFormat) { [weak self] buffer, time in
@@ -102,6 +98,8 @@ final class MicrophonePitchService: @unchecked Sendable {
             
             audioEngine.prepare()
             try audioEngine.start()
+            // Changing the session's category can stop the engine that plays the app's own notes
+            AudioEngineService.shared.ensureRunning()
             
             await MainActor.run {
                 self.isListening = true
@@ -131,112 +129,47 @@ final class MicrophonePitchService: @unchecked Sendable {
             self.detectedNoteName = "--"
             self.detectedFrequency = 0.0
             self.inputLevel = 0.0
-            self.lastEmittedMidiNote = nil
         }
         logger.info("Microphone pitch detection stopped.")
     }
     
-    // MARK: - Audio Processing & Pitch Estimation
+    /// Stops hearing for `seconds`, so the app's own sound through the speaker isn't taken for the piano.
+    func ignoreInput(for seconds: TimeInterval) {
+        deafLock.lock()
+        deafUntil = max(deafUntil, Date().addingTimeInterval(seconds))
+        deafLock.unlock()
+    }
+    
+    // MARK: - Audio Processing
     
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         guard let channelData = buffer.floatChannelData?[0] else { return }
-        let frameCount = Int(buffer.frameLength)
-        guard frameCount >= 512 else { return }
+        let samples = UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength))
         
-        // Compute RMS energy to gate silence
-        var rms: Float = 0.0
-        vDSP_rmsqv(channelData, 1, &rms, vDSP_Length(frameCount))
-        
-        let level = min(1.0, max(0.0, rms * 10.0))
-        
-        guard rms >= minimumRMSThreshold else {
-            DispatchQueue.main.async { [weak self] in
-                self?.inputLevel = level
-            }
+        deafLock.lock()
+        let isDeaf = Date() < deafUntil
+        deafLock.unlock()
+        if isDeaf {
+            reader.reset()
             return
         }
         
-        // Estimate fundamental frequency using autocorrelation
-        if let frequency = detectPitchAutocorrelation(samples: channelData, count: frameCount, sampleRate: sampleRate),
-           frequency >= 55.0 && frequency <= 4186.0 { // Piano A1 (55Hz) to C8 (4186Hz)
-            
-            let midi = Int(round(69.0 + 12.0 * log2(frequency / 440.0)))
-            guard midi >= 21 && midi <= 108 else { return } // 88-key piano range
-            
-            let noteIdx = midi % 12
-            let octave = (midi / 12) - 1
-            let name = "\(noteNames[noteIdx])\(octave)"
-            
-            let now = Date()
-            let shouldEmit = (lastEmittedMidiNote != midi) || (now.timeIntervalSince(lastEmittedTime) >= minNoteInterval)
-            
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.inputLevel = level
-                self.detectedFrequency = frequency
+        let notes = reader.read(samples)
+        let level = min(1.0, max(0.0, reader.level * 10.0))
+        let estimate = reader.lastEstimate
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.inputLevel = level
+            if let estimate {
+                let midi = estimate.midiNote
+                self.detectedFrequency = estimate.frequency
                 self.detectedMidiNote = midi
-                self.detectedNoteName = name
-                
-                if shouldEmit {
-                    self.lastEmittedMidiNote = midi
-                    self.lastEmittedTime = now
-                    self.onNoteDetected?(midi)
-                }
+                self.detectedNoteName = "\(self.noteNames[midi % 12])\((midi / 12) - 1)"
             }
-        } else {
-            DispatchQueue.main.async { [weak self] in
-                self?.inputLevel = level
+            for note in notes {
+                self.onNoteDetected?(note)
             }
         }
-    }
-    
-    /// Pitch detection using Normalized Square Difference / Autocorrelation with parabolic interpolation.
-    private func detectPitchAutocorrelation(samples: UnsafePointer<Float>, count: Int, sampleRate: Double) -> Double? {
-        let minFreq: Double = 55.0   // A1
-        let maxFreq: Double = 4186.0 // C8
-        
-        let minLag = max(1, Int(sampleRate / maxFreq))
-        let maxLag = min(count / 2, Int(sampleRate / minFreq))
-        
-        guard maxLag > minLag else { return nil }
-        
-        var correlations = [Float](repeating: 0.0, count: maxLag + 1)
-        
-        // Calculate autocorrelation for lags
-        for lag in minLag...maxLag {
-            var sum: Float = 0.0
-            let windowLength = count - lag
-            vDSP_dotpr(samples, 1, samples.advanced(by: lag), 1, &sum, vDSP_Length(windowLength))
-            correlations[lag] = sum / Float(windowLength)
-        }
-        
-        // Find highest correlation peak
-        var bestLag = -1
-        var maxCorrelation: Float = 0.0
-        
-        for lag in (minLag + 1)..<maxLag {
-            let prev = correlations[lag - 1]
-            let curr = correlations[lag]
-            let next = correlations[lag + 1]
-            
-            if curr > prev && curr > next && curr > maxCorrelation {
-                maxCorrelation = curr
-                bestLag = lag
-            }
-        }
-        
-        guard bestLag > 0, maxCorrelation > 0.001 else { return nil }
-        
-        // Parabolic interpolation for fine frequency resolution
-        let y0 = Double(correlations[bestLag - 1])
-        let y1 = Double(correlations[bestLag])
-        let y2 = Double(correlations[bestLag + 1])
-        
-        let denominator = 2.0 * (2.0 * y1 - y0 - y2)
-        let delta = denominator != 0 ? (y0 - y2) / denominator : 0.0
-        let refinedLag = Double(bestLag) + delta
-        
-        guard refinedLag > 0 else { return nil }
-        return sampleRate / refinedLag
     }
 }

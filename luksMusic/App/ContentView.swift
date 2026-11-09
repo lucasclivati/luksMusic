@@ -13,7 +13,7 @@ struct ContentView: View {
     
     @State private var authService = AuthService.shared
     @State private var cloudSync = CloudSyncService.shared
-    @State private var selectedTab: Int = 0
+    @State private var selectedTab: Int = 1
     
     var body: some View {
         Group {
@@ -33,10 +33,17 @@ struct ContentView: View {
     @ViewBuilder
     private var mainTabView: some View {
         TabView(selection: $selectedTab) {
-            // Tab 1: Library
+            // Tab 1: Lessons
+            LearnHomeView()
+                .tabItem {
+                    Label("Aprender", systemImage: "graduationcap")
+                }
+                .tag(1)
+
+            // Tab 2: Library
             LibraryView()
                 .tabItem {
-                    Label("Biblioteca", systemImage: "music.note.list")
+                    Label("Tocar", systemImage: "pianokeys")
                 }
                 .tag(0)
             

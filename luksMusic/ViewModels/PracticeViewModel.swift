@@ -50,7 +50,7 @@ final class PracticeViewModel {
     
     // Dependencies
     private let audioEngine = AudioEngineService.shared
-    private let midiService = MIDIService.shared
+    private let midiInput = MIDIKeyInput()
     private var practiceTimer: Timer?
     // Keys of the expected chord already played (guided mode waits for all of them)
     private var playedTargetNotes: Set<Int> = []
@@ -97,8 +97,15 @@ final class PracticeViewModel {
     private func setupMicrophoneListener() {
         microphoneService.onNoteDetected = { [weak self] midiNote in
             guard let self = self, self.isMicrophoneEnabled, self.isRunning, !self.isPaused else { return }
-            self.notePlayed(midiNote: midiNote, fromMicrophone: true)
+            self.notePlayed(midiNote: midiNote, fromInstrument: true)
         }
+        midiInput.start(
+            onNoteOn: { [weak self] midiNote in
+                guard let self, self.isRunning, !self.isPaused else { return }
+                self.notePlayed(midiNote: midiNote, fromInstrument: true)
+            },
+            onNoteOff: { _ in }
+        )
     }
     
     func toggleMicrophoneListening() {
@@ -186,8 +193,9 @@ final class PracticeViewModel {
     // MARK: - Note Evaluation
     
     /// Evaluates a note played by the user (tap on screen keyboard, external MIDI, or acoustic piano via microphone).
-    func notePlayed(midiNote: Int, fromMicrophone: Bool = false) {
-        if !fromMicrophone {
+    func notePlayed(midiNote: Int, fromInstrument: Bool = false) {
+        // A real instrument makes its own sound
+        if !fromInstrument {
             audioEngine.playNote(midiNote: UInt8(midiNote), velocity: 85)
         }
         totalNotesPlayed += 1

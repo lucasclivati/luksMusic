@@ -19,6 +19,8 @@ struct ReadingStaffView: View {
     let keySignature: Int
     var wrongPitch: Pitch? = nil
     var listeningStep: Int? = nil
+    /// Writes every note's name from the start (lessons, while a note is being introduced)
+    var showsAllNames: Bool = false
 
     static let ink = Color(red: 0.07, green: 0.09, blue: 0.13)
     static let currentColor = Color(red: 0.14, green: 0.42, blue: 0.94)
@@ -242,7 +244,7 @@ struct ReadingStaffView: View {
 
             // The note's name once it was found, or when the answer was shown
             if showsName(index) {
-                let nameColor = result.isDone ? stepColor : Self.fixedColor
+                let nameColor = result.isDone ? stepColor : (showsAllNames ? Self.ink : Self.fixedColor)
                 for (line, note) in step.notes.reversed().enumerated() {
                     context.draw(Text(ReadingDrill.name(of: note.pitch)).font(.system(size: 11, weight: .bold)).foregroundColor(nameColor),
                                  at: CGPoint(x: column.x, y: layout.y(lowest) + 4 + CGFloat(line) * 13), anchor: .top)
@@ -261,8 +263,8 @@ struct ReadingStaffView: View {
     }
 
     private func showsName(_ index: Int) -> Bool {
-        guard index < results.count else { return false }
-        return results[index].isDone || (index == current && results[index].revealed)
+        guard index < results.count else { return showsAllNames }
+        return showsAllNames || results[index].isDone || (index == current && results[index].revealed)
     }
 
     private func color(for index: Int, result: ReadingStepResult, midi: Int?) -> Color {

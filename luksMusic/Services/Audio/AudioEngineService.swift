@@ -265,6 +265,13 @@ final class AudioEngineService {
         logger.info("Audio engine stopped.")
     }
     
+    /// Starts the engine again if the system stopped it, as a change of audio session category can.
+    func ensureRunning() {
+        guard !engine.isRunning else { return }
+        isEngineRunning = false
+        restartEngine()
+    }
+
     /// Restarts the audio engine after it was stopped.
     func restartEngine() {
         guard !isEngineRunning else { return }
@@ -307,6 +314,20 @@ final class AudioEngineService {
             name: AVAudioSession.routeChangeNotification,
             object: AVAudioSession.sharedInstance()
         )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleConfigurationChange(_:)),
+            name: .AVAudioEngineConfigurationChange,
+            object: engine
+        )
+    }
+
+    /// The engine stops itself when the audio hardware changes (turning the microphone on, for one).
+    @objc private func handleConfigurationChange(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            self?.ensureRunning()
+        }
     }
     
     /// Handles audio session interruptions (e.g., incoming phone calls).
