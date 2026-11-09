@@ -69,11 +69,13 @@ jobs:
           mkdir -p build/attachments build/screenshots
           xcrun xcresulttool export attachments --path build/Screenshots.xcresult --output-path build/attachments
           python3 - <<'EOF'
-          import json, pathlib, shutil
+          import json, pathlib, re, shutil
           src = pathlib.Path("build/attachments")
           for test in json.loads((src / "manifest.json").read_text()):
               for a in test.get("attachments", []):
                   name = a.get("suggestedHumanReadableName", a["exportedFileName"])
+                  # Automatic failure attachments have quotes in their names, which artifacts refuse
+                  name = re.sub(r'[":<>|*?\r\n\\/]', "_", name)
                   shutil.copy(src / a["exportedFileName"], pathlib.Path("build/screenshots") / name)
           EOF
           ls -la build/screenshots
