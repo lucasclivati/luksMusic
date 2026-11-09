@@ -98,6 +98,9 @@ struct NoteOnsetTracker {
     /// How fast the remembered level falls per hop (a piano note fades slowly)
     var envelopeDecay: Float = 0.94
 
+    /// The last frame was the attack of a new sound
+    private(set) var struckThisFrame = false
+
     private var envelope: Float = 0
     private var framesSinceStrike: Int?
     private var soundingNote: Int?
@@ -116,6 +119,7 @@ struct NoteOnsetTracker {
     /// Returns the note that was just played, if this frame completes one.
     mutating func process(_ frame: Frame) -> Int? {
         let isStrike = frame.level >= noiseGate && frame.level > max(envelope, noiseGate * 0.5) * attackRatio
+        struckThisFrame = isStrike
         envelope = max(frame.level, envelope * envelopeDecay)
 
         guard frame.level >= noiseGate else {
@@ -169,14 +173,65 @@ struct NoteOnsetTracker {
     }
 }
 
+/// Whether the notes a chord should have are all sounding. Telling several notes apart from nothing is hard, but
+/// checking for known ones is not: each expected fundamental must stand out in the spectrum.
+enum ChordMatcher {
+    /// Below this share of the strongest note's energy, a note isn't considered present
+    private static let presenceRatio: Float = 0.06
+
+    static func matches(samples: [Float], sampleRate: Double, expected: Set<Int>) -> Bool {
+        guard !expected.isEmpty, samples.count >= 2048 else { return false }
+        var window = [Float](repeating: 0, count: samples.count)
+        vDSP_hann_window(&window, vDSP_Length(samples.count), Int32(vDSP_HANN_NORM))
+        var shaped = [Float](repeating: 0, count: samples.count)
+        vDSP_vmul(samples, 1, window, 1, &shaped, 1, vDSP_Length(samples.count))
+
+        var strongest: Float = 0
+        for midi in 33...100 {
+            strongest = max(strongest, energy(of: midi, in: shaped, sampleRate: sampleRate))
+        }
+        guard strongest > 0 else { return false }
+        return expected.allSatisfy { energy(of: $0, in: shaped, sampleRate: sampleRate) >= strongest * presenceRatio }
+    }
+
+    /// The energy around a note's fundamental, allowing for a slightly out-of-tune instrument.
+    private static func energy(of midi: Int, in samples: [Float], sampleRate: Double) -> Float {
+        let frequency = 440.0 * pow(2.0, (Double(midi) - 69.0) / 12.0)
+        return [0.985, 1.0, 1.015].map { goertzel(samples, frequency: frequency * $0, sampleRate: sampleRate) }.max() ?? 0
+    }
+
+    private static func goertzel(_ samples: [Float], frequency: Double, sampleRate: Double) -> Float {
+        let coefficient = Float(2 * cos(2 * .pi * frequency / sampleRate))
+        var previous: Float = 0
+        var beforePrevious: Float = 0
+        for sample in samples {
+            let current = sample + coefficient * previous - beforePrevious
+            beforePrevious = previous
+            previous = current
+        }
+        return previous * previous + beforePrevious * beforePrevious - coefficient * previous * beforePrevious
+    }
+}
+
 /// Slices microphone audio into short hops, measures each one and reports the notes played.
 struct MicrophoneNoteReader {
     let sampleRate: Double
     private(set) var level: Float = 0
     private(set) var lastEstimate: PitchDetector.Estimate?
 
+    /// Set when the exercise wants several notes at once: only a strike with all of them counts
+    var expectedChord: Set<Int>? {
+        didSet { if expectedChord != oldValue { chordCountdown = nil } }
+    }
+    /// How many strikes didn't have every note of `expectedChord`
+    private(set) var missedChords = 0
+
     private let hopSize = 1024
     private let windowSize = 4096
+    /// Enough to tell apart notes a semitone from each other, read once the attack has passed
+    private let chordWindowSize = 8192
+    private let chordWaitHops = 9
+    private var chordCountdown: Int?
     /// Estimates less periodic than this are noise, or several notes at once
     private let minimumClarity = 0.8
     private var pending: [Float] = []
@@ -191,6 +246,7 @@ struct MicrophoneNoteReader {
         pending.removeAll(keepingCapacity: true)
         window.removeAll(keepingCapacity: true)
         tracker.reset()
+        chordCountdown = nil
         level = 0
         lastEstimate = nil
     }
@@ -204,8 +260,8 @@ struct MicrophoneNoteReader {
             let hop = Array(pending[start..<(start + hopSize)])
             start += hopSize
             window.append(contentsOf: hop)
-            if window.count > windowSize {
-                window.removeFirst(window.count - windowSize)
+            if window.count > chordWindowSize {
+                window.removeFirst(window.count - chordWindowSize)
             }
 
             var rms: Float = 0
@@ -214,17 +270,39 @@ struct MicrophoneNoteReader {
 
             var note: Int?
             lastEstimate = nil
-            if window.count == windowSize, rms >= tracker.noiseGate,
-               let estimate = PitchDetector.estimate(samples: window, sampleRate: sampleRate),
+            if window.count >= windowSize, rms >= tracker.noiseGate,
+               let estimate = PitchDetector.estimate(samples: Array(window.suffix(windowSize)), sampleRate: sampleRate),
                estimate.clarity >= minimumClarity, (21...108).contains(estimate.midiNote) {
                 note = estimate.midiNote
                 lastEstimate = estimate
             }
-            if let played = tracker.process(NoteOnsetTracker.Frame(level: rms, midiNote: note)) {
+            let played = tracker.process(NoteOnsetTracker.Frame(level: rms, midiNote: note))
+            if let chord = expectedChord {
+                notes += readChord(chord)
+            } else if let played {
                 notes.append(played)
             }
         }
         pending.removeFirst(start)
         return notes
+    }
+
+    /// Waits for the attack of a strike to pass, then checks that every expected note is sounding.
+    private mutating func readChord(_ chord: Set<Int>) -> [Int] {
+        if tracker.struckThisFrame {
+            chordCountdown = chordWaitHops
+            return []
+        }
+        guard let countdown = chordCountdown else { return [] }
+        guard countdown <= 1 else {
+            chordCountdown = countdown - 1
+            return []
+        }
+        chordCountdown = nil
+        if ChordMatcher.matches(samples: window, sampleRate: sampleRate, expected: chord) {
+            return chord.sorted()
+        }
+        missedChords += 1
+        return []
     }
 }

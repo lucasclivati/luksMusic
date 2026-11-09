@@ -47,6 +47,8 @@ struct ReadingStep: Equatable {
     let heldBeats: Double
 
     var midiNotes: Set<Int> { Set(notes.map { Int($0.midiNote) }) }
+
+    var isRest: Bool { !notes.isEmpty && notes.allSatisfy(\.isRest) }
 }
 
 /// What the player did on one step of the current segment.
@@ -81,12 +83,16 @@ struct ReadingSegmentState: Equatable {
     init(steps: [ReadingStep]) {
         self.steps = steps
         self.results = Array(repeating: ReadingStepResult(), count: steps.count)
+        skipRests()
     }
 
     var isComplete: Bool { current >= steps.count }
 
     /// Steps read right on the first try.
-    var cleanCount: Int { results.filter(\.isClean).count }
+    var cleanCount: Int { zip(steps, results).filter { !$0.0.isRest && $0.1.isClean }.count }
+
+    /// Steps with keys to play.
+    var playableCount: Int { steps.filter { !$0.isRest }.count }
 
     var currentStep: ReadingStep? { isComplete ? nil : steps[current] }
 
@@ -103,7 +109,31 @@ struct ReadingSegmentState: Equatable {
         guard target.isSubset(of: results[current].played) else { return .correct(stepDone: false) }
         results[current].isDone = true
         current += 1
+        skipRests()
         return .correct(stepDone: true)
+    }
+
+    /// The moment for the current step passed without it being played.
+    mutating func miss() {
+        guard current < steps.count else { return }
+        results[current].mistakes += 1
+        results[current].isDone = true
+        current += 1
+        skipRests()
+    }
+
+    /// A step was played, but outside its moment.
+    mutating func markOffBeat(step: Int) {
+        guard results.indices.contains(step) else { return }
+        results[step].mistakes += 1
+    }
+
+    /// Nothing is played on a rest, so it is passed over.
+    private mutating func skipRests() {
+        while current < steps.count, steps[current].isRest {
+            results[current].isDone = true
+            current += 1
+        }
     }
 
     /// Shows the current step's answer; the step no longer counts as right on the first try.

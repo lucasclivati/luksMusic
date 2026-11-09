@@ -104,6 +104,43 @@ final class PitchDetectionTests: XCTestCase {
         XCTAssertEqual(notes(in: hiss), [])
     }
 
+    private func chord(_ notes: [Int], seconds: Double = 0.7) -> [Float] {
+        var audio = silence(seconds: 0.2 + seconds)
+        let start = Int(0.2 * sampleRate)
+        for midi in notes {
+            for (offset, sample) in tone(midi, seconds: seconds, amplitude: 0.15).enumerated() {
+                audio[start + offset] += sample
+            }
+        }
+        return audio
+    }
+
+    private func readChord(_ audio: [Float], expecting expected: Set<Int>) -> (notes: [Int], missed: Int) {
+        var reader = MicrophoneNoteReader(sampleRate: sampleRate)
+        reader.expectedChord = expected
+        var result: [Int] = []
+        var start = 0
+        while start < audio.count {
+            let end = min(audio.count, start + 2048)
+            audio[start..<end].withUnsafeBufferPointer { result += reader.read($0) }
+            start = end
+        }
+        return (result, reader.missedChords)
+    }
+
+    func testAChordIsHeardOnlyWhenAllItsNotesSound() {
+        let cMajor: Set<Int> = [60, 64, 67]
+        XCTAssertEqual(readChord(chord([60, 64, 67]), expecting: cMajor).notes, [60, 64, 67])
+
+        let wrongChord = readChord(chord([65, 69, 72]), expecting: cMajor)
+        XCTAssertEqual(wrongChord.notes, [])
+        XCTAssertEqual(wrongChord.missed, 1)
+
+        let incomplete = readChord(chord([60, 64]), expecting: cMajor)
+        XCTAssertEqual(incomplete.notes, [])
+        XCTAssertEqual(incomplete.missed, 1)
+    }
+
     func testUSBKeyboardMessagesAreDecoded() {
         // Universal MIDI Packet words: type 2, group 0, then status/channel, note, velocity
         XCTAssertEqual(MIDIService.messages(in: [0x2090_3C64]), [.noteOn(note: 60, velocity: 100, channel: 0)])

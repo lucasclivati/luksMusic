@@ -21,6 +21,8 @@ struct ReadingStaffView: View {
     var listeningStep: Int? = nil
     /// Writes every note's name from the start (lessons, while a note is being introduced)
     var showsAllNames: Bool = false
+    /// Beats per measure, drawn as a time signature over 4
+    var timeSignature: Int? = nil
 
     static let ink = Color(red: 0.07, green: 0.09, blue: 0.13)
     static let currentColor = Color(red: 0.14, green: 0.42, blue: 0.94)
@@ -80,7 +82,7 @@ struct ReadingStaffView: View {
     }
 
     private func column(for step: ReadingStep, x: CGFloat) -> Column {
-        let positions = step.notes.map { position(of: $0.pitch) }
+        let positions = step.notes.map { $0.isRest ? 0 : position(of: $0.pitch) }
         var displaced = Array(repeating: false, count: positions.count)
         for index in positions.indices.dropFirst() where positions[index] - positions[index - 1] == 1 && !displaced[index - 1] {
             displaced[index] = true
@@ -128,7 +130,8 @@ struct ReadingStaffView: View {
         let right = size.width - 10
         let clefWidth = space * 3.2
         let keyCount = min(7, abs(keySignature))
-        let notesStart = left + clefWidth + CGFloat(keyCount) * space * 0.95 + space * 1.2
+        let timeWidth = timeSignature == nil ? 0 : space * 1.8
+        let notesStart = left + clefWidth + CGFloat(keyCount) * space * 0.95 + timeWidth + space * 1.2
         let columnWidth = steps.isEmpty ? 0 : min((right - notesStart) / CGFloat(steps.count), space * 7)
         let columns = steps.enumerated().map { index, step in
             column(for: step, x: notesStart + columnWidth * (CGFloat(index) + 0.5))
@@ -168,6 +171,14 @@ struct ReadingStaffView: View {
                          anchor: .center)
         }
 
+        if let timeSignature {
+            let x = left + clefWidth + CGFloat(keyCount) * space * 0.95 + space * 0.9
+            for (digit, position) in [(timeSignature, 2), (4, -2)] {
+                context.draw(Text("\(digit)").font(.system(size: space * 2.1, weight: .bold, design: .serif)).foregroundColor(Self.ink),
+                             at: CGPoint(x: x, y: layout.y(position)), anchor: .center)
+            }
+        }
+
         // Barlines and measure numbers
         for (index, step) in steps.enumerated() {
             let boundary = notesStart + columnWidth * CGFloat(index)
@@ -199,6 +210,10 @@ struct ReadingStaffView: View {
             var accidentalSlot = 0
 
             for (noteIndex, note) in step.notes.enumerated().reversed() {
+                if note.isRest {
+                    drawRest(note.duration, in: &context, layout: layout, x: column.x)
+                    continue
+                }
                 let position = column.positions[noteIndex]
                 let x = column.x + (column.displaced[noteIndex] ? headWidth * 0.95 : 0)
                 let noteColor = color(for: index, result: result, midi: Int(note.midiNote))
@@ -223,7 +238,7 @@ struct ReadingStaffView: View {
                 }
             }
 
-            if hasStem(duration), let low = column.positions.min(), let high = column.positions.max() {
+            if hasStem(duration), !step.isRest, let low = column.positions.min(), let high = column.positions.max() {
                 let stemX = column.stemUp ? column.x + headWidth / 2 - 0.7 : column.x - headWidth / 2 + 0.7
                 var stem = Path()
                 stem.move(to: CGPoint(x: stemX, y: layout.y(column.stemUp ? low : high)))
@@ -245,7 +260,7 @@ struct ReadingStaffView: View {
             // The note's name once it was found, or when the answer was shown
             if showsName(index) {
                 let nameColor = result.isDone ? stepColor : (showsAllNames ? Self.ink : Self.fixedColor)
-                for (line, note) in step.notes.reversed().enumerated() {
+                for (line, note) in step.notes.reversed().enumerated() where !note.isRest {
                     context.draw(Text(ReadingDrill.name(of: note.pitch)).font(.system(size: 11, weight: .bold)).foregroundColor(nameColor),
                                  at: CGPoint(x: column.x, y: layout.y(lowest) + 4 + CGFloat(line) * 13), anchor: .top)
                 }
@@ -278,6 +293,34 @@ struct ReadingStaffView: View {
             return Self.currentColor
         }
         return Self.ink
+    }
+
+    private func drawRest(_ duration: NoteDuration, in context: inout GraphicsContext, layout: Layout, x: CGFloat) {
+        let space = layout.space
+        func place(_ path: Path, width: CGFloat, height: CGFloat) -> Path {
+            path.offsetBy(dx: x - width / 2, dy: layout.y(0) - height / 2)
+        }
+        let ink = GraphicsContext.Shading.color(Self.ink)
+        switch duration {
+        case .whole:
+            // Hangs from the fourth line
+            context.fill(Path(CGRect(x: x - space * 0.7, y: layout.y(2), width: space * 1.4, height: space * 0.5)), with: ink)
+        case .half, .dottedHalf:
+            // Sits on the middle line
+            context.fill(Path(CGRect(x: x - space * 0.7, y: layout.y(0) - space * 0.5, width: space * 1.4, height: space * 0.5)), with: ink)
+        case .quarter, .dottedQuarter:
+            let width = space * 1.05
+            let height = space * 3.0
+            context.fill(place(QuarterRestShape().path(in: CGRect(x: 0, y: 0, width: width, height: height)), width: width, height: height), with: ink)
+        case .eighth, .dottedEighth:
+            let width = space * 1.1
+            let height = space * 2.2
+            context.fill(place(EighthRestShape().path(in: CGRect(x: 0, y: 0, width: width, height: height)), width: width, height: height), with: ink)
+        case .sixteenth, .dottedSixteenth, .thirtySecond:
+            let width = space * 1.1
+            let height = space * 2.8
+            context.fill(place(SixteenthRestShape().path(in: CGRect(x: 0, y: 0, width: width, height: height)), width: width, height: height), with: ink)
+        }
     }
 
     /// An engraved flag hanging from the stem's tip toward the notehead: thick at the stem, tapering to a point.

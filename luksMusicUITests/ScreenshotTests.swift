@@ -92,7 +92,7 @@ final class ScreenshotTests: XCTestCase {
                 tapReadingKey("Sol", rightOf: "Dó5")
                 pause(0.4)
                 capture("15-reading-wrong")
-                for name in ["Mi", "D#", "Mi"] {
+                for name in ["Mi", "Ré♯", "Mi"] {
                     tapReadingKey(name, rightOf: "Dó5")
                     pause(0.5)
                 }
@@ -148,6 +148,76 @@ final class ScreenshotTests: XCTestCase {
         capture("25-lesson-finished")
         tapIfExists(app.buttons["Voltar"])
         pause(1)
+        visitLaterLessons()
+    }
+
+    /// Opens one lesson of each later module, once they are all unlocked, to see their screens.
+    private func visitLaterLessons() {
+        guard tapIfExists(app.buttons["learnMenuButton"]) else { return }
+        pause(0.5)
+        tapIfExists(app.switches["Liberar todas as aulas"])
+        tapIfExists(app.buttons["Liberar todas as aulas"])
+        pause(0.8)
+        if app.buttons["learnMenuButton"].exists, !app.buttons["bass-1"].isEnabled {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
+            pause(0.5)
+        }
+
+        let visits: [(id: String, continues: Int, name: String)] = [
+            ("bass-2", 0, "26-bass"),
+            ("grand-1", 0, "27-grand"),
+            ("acc-1", 1, "28-sharps"),
+            ("rhy-4", 0, "29-rests"),
+            ("rhy-6", 0, "30-dotted"),
+            ("key-2", 0, "31-key"),
+            ("hands-1", 0, "32-hands"),
+            ("chord-1", 0, "33-chord"),
+            ("song-3", 0, "34-song"),
+        ]
+        for visit in visits {
+            let lesson = app.buttons[visit.id]
+            guard lesson.waitForExistence(timeout: 5) else { continue }
+            var swipes = 0
+            while lesson.frame.maxY > app.frame.maxY - 120 && swipes < 25 {
+                app.swipeUp(velocity: .slow)
+                pause(0.3)
+                swipes += 1
+            }
+            guard lesson.exists else { continue }
+            lesson.tap()
+            pause(1)
+            for _ in 0..<visit.continues {
+                tapIfExists(app.buttons["lessonContinueButton"])
+                pause(0.5)
+            }
+            capture(visit.name)
+            tapIfExists(app.buttons["Voltar"])
+            pause(0.8)
+        }
+
+        // A timed step: count-in and the beat on screen
+        let rhythm = app.buttons["rhy-1"]
+        var swipes = 0
+        while rhythm.frame.minY < 120 && swipes < 25 {
+            app.swipeDown(velocity: .slow)
+            pause(0.3)
+            swipes += 1
+        }
+        if rhythm.exists {
+            rhythm.tap()
+            pause(1)
+            tapIfExists(app.buttons["lessonContinueButton"])
+            pause(0.8)
+            capture("35-rhythm-ready")
+            tapIfExists(app.buttons["lessonStartButton"])
+            pause(1.5)
+            capture("36-rhythm-count-in")
+            tapIfExists(app.buttons["Voltar"])
+            pause(0.8)
+        }
+
+        // Back to the top of the course for the rest of the walkthrough
+        app.tabBars.buttons["Aprender"].tap()
     }
 
     /// Taps a white key counted from "Dó4" on the lesson's keyboard, whose other keys may have no label.

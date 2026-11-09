@@ -66,25 +66,15 @@ struct LessonPlayerView: View {
             .padding(.horizontal, 14)
             .padding(.top, 10)
 
-            if !viewModel.step.notes.isEmpty {
-                ReadingStaffView(
-                    steps: viewModel.segment.steps,
-                    accidentals: viewModel.accidentals,
-                    results: viewModel.segment.results,
-                    current: viewModel.step.isExercise ? viewModel.segment.current : viewModel.segment.steps.count,
-                    staff: viewModel.step.staff,
-                    keySignature: 0,
-                    wrongPitch: viewModel.wrongPitch,
-                    listeningStep: viewModel.demoNote,
-                    showsAllNames: viewModel.step.kind == .explain || viewModel.step.kind == .guided
-                )
-                .padding(.horizontal, 4)
-                .padding(.vertical, 6)
-                .frame(minHeight: 110, maxHeight: .infinity)
-                .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .padding(.horizontal, 12)
-            } else {
+            if viewModel.segment.steps.isEmpty {
                 Spacer(minLength: 0)
+            } else {
+                staff
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 6)
+                    .frame(minHeight: 110, maxHeight: .infinity)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(.horizontal, 12)
             }
 
             inputStatus
@@ -93,15 +83,50 @@ struct LessonPlayerView: View {
         }
     }
 
+    @ViewBuilder
+    private var staff: some View {
+        let step = viewModel.step
+        let current = step.isExercise ? viewModel.segment.current : viewModel.segment.steps.count
+        let namesEverything = step.kind == .explain || step.kind == .guided
+        if step.isGrand {
+            GrandStaffView(
+                steps: viewModel.segment.steps,
+                accidentals: viewModel.accidentals,
+                results: viewModel.segment.results,
+                current: current,
+                keySignature: step.keySignature,
+                wrongPitch: viewModel.wrongPitch,
+                listeningStep: viewModel.demoNote,
+                showsAllNames: namesEverything,
+                timeSignature: step.meter
+            )
+        } else {
+            ReadingStaffView(
+                steps: viewModel.segment.steps,
+                accidentals: viewModel.accidentals,
+                results: viewModel.segment.results,
+                current: current,
+                staff: step.staff,
+                keySignature: step.keySignature,
+                wrongPitch: viewModel.wrongPitch,
+                listeningStep: viewModel.demoNote,
+                showsAllNames: namesEverything,
+                timeSignature: step.meter
+            )
+        }
+    }
+
     /// Where the notes are coming from.
     @ViewBuilder
     private var inputStatus: some View {
         if let message = viewModel.microphoneMessage {
             statusText(message, symbol: "exclamationmark.triangle.fill", color: .orange)
+        } else if viewModel.isSilentForMicrophone {
+            statusText("Com o microfone sem fone de ouvido, o app fica em silêncio e marca o pulso na tela", symbol: "headphones", color: .orange)
         } else if let name = viewModel.connectedKeyboardName {
             statusText("Teclado conectado: \(name)", symbol: "cable.connector", color: PlayerTheme.green)
         } else if viewModel.usesMicrophone {
-            statusText("Microfone ligado: toque uma nota por vez, em um lugar silencioso", symbol: "mic.fill", color: PlayerTheme.green)
+            statusText("Microfone ligado: toque em um lugar silencioso", symbol: "mic.fill", color: PlayerTheme.green)
         }
     }
 
@@ -130,6 +155,7 @@ struct LessonPlayerView: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                 Spacer(minLength: 0)
+                beatDots
             }
             .foregroundStyle(content.color)
             .padding(.horizontal, 14)
@@ -139,33 +165,73 @@ struct LessonPlayerView: View {
         }
     }
 
-    private var feedbackContent: (symbol: String, text: String, color: Color)? {
+    /// The metronome on screen: one dot per beat of the measure.
+    @ViewBuilder
+    private var beatDots: some View {
+        if let beat = viewModel.beatInMeasure {
+            HStack(spacing: 6) {
+                ForEach(0..<(viewModel.step.meter ?? 4), id: \.self) { index in
+                    Circle()
+                        .fill(index == beat ? PlayerTheme.cyan : PlayerTheme.raised)
+                        .frame(width: index == beat ? 14 : 10, height: index == beat ? 14 : 10)
+                }
+            }
+            .frame(height: 16)
+            .accessibilityHidden(true)
+        }
+    }
+
+    private typealias FeedbackContent = (symbol: String, text: String, color: Color)
+
+    private var feedbackContent: FeedbackContent? {
         let amber = Color(red: 251 / 255, green: 191 / 255, blue: 36 / 255)
+        let red = Color(red: 248 / 255, green: 113 / 255, blue: 113 / 255)
+        let isChord = (viewModel.segment.currentStep?.midiNotes.count ?? 1) > 1
         switch viewModel.feedback {
         case .none:
             return nil
         case .prompt:
-            return ("hand.tap", viewModel.step.kind == .guided ? "Toque a tecla acesa" : "Toque a nota azul", PlayerTheme.text)
+            if viewModel.step.kind == .guided {
+                return ("hand.tap", isChord ? "Toque as teclas acesas" : "Toque a tecla acesa", PlayerTheme.text)
+            }
+            return ("hand.tap", isChord ? "Toque as notas azuis juntas" : "Toque a nota azul", PlayerTheme.text)
         case .correct(let name):
             return ("checkmark.circle.fill", "Certo! \(name)", PlayerTheme.green)
         case .wrong(let name):
-            return ("xmark.circle.fill", "Você tocou \(name). Tente de novo.", Color(red: 248 / 255, green: 113 / 255, blue: 113 / 255))
+            return ("xmark.circle.fill", "Você tocou \(name). Tente de novo.", red)
         case .revealed(let name):
             return ("lightbulb.fill", "A nota é \(name). A tecla está acesa.", amber)
         case .listening:
             return ("ear", "Ouça…", PlayerTheme.cyan)
         case .yourTurn:
             return ("hand.tap", "Sua vez: toque as notas da pauta", PlayerTheme.text)
+        case .readyToStart:
+            return ("metronome", "Toque em Começar quando estiver pronto", PlayerTheme.text)
+        case .countIn(let beats):
+            return ("metronome", "Prepare-se… \(beats)", PlayerTheme.cyan)
+        case .playing:
+            return ("music.note", "Toque no tempo", PlayerTheme.cyan)
+        case .onTime:
+            return ("checkmark.circle.fill", "No tempo!", PlayerTheme.green)
+        case .early:
+            return ("hare", "Adiantado", amber)
+        case .late:
+            return ("tortoise", "Atrasado", amber)
+        case .missed:
+            return ("xmark.circle.fill", "Essa nota passou", red)
+        case .chordMissed:
+            return ("waveform", "Não ouvi todas as notas. Toque juntas de novo.", amber)
         case .stepDone(let clean, let total):
-            return clean == total
-                ? ("star.fill", "Muito bem! Todas certas de primeira", PlayerTheme.green)
-                : ("flag.checkered", "\(clean) de \(total) certas de primeira", amber)
+            if clean == total {
+                return ("star.fill", "Muito bem! Todas certas de primeira", PlayerTheme.green)
+            }
+            return ("flag.checkered", "\(clean) de \(total) certas de primeira", amber)
         }
     }
 
     private var actions: some View {
         HStack(spacing: 8) {
-            if viewModel.step.kind == .listen {
+            if viewModel.showsListen {
                 secondaryButton("Ouvir", symbol: "speaker.wave.2.fill", identifier: "lessonListenButton") {
                     viewModel.playDemo()
                 }
@@ -177,23 +243,33 @@ struct LessonPlayerView: View {
                 }
             }
             Spacer(minLength: 0)
-            if viewModel.showsContinue {
-                Button {
-                    viewModel.continueLesson()
-                } label: {
-                    Text("Continuar")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 26)
-                        .frame(height: 42)
-                        .background(PlayerTheme.deepBlue, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            if viewModel.timedPhase == .ready {
+                primaryButton("Começar", identifier: "lessonStartButton") {
+                    viewModel.startTimedStep()
                 }
-                .accessibilityIdentifier("lessonContinueButton")
+                .disabled(viewModel.isDemonstrating)
+            }
+            if viewModel.showsContinue {
+                primaryButton("Continuar", identifier: "lessonContinueButton") {
+                    viewModel.continueLesson()
+                }
             }
         }
         .frame(minHeight: 42)
         .padding(.horizontal, 12)
         .padding(.bottom, 8)
+    }
+
+    private func primaryButton(_ title: String, identifier: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 26)
+                .frame(height: 42)
+                .background(PlayerTheme.deepBlue, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .accessibilityIdentifier(identifier)
     }
 
     private func secondaryButton(_ title: String, symbol: String, identifier: String, action: @escaping () -> Void) -> some View {
@@ -291,5 +367,49 @@ struct LessonPlayerView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Both staves, one above the other, with their columns lined up. Each note goes on the staff it belongs to.
+struct GrandStaffView: View {
+    let steps: [ReadingStep]
+    let accidentals: [[Accidental?]]
+    let results: [ReadingStepResult]
+    let current: Int
+    let keySignature: Int
+    var wrongPitch: Pitch? = nil
+    var listeningStep: Int? = nil
+    var showsAllNames: Bool = false
+    var timeSignature: Int? = nil
+
+    var body: some View {
+        VStack(spacing: 0) {
+            staffView(.treble)
+            staffView(.bass)
+        }
+    }
+
+    private func staffView(_ staff: Staff) -> some View {
+        // A wrong key is drawn on the staff that would write it
+        let wrong: Pitch? = wrongPitch.flatMap { pitch -> Pitch? in
+            (staff == .treble) == (pitch.midiNoteNumber >= 60) ? pitch : nil
+        }
+        return ReadingStaffView(
+            steps: steps.map { step in
+                ReadingStep(measureIndex: step.measureIndex, measureNumber: step.measureNumber, beat: step.beat,
+                            globalBeat: step.globalBeat, notes: step.notes.filter { $0.staff == staff }, heldBeats: step.heldBeats)
+            },
+            accidentals: zip(steps, accidentals).map { step, marks in
+                zip(step.notes, marks).filter { $0.0.staff == staff }.map { $0.1 }
+            },
+            results: results,
+            current: current,
+            staff: staff,
+            keySignature: keySignature,
+            wrongPitch: wrong,
+            listeningStep: listeningStep,
+            showsAllNames: showsAllNames,
+            timeSignature: timeSignature
+        )
     }
 }

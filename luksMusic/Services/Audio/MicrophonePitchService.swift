@@ -28,6 +28,9 @@ final class MicrophonePitchService: @unchecked Sendable {
     
     // Callback when a new distinct piano note is identified
     var onNoteDetected: ((Int) -> Void)?
+
+    // Called when a chord was struck but some of its notes weren't heard
+    var onChordMissed: (() -> Void)?
     
     // MARK: - Audio Properties
     
@@ -41,6 +44,7 @@ final class MicrophonePitchService: @unchecked Sendable {
     // Time until which the microphone is deaf, while the app itself is making sound
     private let deafLock = NSLock()
     private var deafUntil: Date = .distantPast
+    private var expectedChord: Set<Int>?
     
     private let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     
@@ -140,6 +144,13 @@ final class MicrophonePitchService: @unchecked Sendable {
         deafLock.unlock()
     }
     
+    /// Tells the analysis which notes must sound together, or nil to go back to listening for single notes.
+    func expectChord(_ notes: Set<Int>?) {
+        deafLock.lock()
+        expectedChord = notes
+        deafLock.unlock()
+    }
+
     // MARK: - Audio Processing
     
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
@@ -148,13 +159,17 @@ final class MicrophonePitchService: @unchecked Sendable {
         
         deafLock.lock()
         let isDeaf = Date() < deafUntil
+        let chord = expectedChord
         deafLock.unlock()
         if isDeaf {
             reader.reset()
             return
         }
         
+        reader.expectedChord = chord
+        let missedBefore = reader.missedChords
         let notes = reader.read(samples)
+        let missedChord = reader.missedChords > missedBefore
         let level = min(1.0, max(0.0, reader.level * 10.0))
         let estimate = reader.lastEstimate
         
@@ -169,6 +184,9 @@ final class MicrophonePitchService: @unchecked Sendable {
             }
             for note in notes {
                 self.onNoteDetected?(note)
+            }
+            if missedChord {
+                self.onChordMissed?()
             }
         }
     }

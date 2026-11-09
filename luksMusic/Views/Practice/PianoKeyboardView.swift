@@ -19,6 +19,11 @@ struct PianoKey: Identifiable, Equatable {
         case "G": return "Sol"
         case "A": return "Lá"
         case "B": return "Si"
+        case "C#": return "Dó♯"
+        case "D#": return "Ré♯"
+        case "F#": return "Fá♯"
+        case "G#": return "Sol♯"
+        case "A#": return "Lá♯"
         default: return noteName
         }
     }
@@ -404,6 +409,8 @@ struct BlackKeyView: View {
                 Text(labelStyle == .solfege ? key.solfegeLabel : key.noteName)
                     .font(.system(size: min(width * 0.3, 10), weight: .semibold, design: .rounded))
                     .foregroundStyle(highlightColor ?? .gray)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                     .padding(.bottom, 6)
             }
         }
