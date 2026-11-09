@@ -105,7 +105,7 @@ final class PitchDetectionTests: XCTestCase {
     }
 
     private func chord(_ notes: [Int], seconds: Double = 0.7) -> [Float] {
-        var audio = silence(seconds: 0.2 + seconds)
+        var audio = silence(seconds: 0.3 + seconds)
         let start = Int(0.2 * sampleRate)
         for midi in notes {
             for (offset, sample) in tone(midi, seconds: seconds, amplitude: 0.15).enumerated() {

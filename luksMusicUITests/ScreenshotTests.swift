@@ -12,6 +12,8 @@ final class ScreenshotTests: XCTestCase {
     private let app = XCUIApplication()
 
     func testAppStoreScreenshots() {
+        // Opens every lesson, so the walkthrough can visit the later ones
+        app.launchArguments += ["-lessons.unlockAll", "YES"]
         app.launch()
 
         let guestButton = app.buttons["Continuar como Convidado (Offline)"]
@@ -153,16 +155,6 @@ final class ScreenshotTests: XCTestCase {
 
     /// Opens one lesson of each later module, once they are all unlocked, to see their screens.
     private func visitLaterLessons() {
-        guard tapIfExists(app.buttons["learnMenuButton"]) else { return }
-        pause(0.5)
-        tapIfExists(app.switches["Liberar todas as aulas"])
-        tapIfExists(app.buttons["Liberar todas as aulas"])
-        pause(0.8)
-        if app.buttons["learnMenuButton"].exists, !app.buttons["bass-1"].isEnabled {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.15)).tap()
-            pause(0.5)
-        }
-
         let visits: [(id: String, continues: Int, name: String)] = [
             ("bass-2", 0, "26-bass"),
             ("grand-1", 0, "27-grand"),
