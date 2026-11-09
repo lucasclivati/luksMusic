@@ -305,7 +305,7 @@ final class LessonPlayerViewModel {
     }
 
     private func updateKeyboardRange() {
-        guard let range = lesson.midiRange else { return }
+        guard let range = LessonCatalog.keyboardNotes(for: lesson) else { return }
         let keys = ReadingDrill.keyboardRange(segment: range, hand: range, whiteKeys: whiteKeys, current: nil)
         guard keys.lowerBound != keyboard.rangeStart || keys.upperBound != keyboard.rangeEnd else { return }
         keyboard.rangeStart = keys.lowerBound

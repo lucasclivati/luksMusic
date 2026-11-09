@@ -30,7 +30,7 @@ final class WebLibraryScreenshotTests: XCTestCase {
         if score.waitForExistence(timeout: 40) {
             // The row scrolls sideways and the catalog grows, so the card may start off screen
             var swipes = 0
-            while !score.isHittable && swipes < 6 {
+            while score.frame.maxX > app.frame.maxX && swipes < 6 {
                 let row = score.frame.midY / app.frame.height
                 app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: row))
                     .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: row)))

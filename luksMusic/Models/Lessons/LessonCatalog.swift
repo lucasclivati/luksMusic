@@ -17,6 +17,14 @@ enum LessonCatalog {
         return lessons[index + 1]
     }
 
+    /// The notes the keyboard must show: the same for every lesson of a module, so it stays put between lessons.
+    static func keyboardNotes(for lesson: Lesson) -> ClosedRange<Int>? {
+        let lessons = modules.first { $0.lessons.contains { $0.id == lesson.id } }?.lessons ?? [lesson]
+        let ranges = lessons.compactMap(\.midiRange)
+        guard let low = ranges.map(\.lowerBound).min(), let high = ranges.map(\.upperBound).max() else { return nil }
+        return low...high
+    }
+
     // MARK: - Clave de Sol
 
     private static let trebleClef = LessonModule(

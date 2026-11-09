@@ -172,7 +172,7 @@ final class PianoKeyboardViewModel {
         
         if targetNoteKeys.contains(key.id) {
             let guideColor = isLeftHand ? Self.neonGreen : Self.electricCyan
-            return key.isBlack ? guideColor.opacity(0.55) : guideColor.opacity(0.35)
+            return key.isBlack ? guideColor.opacity(0.55) : guideColor.opacity(0.6)
         }
         return nil
     }
@@ -313,9 +313,10 @@ struct WhiteKeyView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            // Key shape
+            // Key shape, on white so a translucent guide color stays bright on a dark screen
             RoundedRectangle(cornerRadius: 3)
                 .fill(keyFillGradient)
+                .background(RoundedRectangle(cornerRadius: 3).fill(Color.white))
                 .overlay(
                     RoundedRectangle(cornerRadius: 3)
                         .strokeBorder(Color.gray.opacity(0.3), lineWidth: 0.5)
@@ -329,7 +330,7 @@ struct WhiteKeyView: View {
             if let label = key.label(style: labelStyle, marksOctave: marksOctave) {
                 Text(label)
                     .font(.system(size: min(width * 0.35, 14), weight: .medium, design: .rounded))
-                    .foregroundStyle(highlightColor ?? .gray)
+                    .foregroundStyle(highlightColor == nil ? Color.gray : Color.black.opacity(0.75))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .padding(.bottom, 8)

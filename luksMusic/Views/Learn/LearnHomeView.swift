@@ -16,6 +16,14 @@ struct LearnHomeView: View {
                         .font(.subheadline)
                         .foregroundStyle(PlayerTheme.muted)
 
+                    Label("Toque na tela, em um teclado ligado por USB, ou em um piano de verdade com o microfone (botão no alto da aula).",
+                          systemImage: "pianokeys")
+                        .font(.footnote)
+                        .foregroundStyle(PlayerTheme.text)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
                     ForEach(LessonCatalog.modules) { module in
                         VStack(alignment: .leading, spacing: 10) {
                             VStack(alignment: .leading, spacing: 2) {
