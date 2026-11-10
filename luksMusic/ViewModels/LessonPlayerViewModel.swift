@@ -1,9 +1,11 @@
 // LessonPlayerViewModel.swift
 // luksMusic
 //
-// Runs one lesson step by step. The notes can come from the screen's keyboard, a USB keyboard or the microphone;
-// each is checked the same way. Timed steps count in with the metronome and judge when each key was played.
-// The microphone goes deaf while the app is making sound, so it never hears itself.
+// Runs one lesson step by step. Every step asks for notes: a new note is learned by playing its lit key, drills and
+// pieces are read from the staff, ear steps are found by listening, and timed steps are played with the metronome.
+// The notes can come from the screen's keyboard, a USB keyboard or the microphone; each is checked the same way.
+// A finished step waits on a result card, so the next one never starts by surprise. The microphone is told which
+// note comes next, and goes deaf while the app is making sound, so it never hears itself.
 
 import AVFoundation
 import Foundation
@@ -41,16 +43,20 @@ final class LessonPlayerViewModel {
     }
 
     /// Wrong keys on one note before its key is shown
-    private static let mistakesBeforeHint = 3
+    static let mistakesBeforeHint = 2
     private static let secondsPerDemoNote = 0.65
     private static let microphoneKey = "lessons.useMicrophone"
     /// About how long the microphone takes to report a note, taken off when judging its timing
     private static let microphoneDelay = 0.16
+    /// The app's own sound still in the room after it stops playing
+    private static let soundTail = 0.4
 
     private(set) var lesson: Lesson
     private(set) var stepIndex = 0
     private(set) var segment = ReadingSegmentState(steps: [])
     private(set) var accidentals: [[Accidental?]] = []
+    /// The steps shown together on the staff
+    private(set) var pages: [Range<Int>] = []
     private(set) var feedback: Feedback = .none
     private(set) var wrongPitch: Pitch?
     /// The note the app is playing in a demonstration
@@ -70,7 +76,6 @@ final class LessonPlayerViewModel {
 
     @ObservationIgnored private var whiteKeys = 15
     @ObservationIgnored private var demoToken = 0
-    @ObservationIgnored private var advanceToken = 0
     @ObservationIgnored private var timedToken = 0
     @ObservationIgnored private var timing: RhythmTiming?
     @ObservationIgnored private var timedStart: CFTimeInterval?
@@ -110,9 +115,7 @@ final class LessonPlayerViewModel {
         microphone.onChordMissed = { [weak self] in
             self?.chordNotHeard()
         }
-        if step.isExercise {
-            lightCurrentKeys()
-        }
+        lightCurrentKeys()
     }
 
     // MARK: - State for the Screen
@@ -122,6 +125,36 @@ final class LessonPlayerViewModel {
     var stars: Int { Lesson.stars(clean: cleanNotes, total: totalNotes) }
     var progress: Double { Double(stepIndex + (isFinished ? 1 : 0)) / Double(max(1, lesson.steps.count)) }
     var isDemonstrating: Bool { feedback == .listening }
+
+    /// The step that comes after this one, for the result card.
+    var nextStepTitle: String? {
+        stepIndex + 1 < lesson.steps.count ? lesson.steps[stepIndex + 1].title : nil
+    }
+
+    var isStepDone: Bool {
+        if case .stepDone = feedback { return true }
+        return false
+    }
+
+    /// The page of the staff on screen: the one with the note being played or heard.
+    var page: Range<Int> {
+        let focus = demoNote ?? min(segment.current, max(0, segment.steps.count - 1))
+        return pages.first { $0.contains(focus) } ?? pages.last ?? 0..<0
+    }
+
+    /// Ear steps show a note only once it was found.
+    var visibleRange: Range<Int> {
+        guard step.kind == .listen, !segment.isComplete else { return page }
+        return page.lowerBound..<max(page.lowerBound, min(page.upperBound, segment.current))
+    }
+
+    var visibleSteps: [ReadingStep] { Array(segment.steps[visibleRange]) }
+    var visibleAccidentals: [[Accidental?]] { Array(accidentals[visibleRange]) }
+    var visibleResults: [ReadingStepResult] { Array(segment.results[visibleRange]) }
+    /// The note to play, counted on the visible page (a demonstration may show a page ahead of it)
+    var visibleCurrent: Int { max(0, segment.current - visibleRange.lowerBound) }
+    var visibleDemoNote: Int? { demoNote.map { $0 - visibleRange.lowerBound } }
+    var pageNumber: Int { (pages.firstIndex(of: page) ?? 0) + 1 }
 
     /// How loud the microphone hears the room, from 0 to 1.
     var microphoneLevel: Double { Double(microphone.inputLevel) }
@@ -141,22 +174,16 @@ final class LessonPlayerViewModel {
         }?.name
     }
 
-    /// A finished exercise with mistakes waits for "Repetir" or "Continuar"; explanations wait for "Continuar".
-    var showsContinue: Bool {
-        guard !isFinished else { return false }
-        if case .stepDone = feedback { return true }
-        return step.kind == .explain
-    }
+    /// A finished step waits for "Continuar".
+    var showsContinue: Bool { !isFinished && isStepDone }
 
-    var showsRepeat: Bool {
-        if case .stepDone = feedback { return true }
-        return false
-    }
+    /// Learning a note can't go wrong, so only practice can be repeated.
+    var showsRepeat: Bool { isStepDone && step.isScored }
 
-    /// "Ouvir" is offered by ear exercises and before a timed step starts.
+    /// "Ouvir" is offered by ear steps, by pieces and before a timed step starts.
     var showsListen: Bool {
         guard !isFinished, !segment.isComplete else { return false }
-        return step.kind == .listen || timedPhase == .ready
+        return step.kind == .listen || step.isPiece || timedPhase == .ready
     }
 
     // MARK: - Going Through the Lesson
@@ -170,7 +197,7 @@ final class LessonPlayerViewModel {
             feedback = .none
             timedPhase = .notTimed
             keyboard.targetNoteKeys = []
-            microphone.expectChord(nil)
+            microphone.expect(nil)
             LessonProgress.shared.record(lessonID: lesson.id, stars: stars)
         }
     }
@@ -178,8 +205,10 @@ final class LessonPlayerViewModel {
     func repeatStep() {
         cancelPending()
         // The new try replaces the one just counted
-        totalNotes -= segment.playableCount
-        cleanNotes -= segment.cleanCount
+        if isStepDone, step.isScored {
+            totalNotes -= segment.playableCount
+            cleanNotes -= segment.cleanCount
+        }
         begin(step: stepIndex)
     }
 
@@ -202,7 +231,7 @@ final class LessonPlayerViewModel {
         microphone.stopListening()
         microphone.onNoteDetected = nil
         microphone.onChordMissed = nil
-        microphone.expectChord(nil)
+        microphone.expect(nil)
     }
 
     /// Plays the current notes, in rhythm when the step is written in measures.
@@ -211,10 +240,11 @@ final class LessonPlayerViewModel {
         let token = nextDemoToken()
         let notes = segment.steps
         let secondsPerBeat = step.meter == nil ? Self.secondsPerDemoNote : 60.0 / Double(step.tempo)
-        let after: Feedback = step.isTimed ? .readyToStart : .yourTurn
-        let isWaiting = step.isExercise && !segment.isComplete
+        let after: Feedback = step.isTimed ? .readyToStart : (step.kind == .listen ? .yourTurn : .prompt)
+        let isWaiting = !segment.isComplete
         let lastEnd = notes.last.map { ($0.globalBeat + $0.heldBeats) * secondsPerBeat } ?? 0
-        microphone.ignoreInput(for: lastEnd + 0.6)
+        microphone.ignoreInput(for: lastEnd + Self.soundTail)
+        wrongPitch = nil
         if isWaiting {
             feedback = .listening
         }
@@ -304,7 +334,7 @@ final class LessonPlayerViewModel {
                     self.lightCurrentKeys()
                 }
                 if self.segment.isComplete {
-                    self.finishExercise()
+                    self.finishStep()
                     return
                 }
                 try? await Task.sleep(nanoseconds: 15_000_000)
@@ -345,7 +375,7 @@ final class LessonPlayerViewModel {
     func screenKeyPressed(_ note: Int) {
         audioEngine.playNote(midiNote: UInt8(clamping: note), velocity: 85)
         // The phone's speaker must not count as the piano
-        microphone.ignoreInput(for: 0.7)
+        microphone.ignoreInput(for: 0.5)
         notePlayed(note)
     }
 
@@ -353,9 +383,9 @@ final class LessonPlayerViewModel {
         audioEngine.stopNote(midiNote: UInt8(clamping: note))
     }
 
-    /// Checks a note from any source against the current exercise. `inputDelay` is how late this source reports.
+    /// Checks a note from any source against the current step. `inputDelay` is how late this source reports.
     func notePlayed(_ note: Int, inputDelay: Double = 0) {
-        guard !isFinished, step.isExercise, !isDemonstrating, !segment.isComplete, let current = segment.currentStep else { return }
+        guard !isFinished, !isDemonstrating, !segment.isComplete, let current = segment.currentStep else { return }
 
         var elapsed: Double?
         if step.isTimed {
@@ -384,7 +414,7 @@ final class LessonPlayerViewModel {
             }
             lightCurrentKeys()
             if segment.isComplete {
-                finishExercise()
+                finishStep()
             }
         case .wrong:
             flash(note, into: \.incorrectKeys)
@@ -404,10 +434,16 @@ final class LessonPlayerViewModel {
     private func begin(step index: Int) {
         stepIndex = index
         let current = lesson.steps[index]
-        let tokens = current.pool.map { LessonNotation.draw(count: current.drawCount, from: $0, using: &generator) } ?? current.notes
+        let tokens = current.pool.map {
+            LessonNotation.draw(count: current.drawCount, from: $0, favoring: current.focus, using: &generator)
+        } ?? current.notes
         let shown = current.readingSteps(tokens: tokens)
         segment = ReadingSegmentState(steps: shown)
-        accidentals = ReadingDrill.printedAccidentals(for: shown, keySignature: current.keySignature)
+        // A drill's notes are unrelated to each other, so each shows its own sign
+        accidentals = current.isDrill
+            ? shown.map { ReadingDrill.printedAccidentals(for: [$0], keySignature: current.keySignature).first ?? [] }
+            : ReadingDrill.printedAccidentals(for: shown, keySignature: current.keySignature)
+        pages = LessonNotation.pages(of: shown, measured: current.meter != nil)
         wrongPitch = nil
         demoNote = nil
         beatInMeasure = nil
@@ -416,17 +452,13 @@ final class LessonPlayerViewModel {
         timing = nil
         keyboard.correctKeys = []
         keyboard.incorrectKeys = []
-        keyboard.labelStyle = current.kind == .guided || current.kind == .explain ? .solfege : .hidden
+        keyboard.labelStyle = current.kind == .learn ? .solfege : .hidden
         keyboard.marksOctaves = true
         updateKeyboardRange()
 
         timedPhase = current.isTimed ? .ready : .notTimed
         switch current.kind {
-        case .explain:
-            feedback = .none
-            keyboard.targetNoteKeys = current.litMidiKeys
-            microphone.expectChord(nil)
-        case .guided, .alone:
+        case .learn, .read:
             feedback = .prompt
             lightCurrentKeys()
         case .listen:
@@ -438,18 +470,18 @@ final class LessonPlayerViewModel {
         }
     }
 
-    /// In guided steps the next key stays lit; elsewhere only after the answer was shown.
+    /// While learning, the next key stays lit; elsewhere only after the answer was shown. The microphone is told
+    /// which notes come next.
     private func lightCurrentKeys() {
         guard let current = segment.currentStep else {
             keyboard.targetNoteKeys = []
-            microphone.expectChord(nil)
+            microphone.expect(nil)
             return
         }
         let result = segment.results[segment.current]
-        let lit = step.kind == .guided || result.revealed
+        let lit = step.kind == .learn || result.revealed
         keyboard.targetNoteKeys = lit ? current.midiNotes.subtracting(result.played) : []
-        // The microphone can only recognize several notes by knowing which ones to look for
-        microphone.expectChord(current.midiNotes.count > 1 ? current.midiNotes : nil)
+        microphone.expect(current.midiNotes)
     }
 
     private func judge(_ verdict: RhythmTiming.Verdict, step index: Int) {
@@ -466,29 +498,24 @@ final class LessonPlayerViewModel {
     }
 
     private func chordNotHeard() {
-        guard step.isExercise, !segment.isComplete, !isDemonstrating, segment.currentStep != nil else { return }
+        guard !segment.isComplete, !isDemonstrating, segment.currentStep != nil else { return }
         feedback = .chordMissed
     }
 
-    private func finishExercise() {
+    /// Shows the step's result and waits for "Continuar" or "Repetir".
+    private func finishStep() {
         timedToken += 1
         timedPhase = step.isTimed ? .notTimed : timedPhase
         beatInMeasure = nil
-        microphone.expectChord(nil)
+        keyboard.targetNoteKeys = []
+        microphone.expect(nil)
         let clean = segment.cleanCount
         let total = segment.playableCount
-        cleanNotes += clean
-        totalNotes += total
-        feedback = .stepDone(clean: clean, total: total)
-        guard clean == total else { return }
-
-        advanceToken += 1
-        let token = advanceToken
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 1_200_000_000)
-            guard let self, self.advanceToken == token else { return }
-            self.continueLesson()
+        if step.isScored {
+            cleanNotes += clean
+            totalNotes += total
         }
+        feedback = .stepDone(clean: clean, total: total)
     }
 
     private func flash(_ note: Int, into keys: ReferenceWritableKeyPath<PianoKeyboardViewModel, Set<Int>>) {
@@ -501,7 +528,7 @@ final class LessonPlayerViewModel {
 
     private func updateKeyboardRange() {
         guard let module = LessonCatalog.keyboardNotes(for: lesson) else { return }
-        let notes = segment.steps.filter { !$0.isRest }.flatMap(\.midiNotes) + (step.kind == .explain ? Array(step.litMidiKeys) : [])
+        let notes = segment.steps.filter { !$0.isRest }.flatMap(\.midiNotes) + Array(step.litMidiKeys)
         let needed = notes.min().flatMap { low in notes.max().map { low...$0 } } ?? module
         let current = keyboard.rangeEnd > keyboard.rangeStart ? keyboard.rangeStart...keyboard.rangeEnd : nil
         let keys = ReadingDrill.keyboardRange(segment: needed, hand: module, whiteKeys: whiteKeys, current: current)
@@ -517,7 +544,6 @@ final class LessonPlayerViewModel {
     }
 
     private func cancelPending() {
-        advanceToken += 1
         timedToken += 1
         _ = nextDemoToken()
         demoNote = nil

@@ -44,7 +44,7 @@ final class MicrophonePitchService: @unchecked Sendable {
     // Time until which the microphone is deaf, while the app itself is making sound
     private let deafLock = NSLock()
     private var deafUntil: Date = .distantPast
-    private var expectedChord: Set<Int>?
+    private var expectedNotes: Set<Int>?
     
     private let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     
@@ -144,10 +144,11 @@ final class MicrophonePitchService: @unchecked Sendable {
         deafLock.unlock()
     }
     
-    /// Tells the analysis which notes must sound together, or nil to go back to listening for single notes.
-    func expectChord(_ notes: Set<Int>?) {
+    /// Tells the analysis which notes the exercise wants now: one note is listened for closely (a different note
+    /// is still reported), several must sound together. Nil listens for any note.
+    func expect(_ notes: Set<Int>?) {
         deafLock.lock()
-        expectedChord = notes
+        expectedNotes = notes
         deafLock.unlock()
     }
 
@@ -159,27 +160,26 @@ final class MicrophonePitchService: @unchecked Sendable {
         
         deafLock.lock()
         let isDeaf = Date() < deafUntil
-        let chord = expectedChord
+        let expected = expectedNotes
         deafLock.unlock()
         if isDeaf {
             reader.reset()
             return
         }
         
-        reader.expectedChord = chord
+        reader.expectedNotes = expected
         let missedBefore = reader.missedChords
         let notes = reader.read(samples)
         let missedChord = reader.missedChords > missedBefore
         // In decibels, so a piano across the room still moves the meter (-60 dB is empty, -10 dB is full)
         let level = min(1.0, max(0.0, (20 * log10(max(reader.level, 0.000_001)) + 60) / 50))
-        let estimate = reader.lastEstimate
         
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.inputLevel = level
-            if let estimate {
-                let midi = estimate.midiNote
-                self.detectedFrequency = estimate.frequency
+            // The last note understood, which the screen shows as heard
+            if let midi = notes.last {
+                self.detectedFrequency = 440.0 * pow(2.0, (Double(midi) - 69.0) / 12.0)
                 self.detectedMidiNote = midi
                 self.detectedNoteName = "\(self.noteNames[midi % 12])\((midi / 12) - 1)"
             }

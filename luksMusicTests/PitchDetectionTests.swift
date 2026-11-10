@@ -2,7 +2,8 @@
 // luksMusicTests
 //
 // The microphone analysis against synthetic piano tones (harmonics that fade at different speeds, stretched
-// slightly as on real strings, with a little room noise), and the decoding of USB keyboard messages.
+// slightly as on real strings, with a little room noise), and the decoding of USB keyboard messages. "Ringing"
+// tones fade slowly, as with the sustain pedal down, so several notes sound at once.
 
 import XCTest
 @testable import luksMusic
@@ -17,7 +18,7 @@ final class PitchDetectionTests: XCTestCase {
 
     /// A struck string: `amplitudes` per harmonic, the upper ones fading faster.
     private func tone(_ midi: Int, seconds: Double, amplitude: Float = 0.25,
-                      harmonics: [Float] = [1, 0.7, 0.45, 0.3, 0.2, 0.12, 0.08, 0.05]) -> [Float] {
+                      harmonics: [Float] = [1, 0.7, 0.45, 0.3, 0.2, 0.12, 0.08, 0.05], ringing: Bool = false) -> [Float] {
         let f0 = frequency(midi)
         let count = Int(seconds * sampleRate)
         var generator = SeededNoise(state: UInt64(midi) &* 2_654_435_761 &+ 1)
@@ -28,7 +29,8 @@ final class PitchDetectionTests: XCTestCase {
                 let n = Double(h + 1)
                 let stretched = n * f0 * sqrt(1 + 0.0004 * n * n)
                 guard stretched < sampleRate / 2 else { continue }
-                sample += Double(weight) * exp(-t * (1.2 + 0.7 * n)) * sin(2 * .pi * stretched * t)
+                let fade = ringing ? 0.35 + 0.25 * n : 1.2 + 0.7 * n
+                sample += Double(weight) * exp(-t * fade) * sin(2 * .pi * stretched * t)
             }
             let attack = min(1, t / 0.004)
             return Float(sample * attack) * amplitude + generator.next() * 0.0015
@@ -38,6 +40,40 @@ final class PitchDetectionTests: XCTestCase {
     private func silence(seconds: Double) -> [Float] {
         var generator = SeededNoise(state: 99)
         return (0..<Int(seconds * sampleRate)).map { _ in generator.next() * 0.0015 }
+    }
+
+    /// Notes struck `gap` seconds apart, each one still sounding under the next ones.
+    private func played(_ notes: [Int], every gap: Double, amplitudes: [Float]? = nil, ringing: Bool = false) -> [Float] {
+        var audio = silence(seconds: 0.3 + gap * Double(notes.count) + 2)
+        for (index, midi) in notes.enumerated() {
+            let start = Int((0.3 + gap * Double(index)) * sampleRate)
+            for (offset, sample) in tone(midi, seconds: 2, amplitude: amplitudes?[index] ?? 0.25, ringing: ringing).enumerated() {
+                audio[start + offset] += sample
+            }
+        }
+        return audio
+    }
+
+    /// What a lesson hears: the reader is told the next note, which moves on only when that note is heard.
+    private func notes(in samples: [Float], expecting expected: [Int]) -> [Int] {
+        var reader = MicrophoneNoteReader(sampleRate: sampleRate)
+        var found: [Int] = []
+        var next = 0
+        reader.expectedNotes = [expected[0]]
+        var start = 0
+        while start < samples.count {
+            let end = min(samples.count, start + 2048)
+            let heard = samples[start..<end].withUnsafeBufferPointer { reader.read($0) }
+            for note in heard {
+                found.append(note)
+                if next < expected.count, note == expected[next] {
+                    next += 1
+                }
+            }
+            reader.expectedNotes = next < expected.count ? [expected[next]] : nil
+            start = end
+        }
+        return found
     }
 
     private func notes(in samples: [Float], chunk: Int = 2048) -> [Int] {
@@ -125,7 +161,7 @@ final class PitchDetectionTests: XCTestCase {
 
     private func readChord(_ audio: [Float], expecting expected: Set<Int>) -> (notes: [Int], missed: Int) {
         var reader = MicrophoneNoteReader(sampleRate: sampleRate)
-        reader.expectedChord = expected
+        reader.expectedNotes = expected
         var result: [Int] = []
         var start = 0
         while start < audio.count {
@@ -147,6 +183,26 @@ final class PitchDetectionTests: XCTestCase {
         let incomplete = readChord(chord([60, 64]), expecting: cMajor)
         XCTAssertEqual(incomplete.notes, [])
         XCTAssertEqual(incomplete.missed, 1)
+    }
+
+    /// Two ringing notes read together sound like their common lower octave; the strike must be read by what it added.
+    func testNotesStillRingingUnderThePedalDontConfuseTheReading() {
+        let scale = [60, 62, 64, 65, 67, 69, 71, 72]
+        let leaps = [60, 67, 64, 72, 65, 69, 62, 71]
+        for melody in [scale, Array(scale.reversed()), leaps] {
+            let heard = notes(in: played(melody, every: 0.5, ringing: true), expecting: melody)
+            XCTAssertEqual(Array(heard.prefix(melody.count)), melody)
+        }
+    }
+
+    func testASofterRepeatOfTheExpectedNoteCounts() {
+        let audio = played([60, 60, 60], every: 0.6, amplitudes: [0.25, 0.15, 0.1])
+        XCTAssertEqual(notes(in: audio, expecting: [60, 60, 60]).prefix(3), [60, 60, 60])
+    }
+
+    func testAWrongNoteIsStillNamedWhenAnotherIsExpected() {
+        XCTAssertEqual(notes(in: played([60, 65], every: 0.5, ringing: true), expecting: [60, 64]), [60, 65])
+        XCTAssertEqual(notes(in: played([60, 52], every: 0.5), expecting: [60, 64]), [60, 52], "the octave below")
     }
 
     func testUSBKeyboardMessagesAreDecoded() {

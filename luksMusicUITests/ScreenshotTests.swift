@@ -113,41 +113,53 @@ final class ScreenshotTests: XCTestCase {
         add(tree)
     }
 
-    /// Lesson 2 (Dó, Ré, Mi): two explanations, an exercise with help and one without, with a wrong key.
+    /// Lesson 2 (Dó, Ré, Mi): two new notes learned by playing them, a drill with a wrong key, and a short piece.
     private func walkThroughALesson() {
         guard app.buttons["treble-2"].waitForExistence(timeout: 15) else { return }
         capture("18-learn")
         app.buttons["treble-2"].tap()
         pause(1)
-        capture("19-lesson-explain")
+        capture("19-lesson-new-note")
+        tapLessonKey(whiteKeysAboveMiddleC: 1)
+        pause(0.6)
+        capture("20-lesson-learned")
         tapIfExists(app.buttons["lessonContinueButton"])
-        pause(0.5)
+        pause(0.6)
+        tapLessonKey(whiteKeysAboveMiddleC: 2)
+        pause(0.6)
         tapIfExists(app.buttons["lessonContinueButton"])
         pause(1)
-        capture("20-lesson-guided")
-        for offset in 0...2 {
-            tapLessonKey(whiteKeysAboveMiddleC: offset)
-            pause(0.5)
-        }
-        capture("21-lesson-guided-done")
-        pause(1.5)
-        capture("22-lesson-alone")
-        tapLessonKey(whiteKeysAboveMiddleC: 4)
+        capture("21-lesson-drill")
+        // Lá is never in the drill
+        tapLessonKey(whiteKeysAboveMiddleC: 5)
         pause(0.4)
-        capture("23-lesson-wrong")
-        for offset in [2, 1, 0] {
-            tapLessonKey(whiteKeysAboveMiddleC: offset)
-            pause(0.5)
+        capture("22-lesson-wrong")
+        // The drawn notes aren't known here: cycling through Dó, Ré and Mi finds each one
+        var taps = 0
+        while !app.otherElements["lessonResultCard"].exists && taps < 45 {
+            tapLessonKey(whiteKeysAboveMiddleC: taps % 3)
+            pause(0.35)
+            taps += 1
+            if taps == 12 {
+                capture("23-lesson-drill-page-2")
+            }
         }
         capture("24-lesson-step-done")
         tapIfExists(app.buttons["lessonContinueButton"])
-        pause(0.5)
-        for offset in [1, 2, 0, 1] {
+        pause(1)
+        capture("25-lesson-piece")
+        // Hot Cross Buns: Mi Ré Dó, Mi Ré Dó, four Dós, four Rés, Mi Ré Dó
+        for (index, offset) in [2, 1, 0, 2, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 1, 0].enumerated() {
             tapLessonKey(whiteKeysAboveMiddleC: offset)
-            pause(0.5)
+            pause(0.4)
+            if index == 6 {
+                capture("26-lesson-piece-page-2")
+            }
         }
-        pause(2)
-        capture("25-lesson-finished")
+        capture("27-lesson-piece-done")
+        tapIfExists(app.buttons["lessonContinueButton"])
+        pause(1.5)
+        capture("28-lesson-finished")
         tapIfExists(app.buttons["Voltar"])
         pause(1)
         visitLaterLessons()
@@ -156,15 +168,16 @@ final class ScreenshotTests: XCTestCase {
     /// Opens one lesson of each later module, once they are all unlocked, to see their screens.
     private func visitLaterLessons() {
         let visits: [(id: String, continues: Int, name: String)] = [
-            ("bass-2", 0, "26-bass"),
-            ("grand-1", 0, "27-grand"),
-            ("acc-1", 1, "28-sharps"),
-            ("rhy-4", 0, "29-rests"),
-            ("rhy-6", 0, "30-dotted"),
-            ("key-2", 0, "31-key"),
-            ("hands-1", 0, "32-hands"),
-            ("chord-1", 0, "33-chord"),
-            ("song-3", 0, "34-song"),
+            ("bass-2", 0, "29-bass"),
+            ("grand-1", 0, "30-grand"),
+            ("acc-1", 0, "31-sharps"),
+            ("rhy-4", 0, "32-rests"),
+            ("rhy-6", 0, "33-dotted"),
+            ("key-2", 0, "34-key"),
+            ("hands-1", 0, "35-hands"),
+            ("chord-1", 0, "36-chord"),
+            ("song-3", 0, "37-song"),
+            ("ear-1", 0, "38-ear"),
         ]
         for visit in visits {
             let lesson = app.buttons[visit.id]
@@ -197,13 +210,11 @@ final class ScreenshotTests: XCTestCase {
         }
         if rhythm.exists {
             rhythm.tap()
-            pause(1)
-            tapIfExists(app.buttons["lessonContinueButton"])
-            pause(0.8)
-            capture("35-rhythm-ready")
+            pause(1.2)
+            capture("39-rhythm-ready")
             tapIfExists(app.buttons["lessonStartButton"])
             pause(1.5)
-            capture("36-rhythm-count-in")
+            capture("40-rhythm-count-in")
             tapIfExists(app.buttons["Voltar"])
             pause(0.8)
         }

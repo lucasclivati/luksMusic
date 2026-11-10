@@ -1,8 +1,9 @@
 // Lesson.swift
 // luksMusic
 //
-// The "Aprender" course as data: modules of lessons, each a list of steps that explain something or ask for
-// notes to be played. Notes are written as text so lessons read like a score:
+// The "Aprender" course as data: modules of lessons, each a list of steps. Every step asks for notes to be played:
+// a new note is learned by playing it, then read without help, then used in a short piece. Notes are written as
+// text so lessons read like a score:
 //   "C4"  "F#4"  "Bb3"           a note
 //   "C4:h"  "D4:q."  "E4:e"      with a value: w h q e s, and "." for a dot (a quarter when left out)
 //   "R:q"                        a rest
@@ -66,27 +67,77 @@ enum LessonNotation {
         return LessonEvent(pitches: pitches.compactMap { $0 }, duration: duration, isRest: false, forcedStaff: staff)
     }
 
-    /// `count` notes drawn from `pool`, never the same one twice in a row.
-    static func draw<G: RandomNumberGenerator>(count: Int, from pool: [String], using generator: inout G) -> [String] {
-        guard !pool.isEmpty else { return [] }
+    /// `count` notes drawn from `pool`, never the same one twice in a row. Notes in `focus` (the ones just
+    /// learned) come up twice as often as the others, and each of them at least once.
+    static func draw<G: RandomNumberGenerator>(count: Int, from pool: [String], favoring focus: [String] = [],
+                                               using generator: inout G) -> [String] {
+        guard !pool.isEmpty, count > 0 else { return [] }
+        let weights = pool.map { focus.contains($0) ? 2.0 : 1.0 }
         var drawn: [String] = []
         while drawn.count < count {
-            let choices = pool.count > 1 ? pool.filter { $0 != drawn.last } : pool
-            drawn.append(choices.randomElement(using: &generator) ?? pool[0])
+            let choices = pool.indices.filter { pool.count == 1 || pool[$0] != drawn.last }
+            let total = choices.reduce(0) { $0 + weights[$1] }
+            var roll = Double.random(in: 0..<total, using: &generator)
+            var chosen = choices[0]
+            for index in choices {
+                roll -= weights[index]
+                if roll < 0 {
+                    chosen = index
+                    break
+                }
+            }
+            drawn.append(pool[chosen])
+        }
+        for note in focus where pool.contains(note) && !drawn.contains(note) {
+            let spot = drawn.indices.shuffled(using: &generator).first { index in
+                !focus.contains(drawn[index])
+                    && (index == 0 || drawn[index - 1] != note)
+                    && (index + 1 == drawn.count || drawn[index + 1] != note)
+            }
+            if let spot {
+                drawn[spot] = note
+            }
         }
         return drawn
+    }
+
+    /// The columns shown at once, since a phone's staff fits about eight. Measures are kept whole; without
+    /// measures the notes are split into even pages.
+    static func pages(of steps: [ReadingStep], measured: Bool, columns: Int = 8) -> [Range<Int>] {
+        guard !steps.isEmpty else { return [] }
+        guard measured else {
+            let count = (steps.count + columns - 1) / columns
+            let size = (steps.count + count - 1) / count
+            return stride(from: 0, to: steps.count, by: size).map { $0..<min(steps.count, $0 + size) }
+        }
+        var pages: [Range<Int>] = []
+        var start = 0
+        var index = 0
+        while index < steps.count {
+            let measure = steps[index].measureIndex
+            var end = index
+            while end < steps.count && steps[end].measureIndex == measure {
+                end += 1
+            }
+            if end - start > columns && index > start {
+                pages.append(start..<index)
+                start = index
+            }
+            index = end
+        }
+        pages.append(start..<steps.count)
+        return pages
     }
 }
 
 struct LessonStep: Identifiable {
     enum Kind {
-        /// Text with the notes on the staff and their keys lit; nothing to play
-        case explain
-        /// The keys to play are lit and named
-        case guided
-        /// Only the staff: the notes must be read
-        case alone
-        /// The app plays the notes, then they are played back from the staff
+        /// Something new: its notes are named on the staff and their keys lit. Playing them goes on; they don't
+        /// count toward the stars.
+        case learn
+        /// Only the staff: the notes must be read. Drawn at random from `pool`, it is a drill.
+        case read
+        /// The app plays the notes and they are found by ear; each appears on the staff once played
         case listen
         /// Played in time with the metronome
         case rhythm
@@ -100,7 +151,7 @@ struct LessonStep: Identifiable {
     let text: String
     /// The events on the staff, in order
     let notes: [String]
-    /// Keys lit during an explanation, when they differ from the notes on the staff
+    /// Keys lit while learning, when they differ from the notes on the staff
     let litKeys: [String]?
     let staff: Staff
     /// Both staves: notes from middle C up go on the treble staff, the others on the bass staff
@@ -110,13 +161,15 @@ struct LessonStep: Identifiable {
     /// Beats per measure when the step is written in measures
     let meter: Int?
     let tempo: Int
-    /// A random exercise: `drawCount` notes from this pool, instead of `notes`
+    /// A drill: `drawCount` notes from this pool, instead of `notes`
     let pool: [String]?
+    /// The notes of the pool just learned, drawn more often
+    let focus: [String]
     let drawCount: Int
 
     init(_ kind: Kind, _ title: String, _ text: String, notes: String = "", litKeys: String? = nil,
          staff: Staff = .treble, grand: Bool = false, key: Int = 0, meter: Int? = nil, tempo: Int = 72,
-         pool: String? = nil, draw: Int = 8) {
+         pool: String? = nil, focus: String = "", draw: Int = 10) {
         self.kind = kind
         self.title = title
         self.text = text
@@ -128,11 +181,16 @@ struct LessonStep: Identifiable {
         self.meter = meter
         self.tempo = tempo
         self.pool = pool?.split(separator: " ").map(String.init)
+        self.focus = focus.split(separator: " ").map(String.init)
         self.drawCount = draw
     }
 
-    var isExercise: Bool { kind != .explain }
     var isTimed: Bool { kind == .rhythm || kind == .playAlong }
+    /// Learning a note isn't scored; everything else counts toward the lesson's stars
+    var isScored: Bool { kind != .learn }
+    var isDrill: Bool { pool != nil }
+    /// A written piece, read at one's own pace: it can be heard first
+    var isPiece: Bool { kind == .read && meter != nil }
 
     /// The events as the staff and the answer checking expect them. Without a meter each event takes one column.
     func readingSteps(tokens: [String]) -> [ReadingStep] {
@@ -159,7 +217,7 @@ struct LessonStep: Identifiable {
 
     var readingSteps: [ReadingStep] { readingSteps(tokens: notes) }
 
-    /// The MIDI numbers of the keys lit during an explanation.
+    /// The MIDI numbers of the keys lit while learning, when they differ from the notes on the staff.
     var litMidiKeys: Set<Int> {
         if let litKeys {
             return Set(litKeys.compactMap(LessonNotation.pitch(from:)).map { Int($0.midiNoteNumber) })

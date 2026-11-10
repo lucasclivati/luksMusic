@@ -4,7 +4,8 @@
 // Turns microphone audio into played notes, apart from the audio session so it can be tested with synthetic tones.
 // `PitchDetector` finds the pitch of a window of samples (YIN: the first strong dip of the normalized difference
 // function, which avoids the octave errors of picking the strongest autocorrelation peak on a piano's harmonics).
-// `NoteOnsetTracker` decides when a key was actually struck, so a note that keeps ringing counts once.
+// `NoteOnsetTracker` decides when a key was actually struck, so a note that keeps ringing counts once, and
+// `StrikeAnalyzer` names the note a strike added, apart from the notes still ringing.
 
 import Accelerate
 import Foundation
@@ -88,106 +89,209 @@ enum PitchDetector {
     }
 }
 
-/// Reads one short frame of microphone audio at a time and reports each struck note once.
+/// Finds the moment a key is struck: the level jumps, or (a softer key over notes still ringing) the hammer's bright
+/// attack stands out in the hop's first difference while the level still rises a little.
 struct NoteOnsetTracker {
 
-    /// One hop of audio: its level and, when it could be measured, its note.
+    /// One hop of audio.
     struct Frame {
         let level: Float
-        let midiNote: Int?
+        /// Level of the hop's first difference, which a hammer's attack raises far more than a ringing note
+        var brightness: Float = 0
     }
 
     /// Never treat as sound anything quieter than this
     var minimumGate: Float = 0.001
     /// Below this the room is treated as silence: a few times the room's own noise, which is followed as it changes
     var noiseGate: Float { max(minimumGate, noiseFloor * 3) }
-    /// A strike raises the level at least this much above the note still ringing
+    /// A strike raises the level at least this much above the notes still ringing
     var attackRatio: Float = 1.45
-    /// Hops to wait after a strike, while the hammer noise fades, before reading the note
-    var settleFrames = 4
-    /// Hops to keep trying to read the note after a strike
-    var readFrames = 14
-    /// Hops a different note must hold, with no strike heard, to count as a new note (a soft note over a loud one)
-    var changeFrames = 4
-    /// How fast the remembered level falls per hop (a piano note fades slowly)
+    /// Or raises the brightness this much while the level rises at least `softRise`
+    var brightAttackRatio: Float = 1.5
+    var softRise: Float = 1.1
+    /// How fast the remembered levels fall per hop: a piano note fades slowly, its bright attack quickly
     var envelopeDecay: Float = 0.94
+    var brightnessDecay: Float = 0.85
 
-    /// The last frame was the attack of a new sound
-    private(set) var struckThisFrame = false
-
-    private var envelope: Float = 0
+    private(set) var envelope: Float = 0
+    private var brightEnvelope: Float = 0
     /// The quietest level heard lately: falls at once, rises slowly while sound goes on
     private var noiseFloor: Float = 0.002
-    private var framesSinceStrike: Int?
-    private var soundingNote: Int?
-    private var candidate: Int?
-    private var candidateFrames = 0
 
     /// Forgets everything heard so far (after the app played something, or when listening restarts).
     mutating func reset() {
         envelope = 0
+        brightEnvelope = 0
         noiseFloor = 0.002
-        framesSinceStrike = nil
-        soundingNote = nil
-        candidate = nil
-        candidateFrames = 0
     }
 
-    /// Returns the note that was just played, if this frame completes one.
-    mutating func process(_ frame: Frame) -> Int? {
+    /// Takes the next hop and says whether a key was struck in it.
+    mutating func isStrike(_ frame: Frame) -> Bool {
         noiseFloor = frame.level < noiseFloor ? max(frame.level, 0.0001) : noiseFloor * 1.0015
-        let isStrike = frame.level >= noiseGate && frame.level > max(envelope, noiseGate * 0.5) * attackRatio
-        struckThisFrame = isStrike
+        let isLoud = frame.level >= noiseGate
+        let strong = isLoud && frame.level > max(envelope, noiseGate * 0.5) * attackRatio
+        let soft = isLoud && !strong && frame.brightness > brightEnvelope * brightAttackRatio
+            && frame.level > envelope * softRise
         envelope = max(frame.level, envelope * envelopeDecay)
+        brightEnvelope = max(frame.brightness, brightEnvelope * brightnessDecay)
+        return strong || soft
+    }
+}
 
-        guard frame.level >= noiseGate else {
-            if envelope < noiseGate {
-                soundingNote = nil
+/// Which note a strike added. It is the note whose harmonics gained energy from just before the strike to just after
+/// it, so notes still ringing (or held by the pedal) stay out of the answer. A pitch reading of the whole sound hears
+/// two ringing notes as their common lower octave, which was the wrong note the lessons reported.
+enum StrikeAnalyzer {
+    /// The notes considered, A0 sharp to E7
+    static let notes = 28...100
+    private static let harmonics = 6
+    private static let highestFrequency = 5000.0
+    private static let fftSize = 16_384
+    private static let setup = vDSP_DFT_zrop_CreateSetup(nil, vDSP_Length(fftSize), .FORWARD)
+
+    /// The best note must stand this far above the typical note: noise lifts every note alike
+    private static let peakRatio: Float = 6
+    /// The expected note is taken when it gained at least this share of what the best note gained
+    private static let expectedShare: Float = 0.6
+    /// Energy gained against the energy the note already had. The expected note may be ringing already (a key
+    /// played again), so it needs less.
+    private static let freshExpected: Float = 0.4
+    private static let freshOther: Float = 1
+    /// The note's new energy as a share of all the sound after the strike
+    private static let minimumShare: Float = 0.03
+    /// Energy gained on the note's harmonics against energy gained halfway between them
+    private static let harmonicRatio: Float = 3
+    /// A struck note's lowest partials are its strongest; a pick carried by upper partials only is another note's
+    /// harmonic that happens to coincide
+    private static let fundamentalShare: Float = 0.25
+
+    struct Spectrum {
+        /// Power of each harmonic of each note in `notes`
+        let harmonicPowers: [[Float]]
+        /// Power halfway between the note's harmonics, from the first to the fifth
+        let betweenPowers: [[Float]]
+        /// All the sound's power, on the same scale
+        let totalPower: Float
+    }
+
+    static func spectrum(of samples: [Float], sampleRate: Double) -> Spectrum {
+        let count = min(samples.count, fftSize)
+        let empty = Spectrum(harmonicPowers: notes.map { _ in [Float](repeating: 0, count: harmonics) },
+                             betweenPowers: notes.map { _ in [Float](repeating: 0, count: harmonics - 1) }, totalPower: 0)
+        guard count > 0, let setup else { return empty }
+
+        var window = [Float](repeating: 0, count: count)
+        vDSP_hann_window(&window, vDSP_Length(count), Int32(vDSP_HANN_DENORM))
+        var shaped = [Float](repeating: 0, count: fftSize)
+        vDSP_vmul(Array(samples.suffix(count)), 1, window, 1, &shaped, 1, vDSP_Length(count))
+
+        let half = fftSize / 2
+        var inReal = [Float](repeating: 0, count: half)
+        var inImaginary = [Float](repeating: 0, count: half)
+        for index in 0..<half {
+            inReal[index] = shaped[2 * index]
+            inImaginary[index] = shaped[2 * index + 1]
+        }
+        var outReal = [Float](repeating: 0, count: half)
+        var outImaginary = [Float](repeating: 0, count: half)
+        vDSP_DFT_Execute(setup, inReal, inImaginary, &outReal, &outImaginary)
+
+        var power = [Float](repeating: 0, count: half + 1)
+        power[0] = outReal[0] * outReal[0]
+        power[half] = outImaginary[0] * outImaginary[0]
+        var sum = power[0] + power[half]
+        for bin in 1..<half {
+            power[bin] = outReal[bin] * outReal[bin] + outImaginary[bin] * outImaginary[bin]
+            sum += 2 * power[bin]
+        }
+        // Parseval: the window's energy, on the same scale as the bins, whatever scale the transform uses
+        let total = sum / Float(fftSize) * Float(count) / 2
+
+        let binsPerHertz = Double(fftSize) / sampleRate
+        let top = min(highestFrequency, sampleRate / 2 * 0.98)
+        func strongest(near frequency: Double, tolerance: Double) -> Float {
+            guard frequency <= top else { return 0 }
+            let low = max(1, Int((frequency * (1 - tolerance) * binsPerHertz).rounded(.down)))
+            let high = min(half, max(low, Int((frequency * (1 + tolerance) * binsPerHertz).rounded(.up))))
+            return power[low...high].max() ?? 0
+        }
+
+        var harmonicPowers: [[Float]] = []
+        var betweenPowers: [[Float]] = []
+        for midi in notes {
+            let fundamental = 440.0 * pow(2.0, (Double(midi) - 69.0) / 12.0)
+            harmonicPowers.append((1...harmonics).map { number in
+                let n = Double(number)
+                // Strings are a little stiff, so their upper harmonics run sharp
+                return strongest(near: n * fundamental * (1 + 0.0004 * n * n).squareRoot(), tolerance: 0.01)
+            })
+            betweenPowers.append((1..<harmonics).map { number in
+                strongest(near: (Double(number) + 0.5) * fundamental, tolerance: 0)
+            })
+        }
+        return Spectrum(harmonicPowers: harmonicPowers, betweenPowers: betweenPowers, totalPower: total)
+    }
+
+    /// The note struck between `before` and `after`, or nil when nothing clearly new is sounding.
+    static func struckNote(before: Spectrum, after: Spectrum, expected: Int?) -> Int? {
+        let count = notes.count
+        var gains = [[Float]](repeating: [], count: count)
+        var score = [Float](repeating: 0, count: count)
+        var fresh = [Float](repeating: 0, count: count)
+        for index in 0..<count {
+            var gained: Float = 0
+            var had: Float = 0
+            gains[index] = zip(before.harmonicPowers[index], after.harmonicPowers[index]).map { max(0, $1 - $0) }
+            for number in 0..<harmonics {
+                gained += gains[index][number] / Float(number + 1)
+                had += before.harmonicPowers[index][number] / Float(number + 1)
             }
-            framesSinceStrike = nil
-            candidate = nil
-            candidateFrames = 0
-            return nil
+            score[index] = gained
+            fresh[index] = gained / max(had, 1e-12)
         }
+        guard let top = score.max(), top > 1e-9, let best = score.firstIndex(of: top) else { return nil }
+        guard top >= peakRatio * score.sorted()[count / 2] else { return nil }
 
-        if isStrike {
-            framesSinceStrike = 0
-            candidate = nil
-            candidateFrames = 0
-            return nil
-        }
-
-        if let frames = framesSinceStrike {
-            let elapsed = frames + 1
-            framesSinceStrike = elapsed
-            guard elapsed >= settleFrames else { return nil }
-            if let note = frame.midiNote {
-                framesSinceStrike = nil
-                soundingNote = note
-                return note
+        func isNote(_ index: Int) -> Bool {
+            guard score[index] >= minimumShare * after.totalPower else { return false }
+            var between: Float = 0
+            var onHarmonics: Float = 0
+            for number in 0..<(harmonics - 1) {
+                between += max(0, after.betweenPowers[index][number] - before.betweenPowers[index][number]) / Float(number + 1)
+                onHarmonics += gains[index][number] / Float(number + 1)
             }
-            if elapsed >= readFrames {
-                framesSinceStrike = nil
-            }
-            return nil
+            return onHarmonics >= harmonicRatio * between
         }
 
-        guard let note = frame.midiNote, note != soundingNote else {
-            candidate = nil
-            candidateFrames = 0
-            return nil
+        if let expected, notes.contains(expected) {
+            let index = expected - notes.lowerBound
+            if score[index] >= expectedShare * top, fresh[index] >= freshExpected, isNote(index) {
+                return expected
+            }
         }
-        if note == candidate {
-            candidateFrames += 1
-        } else {
-            candidate = note
-            candidateFrames = 1
+        guard fresh[best] >= freshOther, isNote(best) else { return nil }
+        let midi = notes.lowerBound + best
+        // Low notes reach a phone's microphone mostly through their second harmonic
+        let lowest = gains[best][0] + (midi < 48 ? gains[best][1] : 0)
+        guard lowest >= fundamentalShare * gains[best].reduce(0, +) else { return nil }
+        return midi
+    }
+
+    /// The energy of a note's harmonics in a short window, to notice the moment it starts while others ring.
+    static func energy(of midi: Int, in samples: [Float], sampleRate: Double) -> Float {
+        var window = [Float](repeating: 0, count: samples.count)
+        vDSP_hann_window(&window, vDSP_Length(samples.count), Int32(vDSP_HANN_DENORM))
+        var shaped = [Float](repeating: 0, count: samples.count)
+        vDSP_vmul(samples, 1, window, 1, &shaped, 1, vDSP_Length(samples.count))
+        let fundamental = 440.0 * pow(2.0, (Double(midi) - 69.0) / 12.0)
+        var total: Float = 0
+        for number in 1...harmonics {
+            let n = Double(number)
+            let frequency = n * fundamental * (1 + 0.0004 * n * n).squareRoot()
+            guard frequency < sampleRate / 2 * 0.98 else { break }
+            total += [0.99, 1.0, 1.01].map { ChordMatcher.goertzel(shaped, frequency: frequency * $0, sampleRate: sampleRate) }.max() ?? 0
         }
-        guard candidateFrames >= changeFrames else { return nil }
-        candidate = nil
-        candidateFrames = 0
-        soundingNote = note
-        return note
+        return total
     }
 }
 
@@ -218,7 +322,7 @@ enum ChordMatcher {
         return [0.985, 1.0, 1.015].map { goertzel(samples, frequency: frequency * $0, sampleRate: sampleRate) }.max() ?? 0
     }
 
-    private static func goertzel(_ samples: [Float], frequency: Double, sampleRate: Double) -> Float {
+    static func goertzel(_ samples: [Float], frequency: Double, sampleRate: Double) -> Float {
         let coefficient = Float(2 * cos(2 * .pi * frequency / sampleRate))
         var previous: Float = 0
         var beforePrevious: Float = 0
@@ -231,30 +335,59 @@ enum ChordMatcher {
     }
 }
 
-/// Slices microphone audio into short hops, measures each one and reports the notes played.
+/// Slices microphone audio into short hops and reports each key struck, once.
+///
+/// When the exercise says which note it wants, that note's own harmonics are watched too, so its strike is caught
+/// even in a room full of ringing notes; a strike is then read by what it added to the sound (`StrikeAnalyzer`).
+/// Without an expected note (Modo Estudo), a soft note heard without a strike is still read by its pitch.
 struct MicrophoneNoteReader {
     let sampleRate: Double
     private(set) var level: Float = 0
-    private(set) var lastEstimate: PitchDetector.Estimate?
 
-    /// Set when the exercise wants several notes at once: only a strike with all of them counts
-    var expectedChord: Set<Int>? {
-        didSet { if expectedChord != oldValue { chordCountdown = nil } }
+    /// The notes the exercise wants now: one note is listened for by itself, several must sound together
+    var expectedNotes: Set<Int>? {
+        didSet {
+            guard expectedNotes != oldValue else { return }
+            chordCountdown = nil
+            watchHistory.removeAll()
+        }
     }
-    /// How many strikes didn't have every note of `expectedChord`
+    /// How many strikes didn't have every note of the expected chord
     private(set) var missedChords = 0
+
+    private var expectedChord: Set<Int>? { (expectedNotes?.count ?? 0) > 1 ? expectedNotes : nil }
+    private var expectedNote: Int? { expectedNotes?.count == 1 ? expectedNotes?.first : nil }
 
     private let hopSize = 1024
     private let windowSize = 4096
     /// Enough to tell apart notes a semitone from each other, read once the attack has passed
     private let chordWindowSize = 8192
     private let chordWaitHops = 9
-    private var chordCountdown: Int?
-    /// Estimates less periodic than this are noise, or several notes at once
+    /// Hops after a strike before reading it, so the window holds only sound from after the hammer
+    private let settleHops = 4
+    /// A new strike counts this many hops after the last one at the earliest
+    private let refractoryHops = 5
+    /// The expected note's energy rising this many times over its recent low is its strike
+    private let watchRise: Float = 4
+    private let watchWindowSize = 2048
+    /// Pitch readings less periodic than this are noise, or several notes at once
     private let minimumClarity = 0.7
+    /// Hops a different pitch must hold, with no strike heard, to count as a new note
+    private let changeFrames = 4
+
     private var pending: [Float] = []
     private var window: [Float] = []
+    private var lastSample: Float = 0
     private var tracker = NoteOnsetTracker()
+    private var chordCountdown: Int?
+    private var hopsSinceStrike = 1_000
+    /// A strike waiting to be read: the sound before it, and how it was noticed
+    private var strike: (before: [Float], hops: Int, byWatch: Bool)?
+    private var watchHistory: [Float] = []
+    /// The last note reported, while it still sounds
+    private var soundingNote: Int?
+    private var candidate: Int?
+    private var candidateFrames = 0
 
     init(sampleRate: Double) {
         self.sampleRate = sampleRate
@@ -263,10 +396,16 @@ struct MicrophoneNoteReader {
     mutating func reset() {
         pending.removeAll(keepingCapacity: true)
         window.removeAll(keepingCapacity: true)
+        lastSample = 0
         tracker.reset()
         chordCountdown = nil
+        hopsSinceStrike = 1_000
+        strike = nil
+        watchHistory.removeAll()
+        soundingNote = nil
+        candidate = nil
+        candidateFrames = 0
         level = 0
-        lastEstimate = nil
     }
 
     /// Takes the next samples of any length and returns the notes struck in them, in order.
@@ -277,37 +416,109 @@ struct MicrophoneNoteReader {
         while pending.count - start >= hopSize {
             let hop = Array(pending[start..<(start + hopSize)])
             start += hopSize
-            window.append(contentsOf: hop)
-            if window.count > chordWindowSize {
-                window.removeFirst(window.count - chordWindowSize)
-            }
-
-            var rms: Float = 0
-            vDSP_rmsqv(hop, 1, &rms, vDSP_Length(hop.count))
-            level = rms
-
-            var note: Int?
-            lastEstimate = nil
-            if window.count >= windowSize, rms >= tracker.noiseGate,
-               let estimate = PitchDetector.estimate(samples: Array(window.suffix(windowSize)), sampleRate: sampleRate),
-               estimate.clarity >= minimumClarity, (21...108).contains(estimate.midiNote) {
-                note = estimate.midiNote
-                lastEstimate = estimate
-            }
-            let played = tracker.process(NoteOnsetTracker.Frame(level: rms, midiNote: note))
-            if let chord = expectedChord {
-                notes += readChord(chord)
-            } else if let played {
-                notes.append(played)
-            }
+            notes += process(hop)
         }
         pending.removeFirst(start)
         return notes
     }
 
+    private mutating func process(_ hop: [Float]) -> [Int] {
+        var rms: Float = 0
+        vDSP_rmsqv(hop, 1, &rms, vDSP_Length(hop.count))
+        level = rms
+        let brightness = Self.brightness(of: hop, after: lastSample)
+        lastSample = hop[hop.count - 1]
+        let before = strike == nil ? Array(window.suffix(windowSize)) : []
+        window.append(contentsOf: hop)
+        if window.count > chordWindowSize {
+            window.removeFirst(window.count - chordWindowSize)
+        }
+        hopsSinceStrike += 1
+
+        var struck = tracker.isStrike(NoteOnsetTracker.Frame(level: rms, brightness: brightness))
+        let isLoud = rms >= tracker.noiseGate
+        var byWatch = false
+        if let expected = expectedNote, window.count >= watchWindowSize {
+            let energy = StrikeAnalyzer.energy(of: expected, in: Array(window.suffix(watchWindowSize)), sampleRate: sampleRate)
+            if !struck, isLoud, watchHistory.count >= 3, let low = watchHistory.suffix(6).min(),
+               energy > low * watchRise, energy > 1e-6 {
+                struck = true
+                byWatch = true
+            }
+            watchHistory.append(energy)
+            if watchHistory.count > 12 {
+                watchHistory.removeFirst()
+            }
+        }
+
+        if let chord = expectedChord {
+            return readChord(chord, struck: struck)
+        }
+
+        if struck, strike == nil, hopsSinceStrike >= refractoryHops {
+            hopsSinceStrike = 0
+            let padding = [Float](repeating: 0, count: windowSize - before.count)
+            strike = (before: padding + before, hops: 0, byWatch: byWatch)
+            return []
+        }
+        if var waiting = strike {
+            waiting.hops += 1
+            guard waiting.hops >= settleHops else {
+                strike = waiting
+                return []
+            }
+            strike = nil
+            let expected = expectedNote
+            var note = StrikeAnalyzer.struckNote(
+                before: StrikeAnalyzer.spectrum(of: waiting.before, sampleRate: sampleRate),
+                after: StrikeAnalyzer.spectrum(of: Array(window.suffix(windowSize)), sampleRate: sampleRate),
+                expected: expected
+            )
+            // The watch only listens for the expected note
+            if waiting.byWatch, note != expected {
+                note = nil
+            }
+            guard let note else { return [] }
+            soundingNote = note
+            candidate = nil
+            candidateFrames = 0
+            return [note]
+        }
+
+        guard isLoud else {
+            if tracker.envelope < tracker.noiseGate {
+                soundingNote = nil
+            }
+            candidate = nil
+            candidateFrames = 0
+            return []
+        }
+        guard expectedNote == nil, window.count >= windowSize,
+              let estimate = PitchDetector.estimate(samples: Array(window.suffix(windowSize)), sampleRate: sampleRate),
+              estimate.clarity >= minimumClarity, (21...108).contains(estimate.midiNote),
+              estimate.midiNote != soundingNote else {
+            candidate = nil
+            candidateFrames = 0
+            return []
+        }
+        // No note expected: a soft note over a loud one, heard by its pitch without a strike
+        let note = estimate.midiNote
+        if note == candidate {
+            candidateFrames += 1
+        } else {
+            candidate = note
+            candidateFrames = 1
+        }
+        guard candidateFrames >= changeFrames else { return [] }
+        candidate = nil
+        candidateFrames = 0
+        soundingNote = note
+        return [note]
+    }
+
     /// Waits for the attack of a strike to pass, then checks that every expected note is sounding.
-    private mutating func readChord(_ chord: Set<Int>) -> [Int] {
-        if tracker.struckThisFrame {
+    private mutating func readChord(_ chord: Set<Int>, struck: Bool) -> [Int] {
+        if struck {
             chordCountdown = chordWaitHops
             return []
         }
@@ -322,5 +533,17 @@ struct MicrophoneNoteReader {
         }
         missedChords += 1
         return []
+    }
+
+    /// The level of the hop's first difference: high frequencies, where a hammer's attack shows.
+    private static func brightness(of hop: [Float], after previous: Float) -> Float {
+        var sum: Float = 0
+        var last = previous
+        for sample in hop {
+            let difference = sample - last
+            sum += difference * difference
+            last = sample
+        }
+        return (sum / Float(max(1, hop.count))).squareRoot()
     }
 }
