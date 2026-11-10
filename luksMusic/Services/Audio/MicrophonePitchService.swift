@@ -170,7 +170,8 @@ final class MicrophonePitchService: @unchecked Sendable {
         let missedBefore = reader.missedChords
         let notes = reader.read(samples)
         let missedChord = reader.missedChords > missedBefore
-        let level = min(1.0, max(0.0, reader.level * 10.0))
+        // In decibels, so a piano across the room still moves the meter (-60 dB is empty, -10 dB is full)
+        let level = min(1.0, max(0.0, (20 * log10(max(reader.level, 0.000_001)) + 60) / 50))
         let estimate = reader.lastEstimate
         
         DispatchQueue.main.async { [weak self] in

@@ -63,6 +63,18 @@ enum PitchDetector {
             }
             lag += 1
         }
+        // No dip under the threshold (a real room's echo, a bright piano tone): take the first dip close to the
+        // deepest one, as long as the deepest is clearly periodic
+        if found == nil, let deepest = normalized[minLag..<maxLag].min(), deepest < 0.3 {
+            lag = minLag + 1
+            while lag < maxLag {
+                if normalized[lag] <= deepest + 0.05, normalized[lag] <= normalized[lag - 1], normalized[lag] <= normalized[lag + 1] {
+                    found = lag
+                    break
+                }
+                lag += 1
+            }
+        }
         guard let best = found, best > 0, best < maxLag else { return nil }
 
         let before = Double(normalized[best - 1])
@@ -85,8 +97,10 @@ struct NoteOnsetTracker {
         let midiNote: Int?
     }
 
-    /// Below this the room is treated as silence
-    var noiseGate: Float = 0.012
+    /// Never treat as sound anything quieter than this
+    var minimumGate: Float = 0.001
+    /// Below this the room is treated as silence: a few times the room's own noise, which is followed as it changes
+    var noiseGate: Float { max(minimumGate, noiseFloor * 3) }
     /// A strike raises the level at least this much above the note still ringing
     var attackRatio: Float = 1.45
     /// Hops to wait after a strike, while the hammer noise fades, before reading the note
@@ -102,6 +116,8 @@ struct NoteOnsetTracker {
     private(set) var struckThisFrame = false
 
     private var envelope: Float = 0
+    /// The quietest level heard lately: falls at once, rises slowly while sound goes on
+    private var noiseFloor: Float = 0.002
     private var framesSinceStrike: Int?
     private var soundingNote: Int?
     private var candidate: Int?
@@ -110,6 +126,7 @@ struct NoteOnsetTracker {
     /// Forgets everything heard so far (after the app played something, or when listening restarts).
     mutating func reset() {
         envelope = 0
+        noiseFloor = 0.002
         framesSinceStrike = nil
         soundingNote = nil
         candidate = nil
@@ -118,6 +135,7 @@ struct NoteOnsetTracker {
 
     /// Returns the note that was just played, if this frame completes one.
     mutating func process(_ frame: Frame) -> Int? {
+        noiseFloor = frame.level < noiseFloor ? max(frame.level, 0.0001) : noiseFloor * 1.0015
         let isStrike = frame.level >= noiseGate && frame.level > max(envelope, noiseGate * 0.5) * attackRatio
         struckThisFrame = isStrike
         envelope = max(frame.level, envelope * envelopeDecay)
@@ -233,7 +251,7 @@ struct MicrophoneNoteReader {
     private let chordWaitHops = 9
     private var chordCountdown: Int?
     /// Estimates less periodic than this are noise, or several notes at once
-    private let minimumClarity = 0.8
+    private let minimumClarity = 0.7
     private var pending: [Float] = []
     private var window: [Float] = []
     private var tracker = NoteOnsetTracker()

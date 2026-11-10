@@ -97,6 +97,14 @@ final class PitchDetectionTests: XCTestCase {
         XCTAssertEqual(notes(in: audio, chunk: 512), [64, 67])
     }
 
+    func testAQuietPianoFarFromThePhoneIsStillHeard() {
+        // The built-in microphone, without automatic gain, hears a piano across the room this softly
+        for amplitude: Float in [0.012, 0.005] {
+            let audio = silence(seconds: 0.4) + tone(64, seconds: 0.8, amplitude: amplitude) + tone(67, seconds: 0.8, amplitude: amplitude)
+            XCTAssertEqual(notes(in: audio), [64, 67], "amplitude \(amplitude)")
+        }
+    }
+
     func testSilenceAndNoiseAreNotNotes() {
         XCTAssertEqual(notes(in: silence(seconds: 1)), [])
         var generator = SeededNoise(state: 5)

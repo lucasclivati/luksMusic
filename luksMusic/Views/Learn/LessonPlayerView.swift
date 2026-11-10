@@ -36,6 +36,9 @@ struct LessonPlayerView: View {
             }
         }
         .background(PlayerTheme.background.ignoresSafeArea())
+        .onAppear {
+            viewModel.activate()
+        }
         .onDisappear {
             viewModel.stop()
         }
@@ -126,8 +129,35 @@ struct LessonPlayerView: View {
         } else if let name = viewModel.connectedKeyboardName {
             statusText("Teclado conectado: \(name)", symbol: "cable.connector", color: PlayerTheme.green)
         } else if viewModel.usesMicrophone {
-            statusText("Microfone ligado: toque em um lugar silencioso", symbol: "mic.fill", color: PlayerTheme.green)
+            microphoneMeter
         }
+    }
+
+    /// Shows that the microphone hears the room, and the last note it recognized.
+    private var microphoneMeter: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "mic.fill")
+            Text("Ouvindo")
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(PlayerTheme.raised)
+                    Capsule()
+                        .fill(PlayerTheme.green)
+                        .frame(width: geo.size.width * min(1, max(0.03, viewModel.microphoneLevel)))
+                }
+            }
+            .frame(width: 70, height: 6)
+            if let name = viewModel.heardNoteName {
+                Text("última nota: \(name)")
+                    .foregroundStyle(PlayerTheme.text)
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(PlayerTheme.green)
+        .padding(.horizontal, 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("lessonMicrophoneMeter")
     }
 
     private func statusText(_ text: String, symbol: String, color: Color) -> some View {

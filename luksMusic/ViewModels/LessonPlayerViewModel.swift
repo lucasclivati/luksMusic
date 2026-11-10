@@ -91,15 +91,27 @@ final class LessonPlayerViewModel {
                 self?.keyboard.midiActiveKeys.remove(note)
             }
         )
+        begin(step: 0)
+    }
+
+    /// Takes the microphone for this screen. Called when the screen appears, not in `init`: SwiftUI may build
+    /// extra copies of a screen's model and throw them away, and the microphone reports to one listener only.
+    func activate() {
+        claimMicrophone()
+        if !usesMicrophone, UserDefaults.standard.bool(forKey: Self.microphoneKey) {
+            setMicrophone(on: true)
+        }
+    }
+
+    private func claimMicrophone() {
         microphone.onNoteDetected = { [weak self] note in
             self?.notePlayed(note, inputDelay: Self.microphoneDelay)
         }
         microphone.onChordMissed = { [weak self] in
             self?.chordNotHeard()
         }
-        begin(step: 0)
-        if UserDefaults.standard.bool(forKey: Self.microphoneKey) {
-            setMicrophone(on: true)
+        if step.isExercise {
+            lightCurrentKeys()
         }
     }
 
@@ -110,6 +122,15 @@ final class LessonPlayerViewModel {
     var stars: Int { Lesson.stars(clean: cleanNotes, total: totalNotes) }
     var progress: Double { Double(stepIndex + (isFinished ? 1 : 0)) / Double(max(1, lesson.steps.count)) }
     var isDemonstrating: Bool { feedback == .listening }
+
+    /// How loud the microphone hears the room, from 0 to 1.
+    var microphoneLevel: Double { Double(microphone.inputLevel) }
+
+    /// The last note the microphone recognized, named for the step's key.
+    var heardNoteName: String? {
+        guard usesMicrophone, let midi = microphone.detectedMidiNote else { return nil }
+        return ReadingDrill.name(of: ReadingDrill.spelledPitch(midi: midi, keySignature: step.keySignature))
+    }
 
     /// The USB keyboard in use, by name.
     var connectedKeyboardName: String? {
@@ -301,6 +322,7 @@ final class LessonPlayerViewModel {
             microphone.stopListening()
             return
         }
+        claimMicrophone()
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {

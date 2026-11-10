@@ -111,6 +111,8 @@ final class PracticeViewModel {
     func toggleMicrophoneListening() {
         isMicrophoneEnabled.toggle()
         if isMicrophoneEnabled {
+            // Another screen may have taken the microphone's callback since this model was built
+            setupMicrophoneListener()
             Task {
                 try? await self.microphoneService.startListening()
             }
