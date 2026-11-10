@@ -136,7 +136,8 @@ struct LessonPlayerView: View {
             clean = right
             total = all
         }
-        let perfect = clean == total
+        // Learning a note is never wrong
+        let perfect = !viewModel.step.isScored || clean == total
         let headline = !viewModel.step.isScored ? "Muito bem!"
             : (perfect ? "Todas certas de primeira!" : "\(clean) de \(total) certas de primeira")
         return VStack(alignment: .leading, spacing: 10) {

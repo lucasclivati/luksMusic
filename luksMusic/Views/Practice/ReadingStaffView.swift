@@ -132,7 +132,8 @@ struct ReadingStaffView: View {
         let keyCount = min(7, abs(keySignature))
         let timeWidth = timeSignature == nil ? 0 : space * 1.8
         let notesStart = left + clefWidth + CGFloat(keyCount) * space * 0.95 + timeWidth + space * 1.2
-        let columnWidth = steps.isEmpty ? 0 : min((right - notesStart) / CGFloat(steps.count), space * 7)
+        // Room after the last column for an eighth's flag
+        let columnWidth = steps.isEmpty ? 0 : min((right - notesStart - space * 0.9) / CGFloat(steps.count), space * 7)
         let columns = steps.enumerated().map { index, step in
             column(for: step, x: notesStart + columnWidth * (CGFloat(index) + 0.5))
         }
