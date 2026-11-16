@@ -1,1 +1,732 @@
-/* English texts of luksMusic. Each key is the Portuguese text as it is written in the code. */
+/* English texts of luksMusic. Each key is the Portuguese text as it is written in the code (or a unique key
+   with a Portuguese default value); format specifiers follow the types of the interpolated values. */
+
+/* luksMusic/Models/AppLanguage.swift */
+"Idioma do aparelho" = "Device language";
+
+/* luksMusic/App/ContentView.swift */
+"Aprender" = "Learn";
+"Tocar" = "Play";
+"Progresso" = "Progress";
+"Ajustes" = "Settings";
+"Nenhum estudo registrado ainda" = "No practice sessions yet";
+"Abra uma partitura e toque em Modo Estudo para começar a treinar." = "Open a score and tap Practice Mode to start practicing.";
+"Estudos recentes" = "Recent sessions";
+"%@ • %lld notas" = "%@ • %lld notes";
+"Estudos" = "Sessions";
+"Precisão média" = "Average accuracy";
+"Maior sequência" = "Longest streak";
+"Conta e nuvem" = "Account & cloud";
+"Sincronizar partituras na nuvem" = "Sync scores to the cloud";
+"Sair da conta" = "Sign out";
+"Excluir conta" = "Delete account";
+"Entrar com Google" = "Sign in with Google";
+"Teclado MIDI externo" = "External MIDI keyboard";
+"Conexão MIDI" = "MIDI connection";
+"Conectado" = "Connected";
+"Nenhum teclado MIDI conectado" = "No MIDI keyboard connected";
+"Idioma" = "Language";
+"O novo idioma aparece quando o app for aberto de novo." = "The new language takes effect the next time the app opens.";
+"Sobre" = "About";
+"Versão do app" = "App version";
+"Idioma alterado" = "Language changed";
+"OK" = "OK";
+"Feche o luksMusic e abra de novo para ver o app no novo idioma." = "Close luksMusic and open it again to see the app in the new language.";
+"Sua conta e as partituras sincronizadas na nuvem serão apagadas permanentemente. As partituras salvas neste aparelho continuam disponíveis no modo convidado." = "Your account and the scores synced to the cloud will be permanently deleted. Scores saved on this device remain available in guest mode.";
+"Confirme sua identidade" = "Confirm your identity";
+"Senha de %@" = "Password for %@";
+"Excluir Conta Permanentemente" = "Delete Account Permanently";
+"Confirmar com Google e Excluir" = "Confirm with Google and Delete";
+"Excluir Conta" = "Delete Account";
+"Cancelar" = "Cancel";
+
+/* luksMusic/Views/Auth/LoginView.swift */
+"Partituras interativas e prática de piano" = "Interactive sheet music and piano practice";
+"Biblioteca na nuvem" = "Cloud library";
+"Entre com sua conta para guardar suas partituras" = "Sign in to save your scores";
+"Piano Interativo e Prática" = "Interactive Piano & Practice";
+"Teclado interativo, metrônomo e partitura conectada" = "Interactive keyboard, metronome, and connected score";
+"E-mail" = "Email";
+"Senha" = "Password";
+"Entrar / Criar Conta" = "Sign In / Create Account";
+"Entrar com E-mail" = "Sign in with Email";
+"Continuar como Convidado (Offline)" = "Continue as Guest (Offline)";
+
+/* luksMusic/Services/Auth/AuthService.swift */
+"Convidado" = "Guest";
+"Falha no login com Google: %@" = "Google sign-in failed: %@";
+"URL de autenticação inválida" = "Invalid sign-in URL";
+"Código de autorização não recebido" = "Authorization code not received";
+"URL de token inválida" = "Invalid token URL";
+"Erro desconhecido" = "Unknown error";
+"Falha na troca de token Google: %@" = "Google token exchange failed: %@";
+"id_token não encontrado no payload do Google" = "id_token not found in Google's response";
+"URL do Firebase inválida" = "Invalid Firebase URL";
+"Falha no Firebase Sign-In: %@" = "Firebase sign-in failed: %@";
+"Resposta inválida do Firebase" = "Invalid response from Firebase";
+"Pianista" = "Pianist";
+"Erro de autenticação: %@" = "Authentication error: %@";
+"URL inválida" = "Invalid URL";
+"Credenciais inválidas" = "Invalid credentials";
+"Falha no Sign in with Apple: %@" = "Sign in with Apple failed: %@";
+"Credencial da Apple inválida" = "Invalid Apple credential";
+"Convidado Local" = "Local Guest";
+"Confirme com a mesma conta que está conectada." = "Confirm with the same account you're signed in with.";
+"Não foi possível excluir a conta: %@" = "Couldn't delete your account: %@";
+"Entre com sua conta para continuar." = "Sign in to continue.";
+"Sua sessão expirou. Entre novamente." = "Your session has expired. Please sign in again.";
+
+/* luksMusic/Services/Storage/CloudSyncService.swift */
+"Entre com sua conta para sincronizar as partituras." = "Sign in to sync your scores.";
+"Não foi possível sincronizar: %@" = "Couldn't sync: %@";
+"Falha ao apagar dados na nuvem: %@" = "Couldn't delete cloud data: %@";
+
+/* luksMusic/Services/Storage/OnlineLibraryService.swift */
+"Não foi possível conectar ao luksmusic.web.app. Verifique a internet e tente de novo." = "Couldn't connect to luksmusic.web.app. Check your internet connection and try again.";
+"O arquivo não foi encontrado no site." = "The file wasn't found on the site.";
+"O arquivo da partitura não pôde ser lido." = "The score file couldn't be read.";
+"Não foi possível carregar o catálogo: %@" = "Couldn't load the catalog: %@";
+
+/* luksMusic/Models/MusicXML/MusicXMLParser.swift */
+"O arquivo MusicXML está danificado ou não é válido." = "The MusicXML file is damaged or invalid.";
+"A partitura MusicXML não tem nenhuma parte." = "The MusicXML score has no parts.";
+"O arquivo .mxl não contém uma partitura MusicXML." = "The .mxl file doesn't contain a MusicXML score.";
+"Não foi possível ler o MusicXML: %@" = "Couldn't read the MusicXML: %@";
+
+/* luksMusic/Models/MusicXML/ZipArchive.swift */
+"O arquivo compactado está danificado." = "The compressed file is damaged.";
+"O arquivo compactado usa criptografia ou uma compressão que o app não lê." = "The compressed file uses encryption or a compression method the app can't read.";
+
+/* luksMusic/Models/Score.swift */
+"Iniciante" = "Beginner";
+"Intermediário" = "Intermediate";
+"Avançado" = "Advanced";
+"Virtuoso" = "Expert";
+"Criadas no app" = "Made in the app";
+"Importadas" = "Imported";
+"Digitalizadas" = "Scanned";
+
+/* luksMusic/Models/PracticeSession.swift */
+"Livre" = "Free play";
+"Guiado" = "Guided";
+"Mão direita" = "Right hand";
+"Mão esquerda" = "Left hand";
+"Lento" = "Slow practice";
+"Perfeito" = "Perfect";
+"Excelente" = "Excellent";
+"Bom" = "Good";
+"Precisa praticar" = "Needs practice";
+"Continue tentando" = "Keep trying";
+
+/* luksMusic/Views/Library/ImportScoreView.swift */
+"Importar partitura" = "Import score";
+"Escolha um arquivo para importar" = "Choose a file to import";
+"Escolher arquivo" = "Choose file";
+"Formatos aceitos:" = "Supported formats:";
+"Lendo o arquivo…" = "Reading the file…";
+"Arquivo escolhido" = "Selected file";
+"Título" = "Title";
+"Compositor" = "Composer";
+"Dificuldade" = "Difficulty";
+"Dados da partitura" = "Score details";
+"Você pode mudar estes dados depois." = "You can change these details later.";
+"Importando…" = "Importing…";
+"Partitura importada!" = "Score imported!";
+"\"%@\" foi adicionada à sua biblioteca." = "“%@” was added to your library.";
+"Concluir" = "Done";
+"Não foi possível importar" = "Import failed";
+"Tentar de novo" = "Try again";
+"Nenhum arquivo foi escolhido." = "No file was selected.";
+"Não foi possível abrir o arquivo: %@" = "Couldn't open the file: %@";
+"Ocorreu um erro inesperado: %@" = "An unexpected error occurred: %@";
+"Não foi possível ler o arquivo escolhido. Confira as permissões e tente de novo." = "Couldn't read the selected file. Check its permissions and try again.";
+"Este formato de arquivo não é aceito. Use MusicXML (.xml, .musicxml ou .mxl)." = "This file format isn't supported. Use MusicXML (.xml, .musicxml, or .mxl).";
+"Não foi possível ler o arquivo: %@" = "Couldn't read the file: %@";
+"O arquivo tem dados inválidos ou danificados." = "The file contains invalid or damaged data.";
+
+/* luksMusic/Views/Library/LibraryView.swift */
+"Data de inclusão" = "Date added";
+"Último estudo" = "Last practiced";
+"Biblioteca" = "Library";
+"Buscar partituras" = "Search scores";
+"Não foi possível baixar" = "Download failed";
+"Catálogo luksMusic" = "luksMusic Catalog";
+"Baixe para tocar no app, mesmo sem internet" = "Download to play in the app, even offline";
+"Ver todas" = "See all";
+"Privada" = "Private";
+"Baixada" = "Downloaded";
+"Baixar" = "Download";
+"Baixando…" = "Downloading…";
+"Minhas partituras" = "My scores";
+"Limpar filtros" = "Clear filters";
+"Nenhuma partitura sua ainda" = "You don't have any scores yet";
+"Importe um arquivo MusicXML ou crie uma partitura nova." = "Import a MusicXML file or create a new score.";
+"Adicionar partitura" = "Add score";
+"Criar nova" = "Create new";
+"Comece com uma partitura em branco" = "Start with a blank score";
+"Importar arquivo" = "Import file";
+"Arquivos MusicXML (.musicxml, .xml, .mxl)" = "MusicXML files (.musicxml, .xml, .mxl)";
+"Mostrar em lista" = "Show as list";
+"Mostrar em grade" = "Show as grid";
+"Ordenar" = "Sort";
+"Origem" = "Source";
+"Só favoritas" = "Favorites only";
+"Filtrar" = "Filter";
+"Remover dos favoritos" = "Remove from favorites";
+"Favoritar" = "Add to favorites";
+"Apagar" = "Delete";
+"Partitura sem título" = "Untitled score";
+
+/* luksMusic/Views/Library/OnlineLibraryView.swift */
+"Nenhuma partitura do catálogo disponível para esta conta." = "No catalog scores are available for this account.";
+"Toque em uma partitura para baixá-la e tocar no celular, mesmo sem internet. As privadas aparecem só para o autor e para quem ele convidou." = "Tap a score to download it and play it on your phone, even offline. Private scores appear only to their author and the people they invited.";
+
+/* luksMusic/Views/Score/OnlineScoreView.swift */
+"Baixando partitura…" = "Downloading score…";
+"Não foi possível baixar a partitura: %@" = "Couldn't download the score: %@";
+
+/* luksMusic/Models/Clef.swift */
+"Clave de sol" = "Treble clef";
+"Clave de fá" = "Bass clef";
+"Clave de dó" = "Alto clef";
+"Original" = "Original";
+"Automática" = "Automatic";
+"clefChoice.treble" = "Treble";
+"clefChoice.bass" = "Bass";
+"clefChoice.alto" = "Alto";
+"Como a partitura escreve" = "As written in the score";
+"Muda conforme as notas" = "Changes with the notes";
+"Clave de sol em tudo" = "Treble clef throughout";
+"Clave de fá em tudo" = "Bass clef throughout";
+"Clave de dó em tudo" = "Alto clef throughout";
+
+/* luksMusic/Views/Score/ScoreView.swift */
+"1 compasso" = "1 measure";
+"%lld compassos" = "%lld measures";
+"Adicionar aos favoritos" = "Add to Favorites";
+"Treino de leitura" = "Sight-Reading";
+"Modo Estudo" = "Practice Mode";
+"Mixer de mãos" = "Hands Mixer";
+"Configurações" = "Settings";
+"Zoom" = "Zoom";
+"Claves" = "Clefs";
+"Editar partitura" = "Edit Score";
+"Exportar MusicXML" = "Export MusicXML";
+"Opções da partitura" = "Score options";
+
+/* luksMusic/Views/Score/ScoreSettingsView.swift */
+"EXIBIÇÃO" = "DISPLAY";
+"Página" = "Page";
+"Dois compassos por linha" = "Two measures per line";
+"Ampliada" = "Large";
+"Um compasso por linha, notas maiores" = "One measure per line, larger notes";
+"Linha única" = "Single line";
+"A partitura corre para o lado" = "The score scrolls sideways";
+"CLAVES" = "CLEFS";
+"Clave de dó na automática" = "Alto clef in Automatic";
+"A troca automática também usa a clave de dó" = "Automatic switching also uses the alto clef";
+"SOM" = "SOUND";
+"Sala de concerto" = "Concert hall";
+"Reverberação no som do piano" = "Reverb on the piano";
+"TECLADO" = "KEYBOARD";
+"Mostrar teclado" = "Show keyboard";
+"As teclas sob o cursor acendem" = "Keys under the cursor light up";
+"TRANSPOSIÇÃO" = "TRANSPOSITION";
+"Meio tom abaixo" = "Half step down";
+"Meio tom acima" = "Half step up";
+"Tom original" = "Original key";
+"1 semitom acima" = "1 semitone up";
+"1 semitom abaixo" = "1 semitone down";
+"%lld semitons acima" = "%lld semitones up";
+"%lld semitons abaixo" = "%lld semitones down";
+
+/* luksMusic/Views/Score/Player/PlayerChrome.swift */
+"Voltar" = "Back";
+"Posição na música" = "Position in the piece";
+"Compasso %lld/%lld" = "Measure %lld/%lld";
+"Voltar ao início do compasso" = "Back to start of measure";
+"Voltar ao início" = "Back to start";
+"Nota anterior" = "Previous note";
+"Pausar" = "Pause";
+"Próxima nota" = "Next note";
+"Velocidade" = "Speed";
+"Teclado" = "Keyboard";
+"Repetir: desligado" = "Repeat: off";
+"Repetir: compasso" = "Repeat: measure";
+"Repetir: música" = "Repeat: whole piece";
+"Metrônomo" = "Metronome";
+"0,5×" = "0.5×";
+"0,75×" = "0.75×";
+"1,25×" = "1.25×";
+"Mão dir." = "R.H.";
+"Mão esq." = "L.H.";
+"pausa" = "rest";
+"Duas mãos" = "Both hands";
+"Só direita" = "Right only";
+"Só esquerda" = "Left only";
+"Mudo" = "Muted";
+"Silenciar" = "Mute";
+
+/* luksMusic/Views/Editor/EditorView.swift */
+"Compasso %lld • Tempo %@" = "Measure %lld • Beat %@";
+"Pauta: %@" = "Staff: %@";
+"Clave de sol (mão dir.)" = "Treble clef (R.H.)";
+"Clave de fá (mão esq.)" = "Bass clef (L.H.)";
+"Toque numa tecla para inserir a nota" = "Tap a key to insert the note";
+"Fechar" = "Close";
+"Salvar" = "Save";
+
+/* luksMusic/Views/Editor/EditorToolbar.swift */
+"Pauta" = "Staff";
+"Sol 𝄞" = "Treble 𝄞";
+"Fá 𝄢" = "Bass 𝄢";
+"Compasso" = "Measure";
+"Semibreve" = "Whole";
+"Mínima" = "Half";
+"editor.rest" = "Rest";
+"editor.dot" = "Dot";
+
+/* luksMusic/Services/Audio/MicrophonePitchService.swift */
+"O app precisa do microfone para ouvir o seu piano." = "Microphone access is required to listen to your piano.";
+
+/* luksMusic/Services/Audio/AudioEngineService.swift */
+"O motor de áudio não está ligado." = "The audio engine is not running.";
+"O arquivo SoundFont '%@.sf2' não está no app." = "SoundFont file '%@.sf2' not found in the app.";
+"Não foi possível carregar o SoundFont '%@': %@" = "Couldn't load SoundFont '%@': %@";
+"Não foi possível preparar o áudio: %@" = "Couldn't set up audio: %@";
+"Não foi possível ligar o motor de áudio: %@" = "Couldn't start the audio engine: %@";
+
+/* luksMusic/Services/MIDI/MIDIFilePlayer.swift */
+"Arquivo MIDI não encontrado em: %@" = "MIDI file not found at: %@";
+"Não foi possível carregar o arquivo MIDI: %@" = "Couldn't load the MIDI file: %@";
+"Não foi possível tocar: %@" = "Playback failed: %@";
+"Posição inválida: %lf" = "Invalid position: %lf";
+
+/* luksMusic/Services/MIDI/MIDIService.swift */
+"Dispositivo desconhecido" = "Unknown device";
+"midi.unknownManufacturer" = "Unknown";
+
+/* luksMusic/Models/ReadingDrill.swift */
+"Em sequência" = "In order";
+"Aleatório" = "Random";
+
+/* luksMusic/ViewModels/ReadingTrainerViewModel.swift */
+"Anacruse" = "Pickup";
+"Anacruse e compasso 1" = "Pickup and measure 1";
+"Anacruse e compassos 1–%lld" = "Pickup and measures 1–%lld";
+"Compasso %lld" = "Measure %lld";
+"Compassos %lld–%lld" = "Measures %lld–%lld";
+"Dó Ré Mi" = "Do Re Mi";
+"Só os Dós" = "Only C's";
+"Sem nomes" = "No names";
+
+/* luksMusic/Views/Practice/ReadingTrainerView.swift */
+"Ordem" = "Order";
+"Ordem dos trechos" = "Passage order";
+"A %@ não tem notas nesta partitura." = "The %@ has no notes in this score.";
+"Trecho %lld de %lld • %@" = "Passage %lld of %lld • %@";
+"Nota %lld de %lld" = "Note %lld of %lld";
+"Toque as %lld notas azuis (acorde)" = "Play the %lld blue notes (chord)";
+"Toque a nota azul no teclado" = "Play the blue note on the keyboard";
+"Certo! %@" = "Correct! %@";
+"Você tocou %@. Tente de novo." = "You played %@. Try again.";
+"A nota é %@" = "The note is %@";
+"Perfeito! %lld de %lld de primeira" = "Perfect! %lld of %lld on the first try";
+"Trecho concluído: %lld de %lld de primeira" = "Passage done: %lld of %lld on the first try";
+"Escolha a outra mão" = "Choose the other hand";
+"Anterior" = "Previous";
+"Ouvir" = "Listen";
+"Dica" = "Hint";
+"Repetir" = "Repeat";
+"Próximo" = "Next";
+"Próximo trecho" = "Next passage";
+"De primeira: –" = "First try: –";
+"De primeira: %lld%% (%lld/%lld)" = "First try: %lld%% (%lld/%lld)";
+"Sequência %lld" = "Streak %lld";
+"Recorde %lld" = "Best %lld";
+"1 nota" = "1 note";
+"%lld notas" = "%lld notes";
+"Notas por trecho" = "Notes per passage";
+"Clave da %@" = "Clef for the %@";
+"Nomes nas teclas" = "Note names on keys";
+"Avançar sozinho ao acertar tudo" = "Auto-advance after a perfect passage";
+"Voltar ao início da música" = "Back to the start of the piece";
+"Ajustes do treino" = "Sight-reading settings";
+
+/* luksMusic/Views/Practice/PracticeView.swift */
+"Modo de estudo" = "Practice mode";
+"Desligar o microfone" = "Turn off the microphone";
+"Ouvir o piano pelo microfone" = "Listen to the piano through the microphone";
+"Resumo do estudo" = "Practice summary";
+"Precisão" = "Accuracy";
+"Microfone: %@" = "Microphone: %@";
+"Sequência" = "Streak";
+"Modo" = "Mode";
+"Com o microfone sem fone de ouvido, o metrônomo fica em silêncio e marca o pulso na tela" = "With the microphone on and no headphones, the metronome stays silent and shows the beat on screen";
+"Andamento:" = "Tempo:";
+"%lld BPM" = "%lld BPM";
+
+/* luksMusic/Views/Practice/PracticeStatsView.swift */
+"Notas certas" = "Correct notes";
+"Erradas" = "Wrong notes";
+"Notas tocadas" = "Notes played";
+"Andamento" = "Tempo";
+"Trechos concluídos" = "Sections completed";
+"Duração" = "Duration";
+"Como foi este estudo?" = "How did this session go?";
+
+/* luksMusic/Views/Practice/ReadingStaffView.swift */
+"%@, 1 nota" = "%@, 1 note";
+"%@, %lld notas" = "%@, %lld notes";
+
+/* luksMusic/Views/Practice/PianoKeyboardView.swift */
+"SUS" = "SUS";
+
+/* luksMusic/Models/Lessons/LessonCatalog.swift */
+"Sem ajuda. Se errar duas vezes, a tecla acende." = "No help. Miss twice and the key lights up.";
+"Toque em Ouvir para escutar, depois leia e toque no seu ritmo." = "Tap Listen to hear it, then read and play at your own pace.";
+"Mão direita, do Dó central para cima" = "Right hand, from middle C up";
+"O Dó central" = "Middle C";
+"Como achar o Dó no piano e na pauta" = "How to find C on the piano and on the staff";
+"Ache o Dó" = "Find C";
+"As teclas pretas vêm em grupos de 2 e de 3. O Dó é a tecla branca logo à esquerda de cada grupo de 2. Toque os dois Dós acesos." = "The black keys come in groups of 2 and 3. C is the white key just to the left of each group of 2. Play the two lit Cs.";
+"Nota nova: Dó central" = "New note: middle C";
+"É o Dó mais perto do meio do piano. Na clave de sol, ele fica numa linha curta, logo abaixo das cinco linhas. Toque com o polegar direito." = "It's the C closest to the middle of the piano. In the treble clef, it sits on a short extra line just below the five lines. Play it with your right thumb.";
+"Sua vez" = "Your turn";
+"Toque o Dó central três vezes. Cada toque vale uma nota." = "Play middle C three times. Each press counts as one note.";
+"Dó, Ré, Mi" = "C, D, E";
+"As três primeiras notas" = "The first three notes";
+"Nota nova: Ré" = "New note: D";
+"É a tecla branca logo à direita do Dó. Na pauta, fica logo abaixo da primeira linha. Toque o Ré." = "It's the white key just to the right of C. On the staff, it sits just below the first line. Play D.";
+"Nota nova: Mi" = "New note: E";
+"É a tecla branca seguinte. Na pauta, fica em cima da primeira linha. Toque o Mi." = "It's the next white key. On the staff, it sits on the first line. Play E.";
+"Treino" = "Practice";
+"Dez notas sorteadas entre Dó, Ré e Mi. %@" = "Ten random notes from C, D and E. %@";
+"Música: Hot Cross Buns" = "Song: Hot Cross Buns";
+"Uma canção infantil inglesa só com Mi, Ré e Dó. %@" = "An English nursery rhyme that uses only E, D and C. %@";
+"Fá e Sol" = "F and G";
+"A clave de sol marca a linha do Sol" = "The treble clef marks the G line";
+"Nota nova: Fá" = "New note: F";
+"É a tecla branca logo à esquerda do grupo de 3 teclas pretas. Na pauta, fica no primeiro espaço. Toque o Fá." = "It's the white key just to the left of the group of 3 black keys. On the staff, it sits in the first space. Play F.";
+"Nota nova: Sol" = "New note: G";
+"Fica na segunda linha, a que a curva da clave de sol envolve. É daí que vem o nome da clave. Toque o Sol." = "It sits on the second line, the one the curl of the treble clef wraps around. That's why this clef is also called the G clef. Play G.";
+"Dez notas sorteadas do Dó ao Sol. %@" = "Ten random notes from C to G. %@";
+"Música: Ode à Alegria" = "Song: Ode to Joy";
+"O tema de Beethoven usa só as notas do Dó ao Sol. %@" = "Beethoven's theme uses only the notes from C to G. %@";
+"Lá, Si e o outro Dó" = "A, B and the other C";
+"Até o Dó de cima" = "Up to the upper C";
+"Nota nova: Lá" = "New note: A";
+"Vem depois do Sol. Na pauta, fica no segundo espaço. Toque o Lá." = "It comes after G. On the staff, it sits in the second space. Play A.";
+"Nota nova: Si" = "New note: B";
+"Fica na terceira linha, bem no meio da pauta. Toque o Si." = "It sits on the third line, right in the middle of the staff. Play B.";
+"Nota nova: o Dó de cima" = "New note: the upper C";
+"Depois do Si, os nomes recomeçam. Este Dó é o oitavo som a partir do Dó central e fica no terceiro espaço. Toque-o." = "After B, the names start over. This C is the eighth note up from middle C, and it sits in the third space. Play it.";
+"Dez notas sorteadas do Dó central ao Dó de cima. %@" = "Ten random notes from middle C to the upper C. %@";
+"Música: Brilha, Brilha, Estrelinha" = "Song: Twinkle, Twinkle, Little Star";
+"Melodia tradicional que sobe até o Lá. %@" = "A traditional melody that climbs up to A. %@";
+"A escala subindo" = "Up the scale";
+"Do Dó central ao Dó de cima" = "From middle C to the upper C";
+"A escala de Dó" = "The C scale";
+"São oito notas vizinhas, todas em teclas brancas. Na pauta, cada nota sobe um degrau: linha, espaço, linha, espaço. Suba pelas teclas acesas." = "Eight neighboring notes, all on white keys. On the staff, each note goes up one step: line, space, line, space. Go up the lit keys.";
+"Subindo sem ajuda" = "Going up without help";
+"Leia a pauta e suba até o Dó de cima." = "Read the staff and go up to the upper C.";
+"Linhas e espaços" = "Lines and spaces";
+"Primeiro as notas nas linhas, depois as dos espaços: pulando uma tecla de cada vez." = "First the notes on the lines, then the ones in the spaces: skipping one key each time.";
+"A escala descendo" = "Down the scale";
+"O caminho de volta" = "The way back";
+"Descendo" = "Going down";
+"Agora o caminho contrário: comece no Dó de cima e desça um degrau por vez até o Dó central, pelas teclas acesas." = "Now the other way: start on the upper C and go down one step at a time to middle C, along the lit keys.";
+"Descendo sem ajuda" = "Going down without help";
+"Leia a pauta e desça até o Dó central." = "Read the staff and go down to middle C.";
+"Dez notas sorteadas do Dó ao Dó. %@" = "Ten random notes from C to C. %@";
+"Ré, Mi, Fá e Sol de cima" = "Upper D, E, F and G";
+"O alto da pauta" = "The top of the staff";
+"Notas novas: Ré e Mi" = "New notes: D and E";
+"O Ré fica na quarta linha, e o Mi no quarto espaço. Toque os dois." = "D sits on the fourth line, and E in the fourth space. Play both.";
+"Notas novas: Fá e Sol" = "New notes: F and G";
+"O Fá fica na quinta linha, a última. O Sol fica logo acima dela. Toque os dois." = "F sits on the fifth line, the top one. G sits just above it. Play both.";
+"Dez notas sorteadas do Sol ao Sol de cima. %@" = "Ten random notes from G to the upper G. %@";
+"Música: Ode à Alegria, uma oitava acima" = "Song: Ode to Joy, an octave higher";
+"A mesma melodia da aula Fá e Sol, oito notas mais aguda: mesmas teclas, mais à direita. %@" = "The same melody as in the F and G lesson, eight notes higher: same keys, further to the right. %@";
+"Linhas extras em cima" = "Ledger lines above";
+"Lá, Si e Dó acima da pauta" = "A, B and C above the staff";
+"Nota nova: Lá agudo" = "New note: high A";
+"Quando a nota passa das cinco linhas, a pauta ganha linhas curtas. O Lá fica na primeira linha curta acima da pauta. Toque o Lá." = "When a note goes above the five lines, the staff gets short extra lines, called ledger lines. A sits on the first ledger line above the staff. Play A.";
+"Notas novas: Si e Dó agudos" = "New notes: high B and C";
+"O Si fica logo acima dessa linha. O Dó fica na segunda linha curta. Toque os dois." = "B sits just above that line. C sits on the second ledger line. Play both.";
+"Dez notas sorteadas no alto da pauta. %@" = "Ten random notes at the top of the staff. %@";
+"Desafio da clave de sol" = "Treble clef challenge";
+"Notas sorteadas, sem ajuda" = "Random notes, no help";
+"Dez notas sorteadas. %@" = "Ten random notes. %@";
+"Pauta inteira" = "The whole staff";
+"Dez notas sorteadas, do Dó central ao Dó mais alto. %@" = "Ten random notes, from middle C to the highest C. %@";
+"Mão esquerda, do Dó central para baixo" = "Left hand, from middle C down";
+"A clave de fá" = "The bass clef";
+"A pauta da mão esquerda" = "The left hand's staff";
+"Nota nova: o Fá da clave" = "New note: the bass clef's F";
+"A mão esquerda costuma ler esta clave. Os dois pontos dela ficam em volta da quarta linha, e essa linha é o Fá. Toque com a mão esquerda." = "The left hand usually reads this clef. Its two dots sit on either side of the fourth line, and that line is F. Play it with your left hand.";
+"O mesmo Dó central" = "The same middle C";
+"Nesta clave, o Dó central fica numa linha curta acima das cinco linhas. É a mesma tecla da clave de sol. Toque-o." = "In this clef, middle C sits on a ledger line above the five lines. It's the same key as in the treble clef. Play it.";
+"Leia a pauta: só Fá e Dó." = "Read the staff: only F and C.";
+"Si, Lá e Sol" = "B, A and G";
+"Descendo a partir do Dó central" = "Going down from middle C";
+"É a tecla logo à esquerda do Dó central. Na pauta, fica logo acima da quinta linha. Toque o Si." = "It's the key just to the left of middle C. On the staff, it sits just above the fifth line. Play B.";
+"Notas novas: Lá e Sol" = "New notes: A and G";
+"O Lá fica na quinta linha, a de cima. O Sol fica no quarto espaço. Toque os dois." = "A sits on the fifth line, the top one. G sits in the fourth space. Play both.";
+"Dez notas sorteadas do Dó central ao Fá. %@" = "Ten random notes from middle C down to F. %@";
+"Música: Hot Cross Buns com a mão esquerda" = "Song: Hot Cross Buns with the left hand";
+"A canção da clave de sol, agora com Si, Lá e Sol. %@" = "The treble clef song, now with B, A and G. %@";
+"Mi, Ré e Dó" = "E, D and C";
+"O meio da pauta da mão esquerda" = "The middle of the left hand's staff";
+"Fica no terceiro espaço, logo abaixo do Fá. Toque o Mi." = "It sits in the third space, just below F. Play E.";
+"Notas novas: Ré e Dó" = "New notes: D and C";
+"O Ré fica na terceira linha, no meio da pauta. O Dó fica no segundo espaço. Toque os dois." = "D sits on the third line, in the middle of the staff. C sits in the second space. Play both.";
+"Dez notas sorteadas do Dó central ao Dó de baixo. %@" = "Ten random notes from middle C to the lower C. %@";
+"Música: Ode à Alegria com a mão esquerda" = "Song: Ode to Joy with the left hand";
+"O tema de Beethoven oito notas abaixo. %@" = "Beethoven's theme, eight notes lower. %@";
+"Descendo e subindo" = "Down and up";
+"Do Dó central ao Dó de baixo, e de volta" = "From middle C to the lower C, and back";
+"A escala na clave de fá" = "The scale in the bass clef";
+"As mesmas oito notas de nomes, uma oitava abaixo: do Dó central ao Dó do segundo espaço. Desça pelas teclas acesas." = "The same eight note names, an octave lower: from middle C to the C in the second space. Go down the lit keys.";
+"Leia a pauta e desça." = "Read the staff and go down.";
+"Agora o caminho contrário." = "Now the other way.";
+"As notas mais graves" = "The lowest notes";
+"Até o Dó com linhas extras embaixo" = "Down to the C on ledger lines below";
+"Notas novas: Si, Lá e Sol graves" = "New notes: low B, A and G";
+"O Si fica na segunda linha, o Lá no primeiro espaço, e o Sol na primeira linha. Toque os três." = "B sits on the second line, A in the first space, and G on the first line. Play all three.";
+"Abaixo da pauta" = "Below the staff";
+"O Fá fica logo abaixo da primeira linha. O Mi fica numa linha curta, o Ré logo abaixo dela, e o Dó na segunda linha curta. Toque os quatro." = "F sits just below the first line. E sits on a ledger line, D just below it, and C on the second ledger line. Play all four.";
+"Dez notas sorteadas no grave. %@" = "Ten random low notes. %@";
+"Desafio da clave de fá" = "Bass clef challenge";
+"Até o Dó de baixo" = "Down to the lower C";
+"Dez notas sorteadas, do Dó central ao Dó mais grave. %@" = "Ten random notes, from middle C to the lowest C. %@";
+"As duas claves" = "Both clefs";
+"O piano inteiro numa pauta dupla" = "The whole piano on a grand staff";
+"O Dó central é o mesmo" = "Middle C is the same";
+"Onde as duas claves se encontram" = "Where the two clefs meet";
+"Duas pautas, um piano" = "Two staves, one piano";
+"A clave de fá escreve a metade esquerda do piano e a clave de sol, a metade direita. Elas se encontram no Dó central, que aparece na linha curta de cada uma. Toque-o duas vezes." = "The bass clef covers the left half of the piano, and the treble clef the right half. They meet at middle C, which sits on a ledger line in each. Play it twice.";
+"Subindo o teclado" = "Up the keyboard";
+"Da esquerda para a direita, as notas sobem pela pauta de baixo e continuam na de cima. Comece com a mão esquerda e passe para a direita no Dó central." = "From left to right, the notes climb the lower staff and carry on in the upper one. Start with your left hand and switch to your right at middle C.";
+"Leia as duas pautas." = "Read both staves.";
+"Lendo as duas pautas" = "Reading both staves";
+"A nota pode vir de qualquer clave" = "The note can be in either clef";
+"Qual pauta?" = "Which staff?";
+"Primeiro veja a clave, depois a nota." = "Check the clef first, then the note.";
+"Dez notas sorteadas nas duas pautas. %@" = "Ten random notes on both staves. %@";
+"Desafio das duas claves" = "Two-clef challenge";
+"Notas sorteadas nas duas pautas" = "Random notes on both staves";
+"Desafio" = "Challenge";
+"Dezesseis notas sorteadas nas duas pautas. %@" = "Sixteen random notes on both staves. %@";
+"Sustenido e bemol" = "Sharps and flats";
+"As teclas pretas" = "The black keys";
+"O sustenido" = "The sharp";
+"Sobe a nota meio tom" = "Raises a note a half step";
+"O sinal ♯" = "The ♯ sign";
+"O sustenido sobe a nota meio tom: toque a tecla logo à direita. Ele fica antes da nota, na mesma altura dela. Toque Fá e Fá♯." = "A sharp raises a note a half step: play the key just to the right. It's written before the note, at the same height. Play F and F♯.";
+"Dó♯, Ré♯, Fá♯, Sol♯ e Lá♯ são as cinco teclas pretas de cada oitava. Toque as cinco." = "C♯, D♯, F♯, G♯ and A♯ are the five black keys in each octave. Play all five.";
+"Dez notas sorteadas, brancas e pretas. %@" = "Ten random notes, on white and black keys. %@";
+"O bemol" = "The flat";
+"Desce a nota meio tom" = "Lowers a note a half step";
+"O sinal ♭" = "The ♭ sign";
+"O bemol desce a nota meio tom: toque a tecla logo à esquerda. Toque Si e Si♭." = "A flat lowers a note a half step: play the key just to the left. Play B and B♭.";
+"As teclas pretas de novo" = "The black keys again";
+"Ré♭, Mi♭, Sol♭, Lá♭ e Si♭ são as mesmas cinco teclas pretas, com outros nomes. Toque as cinco." = "D♭, E♭, G♭, A♭ and B♭ are the same five black keys, with other names. Play all five.";
+"Uma tecla, dois nomes" = "One key, two names";
+"Dó♯ e Ré♭ são a mesma tecla" = "C♯ and D♭ are the same key";
+"O mesmo som" = "The same sound";
+"Dó♯ e Ré♭ se escrevem em lugares diferentes da pauta, mas são a mesma tecla preta. Toque as duas." = "C♯ and D♭ are written in different places on the staff, but they're the same black key. Play both.";
+"Pares" = "Pairs";
+"Cada par de notas vizinhas é uma tecla só." = "Each pair of neighboring notes is a single key.";
+"O bequadro" = "The natural";
+"Cancela o sustenido ou o bemol" = "Cancels the sharp or the flat";
+"Vale até o fim do compasso" = "It lasts until the end of the measure";
+"Depois de um sustenido, as mesmas notas seguintes continuam alteradas até a barra de compasso, mesmo sem o sinal. Toque os dois Fá♯." = "After a sharp, the same notes that follow stay raised until the bar line, even without the sign. Play both F♯s.";
+"O sinal ♮" = "The ♮ sign";
+"O bequadro cancela a alteração, e a nota volta à tecla branca. Toque as três." = "A natural cancels the sharp or flat, and the note goes back to the white key. Play all three.";
+"A barra apaga o sinal" = "The bar line cancels the sign";
+"No segundo compasso, o sustenido precisa aparecer de novo. Atenção à nota sem sinal." = "In the second measure, the sharp has to be written again. Watch out for the note without a sign.";
+"Desafio dos sinais" = "Accidentals challenge";
+"Brancas e pretas sorteadas" = "Random white and black keys";
+"Sustenidos" = "Sharps";
+"Bemóis" = "Flats";
+"Ritmo" = "Rhythm";
+"Quanto tempo cada nota dura" = "How long each note lasts";
+"O pulso e a semínima" = "The beat and the quarter note";
+"Tocar junto com o metrônomo" = "Playing along with the metronome";
+"Uma nota por pulso" = "One note per beat";
+"A música tem uma batida regular, o pulso, que o metrônomo marca. A semínima dura um pulso. Toque em Começar: o metrônomo conta 4 tempos e você toca uma nota em cada clique." = "Music has a steady pulse, the beat, which the metronome keeps. A quarter note lasts one beat. Tap Start: the metronome counts 4 beats, then you play one note on each click.";
+"Mudando de nota" = "Changing notes";
+"O mesmo pulso, com notas diferentes." = "The same beat, with different notes.";
+"Mínima e semibreve" = "Half and whole notes";
+"Notas de 2 e de 4 pulsos" = "2-beat and 4-beat notes";
+"A mínima" = "The half note";
+"A mínima tem a cabeça vazia e dura dois pulsos: toque e segure por dois cliques." = "A half note has a hollow head and lasts two beats: play it and hold it for two clicks.";
+"A semibreve" = "The whole note";
+"A semibreve não tem haste e dura quatro pulsos, o compasso inteiro." = "A whole note has no stem and lasts four beats, the whole measure.";
+"O compasso" = "The measure";
+"Os pulsos agrupados" = "Beats in groups";
+"Dois compassos" = "Two measures";
+"As barras dividem a música em grupos de pulsos. O 4 de cima diz que cada compasso tem quatro pulsos; o 4 de baixo, que a semínima vale um pulso. O primeiro clique de cada compasso é mais forte." = "Bar lines divide the music into groups of beats. The top 4 says each measure has four beats; the bottom 4, that a quarter note gets one beat. The first click of each measure is louder.";
+"Música: Mary Had a Little Lamb" = "Song: Mary Had a Little Lamb";
+"Agora uma canção no tempo, com o app tocando junto." = "Now a song in time, with the app playing along.";
+"Pausas" = "Rests";
+"O silêncio também tem duração" = "Silence has a length too";
+"Pausa de semínima" = "Quarter rest";
+"A pausa é um tempo em silêncio. Esta dura um pulso: não toque nada e espere o clique seguinte." = "A rest is a moment of silence. This one lasts one beat: play nothing and wait for the next click.";
+"Pausas longas" = "Long rests";
+"A pausa de mínima fica em cima da terceira linha e dura dois pulsos. Conte os cliques durante ela." = "A half rest sits on top of the third line and lasts two beats. Count the clicks during it.";
+"Colcheias" = "Eighth notes";
+"Duas notas em cada pulso" = "Two notes on each beat";
+"Duas por pulso" = "Two per beat";
+"A colcheia tem uma bandeirinha e dura meio pulso: uma no clique e a outra entre os cliques." = "An eighth note has a small flag and lasts half a beat: one on the click and the other between clicks.";
+"Música: Hot Cross Buns no tempo" = "Song: Hot Cross Buns in time";
+"A canção da aula Dó, Ré, Mi, agora com as colcheias no tempo." = "The song from the C, D, E lesson, now with the eighth notes in time.";
+"O ponto de aumento" = "Dotted notes";
+"O ponto soma metade da duração" = "A dot adds half the length";
+"Mínima com ponto" = "Dotted half note";
+"O ponto depois da nota soma metade do valor dela. A mínima com ponto dura três pulsos." = "A dot after a note adds half its value. A dotted half note lasts three beats.";
+"Semínima com ponto" = "Dotted quarter note";
+"Dura um pulso e meio, e costuma vir seguida de uma colcheia, que entra entre o segundo e o terceiro clique." = "It lasts a beat and a half and is usually followed by an eighth note, which comes between the second and third clicks.";
+"Música: Ode à Alegria no tempo" = "Song: Ode to Joy in time";
+"A semínima com ponto aparece no fim da frase." = "The dotted quarter note comes at the end of the phrase.";
+"Compasso de 3" = "Three beats per measure";
+"A valsa" = "The waltz";
+"Conte até 3" = "Count to 3";
+"Com o 3 em cima, cada compasso tem três pulsos. O primeiro continua mais forte: um, dois, três." = "With a 3 on top, each measure has three beats. The first is still the strongest: one, two, three.";
+"Música: Minueto em Sol" = "Song: Minuet in G";
+"O começo do minueto do caderno de Anna Magdalena Bach, em três tempos." = "The opening of the minuet from the Anna Magdalena Bach Notebook, with three beats per measure.";
+"Tonalidades" = "Musical keys";
+"Armadura de clave e escalas" = "Key signatures and scales";
+"A armadura de clave" = "The key signature";
+"Sustenidos e bemóis fixos" = "Sharps and flats that stay";
+"Sinais logo depois da clave" = "Signs right after the clef";
+"A armadura vale para a música toda. Aqui o sustenido está na linha do Fá: todo Fá é Fá♯, mesmo sem sinal ao lado da nota. Toque os dois." = "The key signature applies to the whole piece. Here the sharp is on the F line: every F is F♯, even with no sign next to the note. Play both.";
+"Lembre da armadura" = "Remember the key signature";
+"Todo Fá desta pauta é Fá♯." = "Every F on this staff is F♯.";
+"Escala de Sol maior" = "G major scale";
+"Um sustenido na armadura" = "One sharp in the key signature";
+"Sol maior" = "G major";
+"Começa no Sol e tem o Fá♯. É o mesmo desenho de distâncias da escala de Dó. Suba pelas teclas acesas." = "It starts on G and has F♯. It's the same pattern of steps as the C scale. Go up the lit keys.";
+"Agora o caminho de volta." = "Now the way back.";
+"Dez notas sorteadas em Sol maior. %@" = "Ten random notes in G major. %@";
+"Escala de Fá maior" = "F major scale";
+"Um bemol na armadura" = "One flat in the key signature";
+"Fá maior" = "F major";
+"Começa no Fá e tem o Si♭. O bemol na armadura fica na linha do Si. Suba pelas teclas acesas." = "It starts on F and has B♭. The flat in the key signature sits on the B line. Go up the lit keys.";
+"Dez notas sorteadas em Fá maior. %@" = "Ten random notes in F major. %@";
+"Desafio das armaduras" = "Key signature challenge";
+"Notas sorteadas em cada tonalidade" = "Random notes in each key";
+"Todo Fá é sustenido. %@" = "Every F is sharp. %@";
+"Todo Si é bemol. %@" = "Every B is flat. %@";
+"Mãos juntas e acordes" = "Hands together and chords";
+"Várias notas ao mesmo tempo" = "Several notes at once";
+"As duas mãos juntas" = "Both hands together";
+"Uma nota em cada pauta" = "One note on each staff";
+"Notas alinhadas" = "Lined-up notes";
+"Notas na mesma coluna das duas pautas são tocadas ao mesmo tempo: a mesma nota em cada mão, uma oitava de distância. Com o microfone, toque as duas juntas." = "Notes in the same column on both staves are played at the same time: the same note in each hand, an octave apart. With the microphone, play both together.";
+"Sem ajuda" = "Without help";
+"Melodia e baixo" = "Melody and bass";
+"Cada mão com a sua nota" = "Each hand plays its own note";
+"Mão esquerda parada" = "Left hand stays put";
+"A mão esquerda fica no Dó e a direita caminha. Siga as teclas acesas." = "The left hand stays on C while the right hand moves. Follow the lit keys.";
+"As duas mãos mudam" = "Both hands move";
+"Agora a mão esquerda também muda." = "Now the left hand moves too.";
+"O acorde de Dó maior" = "The C major chord";
+"Três notas juntas" = "Three notes together";
+"O que é um acorde" = "What a chord is";
+"São três ou mais notas tocadas juntas. O acorde de Dó maior usa Dó, Mi e Sol, empilhadas na pauta. Na tela, pode tocar uma tecla de cada vez; no piano, toque as três juntas." = "A chord is three or more notes played together. The C major chord uses C, E and G, stacked on the staff. On the screen you can play one key at a time; on a piano, play all three together.";
+"Três vezes" = "Three times";
+"Toque o acorde três vezes." = "Play the chord three times.";
+"Fá e Sol maior" = "F and G major";
+"Mais dois acordes" = "Two more chords";
+"Mesmo desenho" = "Same shape";
+"Os acordes de Fá maior e de Sol maior têm o mesmo formato: uma nota sim, uma não. Toque os dois." = "The F major and G major chords have the same shape: every other note. Play both.";
+"Leia os acordes" = "Read the chords";
+"Leia as notas empilhadas." = "Read the stacked notes.";
+"Sequência de acordes" = "Chord progression";
+"Dó, Fá, Sol, Dó" = "C, F, G, C";
+"Esta sequência aparece em muitas músicas." = "This progression shows up in lots of songs.";
+"No tempo" = "In time";
+"Um acorde a cada compasso." = "One chord per measure.";
+"Leia a música" = "Read the song";
+"Tocando junto" = "Playing along";
+"Agora no tempo: o app toca a música com você." = "Now in time: the app plays the song with you.";
+"Primeiras músicas" = "First songs";
+"Melodias conhecidas, do início ao fim" = "Well-known melodies, from start to finish";
+"Brilha, Brilha, Estrelinha" = "Twinkle, Twinkle, Little Star";
+"Melodia tradicional" = "Traditional melody";
+"Uma melodia tradicional, só com semínimas e mínimas." = "A traditional melody with only quarter notes and half notes.";
+"Canção tradicional" = "Traditional song";
+"Canção tradicional, com a mão direita perto do Dó central." = "A traditional song, with the right hand near middle C.";
+"Canção tradicional francesa" = "Traditional French song";
+"Canção tradicional francesa. O último trecho desce até o Sol abaixo do Dó central." = "A traditional French song. The last part goes down to the G below middle C.";
+"Ode à Alegria" = "Ode to Joy";
+"Beethoven, 9ª Sinfonia" = "Beethoven, Symphony No. 9";
+"O tema da 9ª Sinfonia de Beethoven. Atenção à semínima com ponto no fim das frases." = "The theme from Beethoven's Ninth Symphony. Watch for the dotted quarter note at the end of the phrases.";
+"Ouvido" = "Ear training";
+"Descobrir as notas sem ver a pauta" = "Finding the notes without seeing the staff";
+"Dó, Mi e Sol de ouvido" = "C, E and G by ear";
+"Três notas, sem pauta" = "Three notes, no staff";
+"Três notas" = "Three notes";
+"O app toca três notas entre Dó, Mi e Sol. Descubra quais são e toque na mesma ordem. Cada nota aparece na pauta quando você acerta." = "The app plays three notes from C, E and G. Figure out which ones they are and play them in the same order. Each note appears on the staff when you get it right.";
+"Quatro notas" = "Four notes";
+"Agora quatro notas entre Dó, Mi e Sol. Toque em Ouvir para escutar de novo." = "Now four notes from C, E and G. Tap Listen to hear them again.";
+"Do Dó ao Sol de ouvido" = "C to G by ear";
+"Cinco notas vizinhas" = "Five neighboring notes";
+"Três notas entre Dó e Sol. Comece pelo Dó central e vá comparando." = "Three notes between C and G. Start from middle C and compare as you go.";
+"Quatro notas entre Dó e Sol." = "Four notes between C and G.";
+
+/* luksMusic/ViewModels/LessonPlayerViewModel.swift */
+"Não foi possível usar o microfone. Confira a permissão nos Ajustes do iPhone." = "Couldn't use the microphone. Check the permission in the iPhone's Settings app.";
+
+/* luksMusic/Views/Learn/LearnHomeView.swift */
+"Aprenda a ler partitura tocando. Cada aula explica algumas notas e pede para você tocá-las." = "Learn to read sheet music by playing. Each lesson explains a few notes and asks you to play them.";
+"Toque na tela, em um teclado ligado por USB, ou em um piano de verdade com o microfone (botão no alto da aula)." = "Play on the screen, on a USB keyboard, or on a real piano using the microphone (button at the top of the lesson).";
+"Liberar todas as aulas" = "Unlock all lessons";
+"Opções das aulas" = "Lesson options";
+"%lld de 3 estrelas" = "%lld of 3 stars";
+"Bloqueada" = "Locked";
+
+/* luksMusic/Views/Learn/LessonPlayerView.swift */
+"Aula concluída" = "Lesson complete";
+"Passo %lld de %lld" = "Step %lld of %lld";
+"Parte %lld de %lld" = "Part %lld of %lld";
+"APRENDA" = "LEARN";
+"TREINO" = "PRACTICE";
+"MÚSICA" = "SONG";
+"LEITURA" = "READING";
+"OUVIDO" = "BY EAR";
+"RITMO" = "RHYTHM";
+"TOCANDO JUNTO" = "PLAY ALONG";
+"Muito bem!" = "Well done!";
+"Todas certas de primeira!" = "All correct on the first try!";
+"%lld de %lld certas de primeira" = "%lld of %lld correct on the first try";
+"A seguir: %@" = "Next: %@";
+"A seguir: fim da aula" = "Next: end of the lesson";
+"Continuar" = "Continue";
+"Com o microfone sem fone de ouvido, o app fica em silêncio e marca o pulso na tela" = "With the microphone on and no headphones, the app stays silent and shows the beat on screen";
+"Teclado conectado: %@" = "Keyboard connected: %@";
+"Ouvindo" = "Listening";
+"última nota: %@" = "last note: %@";
+"Toque as teclas acesas juntas" = "Play the lit keys together";
+"Toque a tecla acesa" = "Play the lit key";
+"Toque as notas azuis juntas" = "Play the blue notes together";
+"Toque a nota azul" = "Play the blue note";
+"A nota é %@. A tecla está acesa." = "The note is %@. Its key is lit.";
+"Ouça…" = "Listen…";
+"Sua vez: toque as notas que ouviu, na ordem" = "Your turn: play the notes you heard, in order";
+"Toque em Começar quando estiver pronto" = "Tap Start when you're ready";
+"Prepare-se… %lld" = "Get ready… %lld";
+"Toque no tempo" = "Play in time";
+"No tempo!" = "On time!";
+"Adiantado" = "Early";
+"Atrasado" = "Late";
+"Essa nota passou" = "Missed that note";
+"Não ouvi todas as notas. Toque juntas de novo." = "I didn't hear all the notes. Play them together again.";
+"Começar" = "Start";
+"Desligar microfone" = "Turn off microphone";
+"Ligar microfone" = "Turn on microphone";
+"%lld de %lld notas certas de primeira" = "%lld of %lld notes correct on the first try";
+"Próxima aula: %@" = "Next lesson: %@";
+"Refazer a aula" = "Restart the lesson";

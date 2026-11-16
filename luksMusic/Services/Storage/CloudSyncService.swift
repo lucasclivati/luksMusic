@@ -49,7 +49,7 @@ final class CloudSyncService {
     /// Syncs local SwiftData scores with the remote Firebase cloud database.
     func syncLibrary(scores: [Score]) async {
         guard let user = authService.currentUser, user.authProvider != .guest else {
-            syncError = "Entre com sua conta para sincronizar as partituras."
+            syncError = String(localized: "Entre com sua conta para sincronizar as partituras.")
             return
         }
 
@@ -86,7 +86,7 @@ final class CloudSyncService {
             UserDefaults.standard.set(self.lastSyncDate, forKey: "luksMusic_lastSync")
             self.isSyncing = false
         } catch {
-            self.syncError = "Não foi possível sincronizar: \(error.localizedDescription)"
+            self.syncError = String(localized: "Não foi possível sincronizar: \(error.localizedDescription)")
             self.isSyncing = false
         }
     }
@@ -114,7 +114,7 @@ final class CloudSyncService {
         request.httpBody = try? JSONSerialization.data(withJSONObject: firestoreFields)
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let errorText = String(data: data, encoding: .utf8) ?? "Erro desconhecido"
+            let errorText = String(data: data, encoding: .utf8) ?? String(localized: "Erro desconhecido")
             throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: errorText])
         }
     }
@@ -162,8 +162,8 @@ final class CloudSyncService {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let errorText = String(data: data, encoding: .utf8) ?? "Erro desconhecido"
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Falha ao apagar dados na nuvem: \(errorText)"])
+            let errorText = String(data: data, encoding: .utf8) ?? String(localized: "Erro desconhecido")
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "Falha ao apagar dados na nuvem: \(errorText)")])
         }
         return (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
     }

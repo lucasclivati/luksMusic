@@ -16,7 +16,7 @@ enum ReadingHand: String, CaseIterable, Identifiable {
 
     var staff: Staff { self == .right ? .treble : .bass }
 
-    var displayName: String { self == .right ? "Mão direita" : "Mão esquerda" }
+    var displayName: String { self == .right ? String(localized: "Mão direita") : String(localized: "Mão esquerda") }
 }
 
 /// How one segment follows another.
@@ -28,7 +28,7 @@ enum ReadingOrder: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var displayName: String { self == .sequential ? "Em sequência" : "Aleatório" }
+    var displayName: String { self == .sequential ? String(localized: "Em sequência") : String(localized: "Aleatório") }
 }
 
 /// The keys one hand strikes together at one moment of the piece.
@@ -320,15 +320,16 @@ enum ReadingDrill {
 
     private static let solfege: [NoteName: String] = [.C: "Dó", .D: "Ré", .E: "Mi", .F: "Fá", .G: "Sol", .A: "Lá", .B: "Si"]
 
-    /// "Mi5", "Fá♯4", "Si♭3".
-    static func name(of pitch: Pitch) -> String {
+    /// "Mi5", "Fá♯4", "Si♭3" in solfège; "E5", "F♯4", "B♭3" with `usesLetters` (the app in English).
+    static func name(of pitch: Pitch, usesLetters: Bool = AppLanguage.usesLetterNames) -> String {
         let symbol = pitch.accidental == .natural ? "" : pitch.accidental.symbol
-        return "\(solfege[pitch.noteName] ?? pitch.noteName.rawValue)\(symbol)\(pitch.octave)"
+        let letter = usesLetters ? pitch.noteName.rawValue : (solfege[pitch.noteName] ?? pitch.noteName.rawValue)
+        return "\(letter)\(symbol)\(pitch.octave)"
     }
 
     /// A step's notes named from the highest down, the way they stack on the staff: "Mi5 · Dó5".
-    static func name(of step: ReadingStep) -> String {
-        step.notes.reversed().map { name(of: $0.pitch) }.joined(separator: " · ")
+    static func name(of step: ReadingStep, usesLetters: Bool = AppLanguage.usesLetterNames) -> String {
+        step.notes.reversed().map { name(of: $0.pitch, usesLetters: usesLetters) }.joined(separator: " · ")
     }
 
     // MARK: - Keyboard Window

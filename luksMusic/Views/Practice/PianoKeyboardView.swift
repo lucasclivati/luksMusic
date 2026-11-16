@@ -28,7 +28,18 @@ struct PianoKey: Identifiable, Equatable {
         }
     }
 
-    /// The text written on the key for a label style; with `marksOctave`, each C also shows its octave ("Dó4").
+    /// Letter label for the key, with a real sharp sign ("C♯").
+    var letterLabel: String {
+        noteName.replacingOccurrences(of: "#", with: "♯")
+    }
+
+    /// The key's name the app's way: letters (C, C♯) in English, solfège (Dó, Dó♯) in Portuguese.
+    func languageName(usesLetters: Bool = AppLanguage.usesLetterNames) -> String {
+        usesLetters ? letterLabel : solfegeLabel
+    }
+
+    /// The text written on the key for a label style; with `marksOctave`, each C also shows its octave ("Dó4",
+    /// or "C4" in English when the other keys have no label).
     func label(style: KeyLabelStyle, marksOctave: Bool) -> String? {
         let name: String? = switch style {
         case .hidden: nil
@@ -36,7 +47,7 @@ struct PianoKey: Identifiable, Equatable {
         case .solfege: solfegeLabel
         }
         guard marksOctave, noteName == "C" else { return name }
-        return "\(name ?? solfegeLabel)\(octave)"
+        return "\(name ?? languageName())\(octave)"
     }
     
     /// Full display name including octave.

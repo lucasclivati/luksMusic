@@ -22,9 +22,9 @@ enum Clef: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .treble: return "Clave de sol"
-        case .bass: return "Clave de fá"
-        case .alto: return "Clave de dó"
+        case .treble: return String(localized: "Clave de sol")
+        case .bass: return String(localized: "Clave de fá")
+        case .alto: return String(localized: "Clave de dó")
         }
     }
 
@@ -88,21 +88,21 @@ enum ClefChoice: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .score: return "Original"
-        case .automatic: return "Automática"
-        case .treble: return "Sol"
-        case .bass: return "Fá"
-        case .alto: return "Dó"
+        case .score: return String(localized: "Original")
+        case .automatic: return String(localized: "Automática")
+        case .treble: return String(localized: "clefChoice.treble", defaultValue: "Sol")
+        case .bass: return String(localized: "clefChoice.bass", defaultValue: "Fá")
+        case .alto: return String(localized: "clefChoice.alto", defaultValue: "Dó")
         }
     }
 
     var detail: String {
         switch self {
-        case .score: return "Como a partitura escreve"
-        case .automatic: return "Muda conforme as notas"
-        case .treble: return "Clave de sol em tudo"
-        case .bass: return "Clave de fá em tudo"
-        case .alto: return "Clave de dó em tudo"
+        case .score: return String(localized: "Como a partitura escreve")
+        case .automatic: return String(localized: "Muda conforme as notas")
+        case .treble: return String(localized: "Clave de sol em tudo")
+        case .bass: return String(localized: "Clave de fá em tudo")
+        case .alto: return String(localized: "Clave de dó em tudo")
         }
     }
 

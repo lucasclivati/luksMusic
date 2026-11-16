@@ -13,7 +13,7 @@ struct EditorToolbar: View {
             // Top Row: Staff / Voice / Undo / Redo
             HStack(spacing: 12) {
                 // Staff Selector (Treble or Bass)
-                Picker("Staff", selection: $viewModel.selectedStaff) {
+                Picker("Pauta", selection: $viewModel.selectedStaff) {
                     Text("Sol 𝄞").tag(Staff.treble)
                     Text("Fá 𝄢").tag(Staff.bass)
                 }
@@ -60,8 +60,8 @@ struct EditorToolbar: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     // Duration Buttons
-                    durationButton(duration: .whole, symbol: "𝅝", label: "Whole")
-                    durationButton(duration: .half, symbol: "𝅗𝅥", label: "Half")
+                    durationButton(duration: .whole, symbol: "𝅝", label: String(localized: "Semibreve"))
+                    durationButton(duration: .half, symbol: "𝅗𝅥", label: String(localized: "Mínima"))
                     durationButton(duration: .quarter, symbol: "♩", label: "1/4")
                     durationButton(duration: .eighth, symbol: "♪", label: "1/8")
                     durationButton(duration: .sixteenth, symbol: "𝅘𝅥𝅯", label: "1/16")
@@ -73,7 +73,7 @@ struct EditorToolbar: View {
                     toggleButton(
                         isActive: viewModel.isRestSelected,
                         symbol: "𝄽",
-                        label: "Rest",
+                        label: String(localized: "editor.rest", defaultValue: "Pausa"),
                         onTap: { viewModel.isRestSelected.toggle() }
                     )
                     
@@ -81,7 +81,7 @@ struct EditorToolbar: View {
                     toggleButton(
                         isActive: viewModel.isDottedSelected,
                         symbol: "•",
-                        label: "Dot",
+                        label: String(localized: "editor.dot", defaultValue: "Ponto"),
                         onTap: { viewModel.isDottedSelected.toggle() }
                     )
                     
@@ -112,6 +112,8 @@ struct EditorToolbar: View {
                     .font(.system(size: 20))
                 Text(label)
                     .font(.system(size: 9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
             }
             .frame(width: 44, height: 44)
             .background(viewModel.selectedDuration == duration ? Color.accentColor : Color(.tertiarySystemFill))
@@ -128,6 +130,8 @@ struct EditorToolbar: View {
                     .font(.system(size: 18))
                 Text(label)
                     .font(.system(size: 9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
             }
             .frame(width: 44, height: 44)
             .background(isActive ? Color.accentColor : Color(.tertiarySystemFill))

@@ -60,6 +60,8 @@ jobs:
             -only-testing:luksMusicTests \
             -only-testing:luksMusicUITests \
             -resultBundlePath build/Screenshots.xcresult \
+            -testLanguage pt-BR \
+            -testRegion BR \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 

@@ -289,7 +289,7 @@ struct ImportScoreView: View {
         switch result {
         case .success(let urls):
             guard let url = urls.first else {
-                phase = .failure("Nenhum arquivo foi escolhido.")
+                phase = .failure(String(localized: "Nenhum arquivo foi escolhido."))
                 return
             }
 
@@ -305,7 +305,7 @@ struct ImportScoreView: View {
             phase = .previewing
 
         case .failure(let error):
-            phase = .failure("Não foi possível abrir o arquivo: \(error.localizedDescription)")
+            phase = .failure(String(localized: "Não foi possível abrir o arquivo: \(error.localizedDescription)"))
         }
     }
 
@@ -316,7 +316,7 @@ struct ImportScoreView: View {
         Task {
             guard let url = selectedURL else {
                 await MainActor.run {
-                    phase = .failure("Nenhum arquivo foi escolhido.")
+                    phase = .failure(String(localized: "Nenhum arquivo foi escolhido."))
                 }
                 return
             }
@@ -365,7 +365,7 @@ struct ImportScoreView: View {
         if error is ImportError || error is MusicXMLParserError || error is ZipArchiveError {
             return error.localizedDescription
         }
-        return "Ocorreu um erro inesperado: \(error.localizedDescription)"
+        return String(localized: "Ocorreu um erro inesperado: \(error.localizedDescription)")
     }
 }
 
@@ -381,13 +381,13 @@ enum ImportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileNotReadable:
-            return "Não foi possível ler o arquivo escolhido. Confira as permissões e tente de novo."
+            return String(localized: "Não foi possível ler o arquivo escolhido. Confira as permissões e tente de novo.")
         case .unsupportedFormat:
-            return "Este formato de arquivo não é aceito. Use MusicXML (.xml, .musicxml ou .mxl)."
+            return String(localized: "Este formato de arquivo não é aceito. Use MusicXML (.xml, .musicxml ou .mxl).")
         case .parsingFailed(let detail):
-            return "Não foi possível ler o arquivo: \(detail)"
+            return String(localized: "Não foi possível ler o arquivo: \(detail)")
         case .invalidData:
-            return "O arquivo tem dados inválidos ou danificados."
+            return String(localized: "O arquivo tem dados inválidos ou danificados.")
         }
     }
 }

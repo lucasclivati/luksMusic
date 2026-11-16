@@ -14,6 +14,8 @@ final class ScreenshotTests: XCTestCase {
     func testAppStoreScreenshots() {
         // Opens every lesson, so the walkthrough can visit the later ones
         app.launchArguments += ["-lessons.unlockAll", "YES"]
+        // The walkthrough finds controls by their Portuguese names, whatever the simulator's language
+        app.launchArguments += ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
         app.launch()
 
         let guestButton = app.buttons["Continuar como Convidado (Offline)"]
@@ -300,23 +302,38 @@ final class ScreenshotTests: XCTestCase {
     private func tapKey(_ name: String, index: Int) {
         let keyboard = app.otherElements["practiceKeyboard"]
         guard keyboard.waitForExistence(timeout: 5) else { return }
-        let keys = keyboard.staticTexts.matching(NSPredicate(format: "label == %@", name)).allElementsBoundByIndex
-            .sorted { $0.frame.minX < $1.frame.minX }
+        let keys = keyFrames(name, in: keyboard)
         guard index < keys.count else { return }
-        keys[index].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        tap(at: keys[index])
     }
 
     /// Taps the first key labelled `name` to the right of the key labelled `anchor` on the reading drill's keyboard
     /// (its C keys show their octave, so "Dó5" finds the octave above middle C wherever the keyboard starts).
     private func tapReadingKey(_ name: String, rightOf anchor: String) {
         let keyboard = app.otherElements["readingKeyboard"]
-        guard keyboard.waitForExistence(timeout: 5) else { return }
-        let anchorKey = keyboard.staticTexts[anchor]
-        guard anchorKey.waitForExistence(timeout: 2) else { return }
-        let key = keyboard.staticTexts.matching(NSPredicate(format: "label == %@", name)).allElementsBoundByIndex
-            .filter { $0.frame.minX > anchorKey.frame.minX }
-            .min { $0.frame.minX < $1.frame.minX }
-        key?.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        guard keyboard.waitForExistence(timeout: 5), let anchorKey = keyFrames(anchor, in: keyboard).first,
+              let key = keyFrames(name, in: keyboard).first(where: { $0.minX > anchorKey.minX }) else { return }
+        tap(at: key)
+    }
+
+    /// Frames of the key labels called `name` on a keyboard, left to right, read from ONE snapshot of it: asking
+    /// each key for its frame takes a whole accessibility snapshot of the busy practice screen per key, which made
+    /// a single tap take minutes and the walkthrough time out.
+    private func keyFrames(_ name: String, in keyboard: XCUIElement) -> [CGRect] {
+        guard let snapshot = try? keyboard.snapshot() else { return [] }
+        var frames: [CGRect] = []
+        func visit(_ element: XCUIElementSnapshot) {
+            if element.elementType == .staticText && element.label == name {
+                frames.append(element.frame)
+            }
+            element.children.forEach(visit)
+        }
+        visit(snapshot)
+        return frames.sorted { $0.minX < $1.minX }
+    }
+
+    private func tap(at frame: CGRect) {
+        app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.midX, dy: frame.midY)).tap()
     }
 
     private func waitForLabel(_ element: XCUIElement, _ label: String) {

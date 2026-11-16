@@ -187,12 +187,13 @@ struct PlayerDock: View {
             repeatButton
             Spacer(minLength: 4)
             controlButton("backward.end.fill",
-                          label: viewModel.loopMode == .measure ? "Voltar ao início do compasso" : "Voltar ao início",
+                          label: viewModel.loopMode == .measure
+                              ? String(localized: "Voltar ao início do compasso") : String(localized: "Voltar ao início"),
                           identifier: "Voltar ao início") {
                 viewModel.restart()
             }
             Spacer(minLength: 4)
-            controlButton("backward.frame.fill", label: "Nota anterior", identifier: "previousNoteButton") {
+            controlButton("backward.frame.fill", label: String(localized: "Nota anterior"), identifier: "previousNoteButton") {
                 viewModel.stepBackward()
             }
             Spacer(minLength: 4)
@@ -210,11 +211,11 @@ struct PlayerDock: View {
                     )
                     .shadow(color: PlayerTheme.blue.opacity(0.6), radius: 10)
             }
-            .accessibilityLabel(viewModel.isPlaying ? "Pausar" : "Tocar")
+            .accessibilityLabel(viewModel.isPlaying ? String(localized: "Pausar") : String(localized: "Tocar"))
             .accessibilityIdentifier("playPauseButton")
 
             Spacer(minLength: 4)
-            controlButton("forward.frame.fill", label: "Próxima nota", identifier: "nextNoteButton") {
+            controlButton("forward.frame.fill", label: String(localized: "Próxima nota"), identifier: "nextNoteButton") {
                 viewModel.stepForward()
             }
             Spacer(minLength: 4)
@@ -239,9 +240,9 @@ struct PlayerDock: View {
             Spacer(minLength: 4)
             metronomeButton
             Spacer(minLength: 4)
-            controlButton("slider.vertical.3", label: "Mixer de mãos", action: onMixer)
+            controlButton("slider.vertical.3", label: String(localized: "Mixer de mãos"), identifier: "Mixer de mãos", action: onMixer)
             Spacer(minLength: 4)
-            controlButton("pianokeys", label: "Teclado", isOn: showKeyboard, identifier: "keyboardToggleButton") {
+            controlButton("pianokeys", label: String(localized: "Teclado"), isOn: showKeyboard, identifier: "keyboardToggleButton") {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                     showKeyboard.toggle()
                 }
@@ -257,9 +258,9 @@ struct PlayerDock: View {
         let mode = viewModel.loopMode
         let label: String
         switch mode {
-        case .off: label = "Repetir: desligado"
-        case .measure: label = "Repetir: compasso"
-        case .piece: label = "Repetir: música"
+        case .off: label = String(localized: "Repetir: desligado")
+        case .measure: label = String(localized: "Repetir: compasso")
+        case .piece: label = String(localized: "Repetir: música")
         }
         return controlButton(mode == .measure ? "repeat.1" : "repeat", label: label, isOn: mode != .off,
                              identifier: "repeatButton") {
@@ -270,7 +271,7 @@ struct PlayerDock: View {
     /// Clicks on every beat while the piece plays, like the web player's metronome; its light flashes red on the
     /// first beat of the measure and yellow on the others.
     private var metronomeButton: some View {
-        controlButton(viewModel.isMetronomeOn ? "metronome.fill" : "metronome", label: "Metrônomo",
+        controlButton(viewModel.isMetronomeOn ? "metronome.fill" : "metronome", label: String(localized: "Metrônomo"),
                       isOn: viewModel.isMetronomeOn, identifier: "metronomeButton") {
             viewModel.isMetronomeOn.toggle()
         }
@@ -308,11 +309,12 @@ struct PlayerDock: View {
         .accessibilityIdentifier(identifier ?? label)
     }
 
+    /// The decimal separator follows the app's language (0,5× in Portuguese, 0.5× in English).
     private static func speedLabel(_ speed: Double) -> String {
         switch speed {
-        case 0.5: return "0,5×"
-        case 0.75: return "0,75×"
-        case 1.25: return "1,25×"
+        case 0.5: return String(localized: "0,5×")
+        case 0.75: return String(localized: "0,75×")
+        case 1.25: return String(localized: "1,25×")
         default: return "1×"
         }
     }
@@ -321,8 +323,8 @@ struct PlayerDock: View {
 
     private var notesUnderCursor: some View {
         HStack(spacing: 14) {
-            hand("Mão dir.", names: viewModel.trebleNoteNames, color: PlayerTheme.cyan)
-            hand("Mão esq.", names: viewModel.bassNoteNames, color: PlayerTheme.green)
+            hand(String(localized: "Mão dir."), names: viewModel.trebleNoteNames, color: PlayerTheme.cyan)
+            hand(String(localized: "Mão esq."), names: viewModel.bassNoteNames, color: PlayerTheme.green)
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 14)
@@ -339,7 +341,7 @@ struct PlayerDock: View {
             Text(title)
                 .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(color)
-            Text(names.isEmpty ? "pausa" : names)
+            Text(names.isEmpty ? String(localized: "pausa") : names)
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
                 .foregroundStyle(names.isEmpty ? PlayerTheme.muted : PlayerTheme.text)
                 .lineLimit(1)
@@ -357,15 +359,15 @@ struct HandsMixerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 18) {
-                channel(symbol: "𝄞", title: "Mão direita", color: PlayerTheme.cyan,
+                channel(symbol: "𝄞", title: String(localized: "Mão direita"), color: PlayerTheme.cyan,
                         volume: $viewModel.trebleVolume, muted: $viewModel.trebleMuted)
-                channel(symbol: "𝄢", title: "Mão esquerda", color: PlayerTheme.green,
+                channel(symbol: "𝄢", title: String(localized: "Mão esquerda"), color: PlayerTheme.green,
                         volume: $viewModel.bassVolume, muted: $viewModel.bassMuted)
 
                 HStack(spacing: 8) {
-                    preset("Duas mãos", treble: true, bass: true)
-                    preset("Só direita", treble: true, bass: false)
-                    preset("Só esquerda", treble: false, bass: true)
+                    preset(String(localized: "Duas mãos"), treble: true, bass: true)
+                    preset(String(localized: "Só direita"), treble: true, bass: false)
+                    preset(String(localized: "Só esquerda"), treble: false, bass: true)
                 }
 
                 Spacer()
@@ -400,7 +402,7 @@ struct HandsMixerSheet: View {
                     .disabled(muted.wrappedValue)
             }
 
-            Button(muted.wrappedValue ? "Mudo" : "Silenciar") {
+            Button(muted.wrappedValue ? String(localized: "Mudo") : String(localized: "Silenciar")) {
                 muted.wrappedValue.toggle()
             }
             .font(.caption.weight(.bold))

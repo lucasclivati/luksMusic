@@ -14,9 +14,9 @@ enum ZipArchiveError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .corrupted:
-            return "O arquivo compactado está danificado."
+            return String(localized: "O arquivo compactado está danificado.")
         case .unsupported:
-            return "O arquivo compactado usa criptografia ou uma compressão que o app não lê."
+            return String(localized: "O arquivo compactado usa criptografia ou uma compressão que o app não lê.")
         }
     }
 }

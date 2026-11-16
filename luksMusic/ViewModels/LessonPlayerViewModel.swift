@@ -359,7 +359,7 @@ final class LessonPlayerViewModel {
             } catch {
                 self.usesMicrophone = false
                 UserDefaults.standard.set(false, forKey: Self.microphoneKey)
-                self.microphoneMessage = "Não foi possível usar o microfone. Confira a permissão nos Ajustes do iPhone."
+                self.microphoneMessage = String(localized: "Não foi possível usar o microfone. Confira a permissão nos Ajustes do iPhone.")
             }
         }
     }
@@ -451,7 +451,9 @@ final class LessonPlayerViewModel {
         timing = nil
         keyboard.correctKeys = []
         keyboard.incorrectKeys = []
-        keyboard.labelStyle = current.kind == .learn ? .solfege : .hidden
+        // Keys are named with letters in English and in solfège in Portuguese
+        let names: KeyLabelStyle = AppLanguage.usesLetterNames ? .letter : .solfege
+        keyboard.labelStyle = current.kind == .learn ? names : .hidden
         keyboard.marksOctaves = true
         updateKeyboardRange()
 

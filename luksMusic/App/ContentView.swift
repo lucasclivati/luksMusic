@@ -210,7 +210,7 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(user.displayName)
                                     .font(.headline)
-                                Text("\(user.email) (\(user.authProvider.rawValue))")
+                                Text("\(user.email) (\(user.authProvider.displayName))")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -270,7 +270,9 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Conexão MIDI")
                                 .font(.subheadline)
-                            Text(MIDIService.shared.isDeviceConnected ? "Conectado" : "Nenhum teclado MIDI conectado")
+                            Text(MIDIService.shared.isDeviceConnected
+                                 ? String(localized: "Conectado")
+                                 : String(localized: "Nenhum teclado MIDI conectado"))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

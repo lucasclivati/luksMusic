@@ -24,7 +24,8 @@ final class ScoreViewModel {
     // Keys under the playback cursor for the interactive keyboard (kept while paused)
     var activeMidiNotes: Set<Int> = []
 
-    // The same keys by hand (treble staff = right hand, bass staff = left hand) and their names ("Sol4, Sol5")
+    // The same keys by hand (treble staff = right hand, bass staff = left hand) and their names ("Sol4, Sol5", or
+    // "G4, G5" in English)
     var activeTrebleMidi: Set<Int> = []
     var activeBassMidi: Set<Int> = []
     var trebleNoteNames: String = ""
@@ -223,16 +224,21 @@ final class ScoreViewModel {
 
     private static let solfege: [NoteName: String] = [.C: "Dó", .D: "Ré", .E: "Mi", .F: "Fá", .G: "Sol", .A: "Lá", .B: "Si"]
     private static let solfegeBySemitone = ["Dó", "Dó♯", "Ré", "Mi♭", "Mi", "Fá", "Fá♯", "Sol", "Lá♭", "Lá", "Si♭", "Si"]
+    private static let lettersBySemitone = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
 
-    /// The notes in solfège with their octave, lowest first ("Dó3, Sol3"); spelled from the score unless transposed.
-    private func noteNames(_ notes: [Note]) -> String {
+    /// The notes with their octave, lowest first: in solfège ("Dó3, Sol3"), or with letters ("C3, G3") when the app
+    /// is in English; spelled from the score unless transposed.
+    private func noteNames(_ notes: [Note], letters: Bool = AppLanguage.usesLetterNames) -> String {
         let named = notes.map { note -> (midi: Int, name: String) in
             let midi = Int(note.midiNote) + transpositionSemitones
-            if transpositionSemitones == 0, let syllable = Self.solfege[note.pitch.noteName] {
+            if transpositionSemitones == 0 {
+                let noteName = note.pitch.noteName
+                let syllable = letters ? noteName.rawValue : (Self.solfege[noteName] ?? noteName.rawValue)
                 let accidental = note.pitch.accidental == .natural ? "" : note.pitch.accidental.symbol
                 return (midi, "\(syllable)\(accidental)\(note.pitch.octave)")
             }
-            return (midi, "\(Self.solfegeBySemitone[((midi % 12) + 12) % 12])\(midi / 12 - 1)")
+            let names = letters ? Self.lettersBySemitone : Self.solfegeBySemitone
+            return (midi, "\(names[((midi % 12) + 12) % 12])\(midi / 12 - 1)")
         }
         var seen = Set<Int>()
         return named

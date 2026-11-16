@@ -429,7 +429,9 @@ struct ReadingStaffView: View {
     }
 
     private var accessibilityText: String {
-        "\(clef.displayName), \(steps.count) notas"
+        steps.count == 1
+            ? String(localized: "\(clef.displayName), 1 nota")
+            : String(localized: "\(clef.displayName), \(steps.count) notas")
     }
 }
 

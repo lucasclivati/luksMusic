@@ -53,9 +53,9 @@ enum OnlineLibraryError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .connection: return "Não foi possível conectar ao luksmusic.web.app. Verifique a internet e tente de novo."
-        case .notFound: return "O arquivo não foi encontrado no site."
-        case .unreadable: return "O arquivo da partitura não pôde ser lido."
+        case .connection: return String(localized: "Não foi possível conectar ao luksmusic.web.app. Verifique a internet e tente de novo.")
+        case .notFound: return String(localized: "O arquivo não foi encontrado no site.")
+        case .unreadable: return String(localized: "O arquivo da partitura não pôde ser lido.")
         }
     }
 }
@@ -129,7 +129,7 @@ final class OnlineLibraryService {
             scores = allowed.keys.sorted().compactMap { allowed[$0] }
             loadedAccount = account
         } catch {
-            errorMessage = "Não foi possível carregar o catálogo: \(error.localizedDescription)"
+            errorMessage = String(localized: "Não foi possível carregar o catálogo: \(error.localizedDescription)")
         }
     }
 

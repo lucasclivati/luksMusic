@@ -44,4 +44,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     static var current: AppLanguage {
         Bundle.main.preferredLocalizations.first?.hasPrefix("pt") == true ? .portuguese : .english
     }
+
+    /// Notes are named with letters (C, D, E) in English and in solfège (Dó, Ré, Mi) in Portuguese
+    static var usesLetterNames: Bool {
+        current == .english
+    }
 }

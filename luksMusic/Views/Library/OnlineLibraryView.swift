@@ -47,7 +47,7 @@ struct OnlineLibraryView: View {
                                 .lineLimit(2)
                         }
                         Spacer(minLength: 4)
-                        Label(downloaded.contains(score.id) ? "Baixada" : "Baixar",
+                        Label(downloaded.contains(score.id) ? String(localized: "Baixada") : String(localized: "Baixar"),
                               systemImage: downloaded.contains(score.id) ? "checkmark.circle.fill" : "arrow.down.circle")
                             .labelStyle(.iconOnly)
                             .foregroundColor(downloaded.contains(score.id) ? .green : .accentColor)

@@ -6,6 +6,7 @@
 
 import CoreMIDI
 import Combine
+import Foundation
 import Observation
 import os.log
 
@@ -221,8 +222,10 @@ final class MIDIService {
         let sourceCount = MIDIGetNumberOfSources()
         for i in 0..<sourceCount {
             let source = MIDIGetSource(i)
-            let name = getMIDIStringProperty(source, property: kMIDIPropertyDisplayName) ?? "Unknown Device"
-            let manufacturer = getMIDIStringProperty(source, property: kMIDIPropertyManufacturer) ?? "Unknown"
+            let name = getMIDIStringProperty(source, property: kMIDIPropertyDisplayName)
+                ?? String(localized: "Dispositivo desconhecido")
+            let manufacturer = getMIDIStringProperty(source, property: kMIDIPropertyManufacturer)
+                ?? String(localized: "midi.unknownManufacturer", defaultValue: "Desconhecido")
             
             devices.append(MIDIDeviceInfo(
                 id: source,

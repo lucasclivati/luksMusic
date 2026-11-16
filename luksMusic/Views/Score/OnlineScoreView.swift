@@ -75,7 +75,7 @@ struct OnlineScoreView: View {
         do {
             local = try await catalog.download(score, into: modelContext)
         } catch {
-            errorMessage = "Não foi possível baixar a partitura: \(error.localizedDescription)"
+            errorMessage = String(localized: "Não foi possível baixar a partitura: \(error.localizedDescription)")
         }
     }
 }

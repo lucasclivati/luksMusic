@@ -46,7 +46,9 @@ struct LessonPlayerView: View {
     }
 
     private var subtitle: String {
-        viewModel.isFinished ? "Aula concluída" : "Passo \(viewModel.stepIndex + 1) de \(viewModel.lesson.steps.count)"
+        viewModel.isFinished
+            ? String(localized: "Aula concluída")
+            : String(localized: "Passo \(viewModel.stepIndex + 1) de \(viewModel.lesson.steps.count)")
     }
 
     private func close() {
@@ -114,17 +116,17 @@ struct LessonPlayerView: View {
         let step = viewModel.step
         switch step.kind {
         case .learn:
-            return ("APRENDA", "lightbulb.fill", PlayerTheme.cyan)
+            return (String(localized: "APRENDA"), "lightbulb.fill", PlayerTheme.cyan)
         case .read:
-            if step.isDrill { return ("TREINO", "target", PlayerTheme.green) }
-            if step.isPiece { return ("MÚSICA", "music.note", Self.amber) }
-            return ("LEITURA", "eye.fill", PlayerTheme.green)
+            if step.isDrill { return (String(localized: "TREINO"), "target", PlayerTheme.green) }
+            if step.isPiece { return (String(localized: "MÚSICA"), "music.note", Self.amber) }
+            return (String(localized: "LEITURA"), "eye.fill", PlayerTheme.green)
         case .listen:
-            return ("OUVIDO", "ear.fill", Self.violet)
+            return (String(localized: "OUVIDO"), "ear.fill", Self.violet)
         case .rhythm:
-            return ("RITMO", "metronome.fill", Self.amber)
+            return (String(localized: "RITMO"), "metronome.fill", Self.amber)
         case .playAlong:
-            return ("TOCANDO JUNTO", "music.quarternote.3", Self.amber)
+            return (String(localized: "TOCANDO JUNTO"), "music.quarternote.3", Self.amber)
         }
     }
 
@@ -138,8 +140,8 @@ struct LessonPlayerView: View {
         }
         // Learning a note is never wrong
         let perfect = !viewModel.step.isScored || clean == total
-        let headline = !viewModel.step.isScored ? "Muito bem!"
-            : (perfect ? "Todas certas de primeira!" : "\(clean) de \(total) certas de primeira")
+        let headline = !viewModel.step.isScored ? String(localized: "Muito bem!")
+            : (perfect ? String(localized: "Todas certas de primeira!") : String(localized: "\(clean) de \(total) certas de primeira"))
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: perfect ? "star.fill" : "flag.checkered")
@@ -148,17 +150,17 @@ struct LessonPlayerView: View {
                     .font(.system(size: 16, weight: .bold))
             }
             .foregroundStyle(perfect ? PlayerTheme.green : Self.amber)
-            Text(viewModel.nextStepTitle.map { "A seguir: \($0)" } ?? "A seguir: fim da aula")
+            Text(viewModel.nextStepTitle.map { String(localized: "A seguir: \($0)") } ?? String(localized: "A seguir: fim da aula"))
                 .font(.system(size: 13))
                 .foregroundStyle(PlayerTheme.muted)
             HStack(spacing: 8) {
                 if viewModel.showsRepeat {
-                    secondaryButton("Repetir", symbol: "arrow.counterclockwise", identifier: "lessonRepeatButton") {
+                    secondaryButton(String(localized: "Repetir"), symbol: "arrow.counterclockwise", identifier: "lessonRepeatButton") {
                         viewModel.repeatStep()
                     }
                 }
                 Spacer(minLength: 0)
-                primaryButton("Continuar", identifier: "lessonContinueButton") {
+                primaryButton(String(localized: "Continuar"), identifier: "lessonContinueButton") {
                     viewModel.continueLesson()
                 }
             }
@@ -209,9 +211,9 @@ struct LessonPlayerView: View {
         if let message = viewModel.microphoneMessage {
             statusText(message, symbol: "exclamationmark.triangle.fill", color: .orange)
         } else if viewModel.isSilentForMicrophone {
-            statusText("Com o microfone sem fone de ouvido, o app fica em silêncio e marca o pulso na tela", symbol: "headphones", color: .orange)
+            statusText(String(localized: "Com o microfone sem fone de ouvido, o app fica em silêncio e marca o pulso na tela"), symbol: "headphones", color: .orange)
         } else if let name = viewModel.connectedKeyboardName {
-            statusText("Teclado conectado: \(name)", symbol: "cable.connector", color: PlayerTheme.green)
+            statusText(String(localized: "Teclado conectado: \(name)"), symbol: "cable.connector", color: PlayerTheme.green)
         } else if viewModel.usesMicrophone {
             microphoneMeter
         }
@@ -306,35 +308,35 @@ struct LessonPlayerView: View {
             return nil
         case .prompt:
             if viewModel.step.kind == .learn {
-                return ("hand.tap", isChord ? "Toque as teclas acesas juntas" : "Toque a tecla acesa", PlayerTheme.text)
+                return ("hand.tap", isChord ? String(localized: "Toque as teclas acesas juntas") : String(localized: "Toque a tecla acesa"), PlayerTheme.text)
             }
-            return ("hand.tap", isChord ? "Toque as notas azuis juntas" : "Toque a nota azul", PlayerTheme.text)
+            return ("hand.tap", isChord ? String(localized: "Toque as notas azuis juntas") : String(localized: "Toque a nota azul"), PlayerTheme.text)
         case .correct(let name):
-            return ("checkmark.circle.fill", "Certo! \(name)", PlayerTheme.green)
+            return ("checkmark.circle.fill", String(localized: "Certo! \(name)"), PlayerTheme.green)
         case .wrong(let name):
-            return ("xmark.circle.fill", "Você tocou \(name). Tente de novo.", red)
+            return ("xmark.circle.fill", String(localized: "Você tocou \(name). Tente de novo."), red)
         case .revealed(let name):
-            return ("lightbulb.fill", "A nota é \(name). A tecla está acesa.", amber)
+            return ("lightbulb.fill", String(localized: "A nota é \(name). A tecla está acesa."), amber)
         case .listening:
-            return ("ear", "Ouça…", PlayerTheme.cyan)
+            return ("ear", String(localized: "Ouça…"), PlayerTheme.cyan)
         case .yourTurn:
-            return ("hand.tap", "Sua vez: toque as notas que ouviu, na ordem", PlayerTheme.text)
+            return ("hand.tap", String(localized: "Sua vez: toque as notas que ouviu, na ordem"), PlayerTheme.text)
         case .readyToStart:
-            return ("metronome", "Toque em Começar quando estiver pronto", PlayerTheme.text)
+            return ("metronome", String(localized: "Toque em Começar quando estiver pronto"), PlayerTheme.text)
         case .countIn(let beats):
-            return ("metronome", "Prepare-se… \(beats)", PlayerTheme.cyan)
+            return ("metronome", String(localized: "Prepare-se… \(beats)"), PlayerTheme.cyan)
         case .playing:
-            return ("music.note", "Toque no tempo", PlayerTheme.cyan)
+            return ("music.note", String(localized: "Toque no tempo"), PlayerTheme.cyan)
         case .onTime:
-            return ("checkmark.circle.fill", "No tempo!", PlayerTheme.green)
+            return ("checkmark.circle.fill", String(localized: "No tempo!"), PlayerTheme.green)
         case .early:
-            return ("hare", "Adiantado", amber)
+            return ("hare", String(localized: "Adiantado"), amber)
         case .late:
-            return ("tortoise", "Atrasado", amber)
+            return ("tortoise", String(localized: "Atrasado"), amber)
         case .missed:
-            return ("xmark.circle.fill", "Essa nota passou", red)
+            return ("xmark.circle.fill", String(localized: "Essa nota passou"), red)
         case .chordMissed:
-            return ("waveform", "Não ouvi todas as notas. Toque juntas de novo.", amber)
+            return ("waveform", String(localized: "Não ouvi todas as notas. Toque juntas de novo."), amber)
         case .stepDone:
             // Shown by the result card
             return nil
@@ -344,14 +346,14 @@ struct LessonPlayerView: View {
     private var actions: some View {
         HStack(spacing: 8) {
             if viewModel.showsListen {
-                secondaryButton("Ouvir", symbol: "speaker.wave.2.fill", identifier: "lessonListenButton") {
+                secondaryButton(String(localized: "Ouvir"), symbol: "speaker.wave.2.fill", identifier: "lessonListenButton") {
                     viewModel.playDemo()
                 }
                 .disabled(viewModel.isDemonstrating)
             }
             Spacer(minLength: 0)
             if viewModel.timedPhase == .ready {
-                primaryButton("Começar", identifier: "lessonStartButton") {
+                primaryButton(String(localized: "Começar"), identifier: "lessonStartButton") {
                     viewModel.startTimedStep()
                 }
                 .disabled(viewModel.isDemonstrating)
@@ -393,7 +395,7 @@ struct LessonPlayerView: View {
             PlayerMenuLabel(systemName: viewModel.usesMicrophone ? "mic.fill" : "mic.slash",
                             tint: viewModel.usesMicrophone ? PlayerTheme.green : PlayerTheme.text)
         }
-        .accessibilityLabel(viewModel.usesMicrophone ? "Desligar microfone" : "Ligar microfone")
+        .accessibilityLabel(viewModel.usesMicrophone ? String(localized: "Desligar microfone") : String(localized: "Ligar microfone"))
         .accessibilityIdentifier("lessonMicrophoneButton")
     }
 

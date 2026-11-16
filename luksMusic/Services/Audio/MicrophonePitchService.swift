@@ -46,7 +46,9 @@ final class MicrophonePitchService: @unchecked Sendable {
     private var deafUntil: Date = .distantPast
     private var expectedNotes: Set<Int>?
     
-    private let noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    // The heard note is named in solfège, or with letters when the app is in English
+    private let solfegeNames = ["Dó", "Dó♯", "Ré", "Ré♯", "Mi", "Fá", "Fá♯", "Sol", "Sol♯", "Lá", "Lá♯", "Si"]
+    private let letterNames = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
     
     private init() {}
     
@@ -78,7 +80,7 @@ final class MicrophonePitchService: @unchecked Sendable {
         
         let granted = await requestPermission()
         guard granted else {
-            let errorMsg = "Microphone access is required to listen to your piano."
+            let errorMsg = String(localized: "O app precisa do microfone para ouvir o seu piano.")
             await MainActor.run {
                 self.errorMessage = errorMsg
                 self.isListening = false
@@ -181,7 +183,8 @@ final class MicrophonePitchService: @unchecked Sendable {
             if let midi = notes.last {
                 self.detectedFrequency = 440.0 * pow(2.0, (Double(midi) - 69.0) / 12.0)
                 self.detectedMidiNote = midi
-                self.detectedNoteName = "\(self.noteNames[midi % 12])\((midi / 12) - 1)"
+                let names = AppLanguage.usesLetterNames ? self.letterNames : self.solfegeNames
+                self.detectedNoteName = "\(names[midi % 12])\((midi / 12) - 1)"
             }
             for note in notes {
                 self.onNoteDetected?(note)

@@ -30,8 +30,10 @@ struct NoteInputView: View {
                         } label: {
                             VStack {
                                 Spacer()
-                                Text("\(name.rawValue)\(octave)")
+                                Text(verbatim: Self.keyName(name, octave: octave))
                                     .font(.system(size: 10, weight: .semibold))
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.6)
                                     .foregroundColor(.black.opacity(0.6))
                                     .padding(.bottom, 6)
                             }
@@ -66,6 +68,14 @@ struct NoteInputView: View {
         .padding(.horizontal, 8)
     }
     
+    private static let solfege: [NoteName: String] = [.C: "Dó", .D: "Ré", .E: "Mi", .F: "Fá", .G: "Sol", .A: "Lá", .B: "Si"]
+
+    /// The key's name with its octave: in solfège ("Dó3"), or with letters ("C3") when the app is in English.
+    private static func keyName(_ name: NoteName, octave: Int, letters: Bool = AppLanguage.usesLetterNames) -> String {
+        let syllable = letters ? name.rawValue : (solfege[name] ?? name.rawValue)
+        return "\(syllable)\(octave)"
+    }
+
     private func hasBlackKeyAfter(name: NoteName) -> Bool {
         name != .E && name != .B
     }

@@ -25,6 +25,16 @@ struct UserProfile: Codable, Identifiable, Sendable {
         case email = "E-mail"
         case apple = "Apple"
         case guest = "Guest"
+
+        /// Name shown in Ajustes (the raw value is what the saved profile stores)
+        var displayName: String {
+            switch self {
+            case .google: return "Google"
+            case .email: return String(localized: "E-mail")
+            case .apple: return "Apple"
+            case .guest: return String(localized: "Convidado")
+            }
+        }
     }
 }
 
@@ -87,7 +97,7 @@ final class AuthService {
             saveUser(profile)
             isAuthenticating = false
         } catch {
-            authError = "Falha no login com Google: \(error.localizedDescription)"
+            authError = String(localized: "Falha no login com Google: \(error.localizedDescription)")
             isAuthenticating = false
         }
     }
@@ -98,7 +108,7 @@ final class AuthService {
         let authURLString = "https://accounts.google.com/o/oauth2/v2/auth?client_id=\(FirebaseConfig.clientId)&redirect_uri=\(redirectURI)&response_type=code&scope=\(scope)"
         
         guard let authURL = URL(string: authURLString) else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL de autenticação inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL de autenticação inválida")])
         }
         
         return try await withCheckedThrowingContinuation { continuation in
@@ -111,7 +121,7 @@ final class AuthService {
                 guard let callbackURL = callbackURL,
                       let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
                       let code = components.queryItems?.first(where: { $0.name == "code" })?.value else {
-                    continuation.resume(throwing: NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Código de autorização não recebido"]))
+                    continuation.resume(throwing: NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: String(localized: "Código de autorização não recebido")]))
                     return
                 }
                 
@@ -127,7 +137,7 @@ final class AuthService {
     
     private func exchangeGoogleAuthCode(_ code: String) async throws -> (idToken: String, accessToken: String) {
         guard let url = URL(string: "https://oauth2.googleapis.com/token") else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL de token inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL de token inválida")])
         }
         
         var request = URLRequest(url: url)
@@ -140,13 +150,13 @@ final class AuthService {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let errorText = String(data: data, encoding: .utf8) ?? "Erro desconhecido"
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Falha na troca de token Google: \(errorText)"])
+            let errorText = String(data: data, encoding: .utf8) ?? String(localized: "Erro desconhecido")
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "Falha na troca de token Google: \(errorText)")])
         }
         
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let idToken = json["id_token"] as? String else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "id_token não encontrado no payload do Google"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "id_token não encontrado no payload do Google")])
         }
         
         let accessToken = json["access_token"] as? String ?? ""
@@ -156,7 +166,7 @@ final class AuthService {
     private func exchangeGoogleTokenWithFirebase(googleIdToken: String) async throws -> UserProfile {
         let endpoint = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=\(FirebaseConfig.apiKey)"
         guard let url = URL(string: endpoint) else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL do Firebase inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL do Firebase inválida")])
         }
         
         var request = URLRequest(url: url)
@@ -173,17 +183,17 @@ final class AuthService {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let errorText = String(data: data, encoding: .utf8) ?? "Erro desconhecido"
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Falha no Firebase Sign-In: \(errorText)"])
+            let errorText = String(data: data, encoding: .utf8) ?? String(localized: "Erro desconhecido")
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "Falha no Firebase Sign-In: \(errorText)")])
         }
         
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Resposta inválida do Firebase"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "Resposta inválida do Firebase")])
         }
         
         let localId = json["localId"] as? String ?? UUID().uuidString
         let email = json["email"] as? String ?? ""
-        let displayName = json["displayName"] as? String ?? email.components(separatedBy: "@").first?.capitalized ?? "Pianista"
+        let displayName = json["displayName"] as? String ?? email.components(separatedBy: "@").first?.capitalized ?? String(localized: "Pianista")
         let photoURLStr = json["photoUrl"] as? String
         let idToken = json["idToken"] as? String
         let refreshToken = json["refreshToken"] as? String
@@ -211,7 +221,7 @@ final class AuthService {
             saveUser(profile)
             isAuthenticating = false
         } catch {
-            authError = "Erro de autenticação: \(error.localizedDescription)"
+            authError = String(localized: "Erro de autenticação: \(error.localizedDescription)")
             isAuthenticating = false
         }
     }
@@ -220,7 +230,7 @@ final class AuthService {
         // First try signInWithPassword
         let signInEndpoint = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=\(FirebaseConfig.apiKey)"
         guard let signInURL = URL(string: signInEndpoint) else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL inválida")])
         }
         
         var request = URLRequest(url: signInURL)
@@ -239,7 +249,7 @@ final class AuthService {
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                 let localId = json["localId"] as? String ?? UUID().uuidString
                 let email = json["email"] as? String ?? email
-                let displayName = json["displayName"] as? String ?? email.components(separatedBy: "@").first?.capitalized ?? "Pianista"
+                let displayName = json["displayName"] as? String ?? email.components(separatedBy: "@").first?.capitalized ?? String(localized: "Pianista")
                 let idToken = json["idToken"] as? String
                 let refreshToken = json["refreshToken"] as? String
                 
@@ -258,7 +268,7 @@ final class AuthService {
         // If signIn failed, check if user needs to be registered (signUp)
         let signUpEndpoint = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=\(FirebaseConfig.apiKey)"
         guard let signUpURL = URL(string: signUpEndpoint) else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL inválida")])
         }
         
         var signUpReq = URLRequest(url: signUpURL)
@@ -271,7 +281,7 @@ final class AuthService {
             if let json = try? JSONSerialization.jsonObject(with: signData) as? [String: Any] {
                 let localId = json["localId"] as? String ?? UUID().uuidString
                 let email = json["email"] as? String ?? email
-                let displayName = email.components(separatedBy: "@").first?.capitalized ?? "Pianista"
+                let displayName = email.components(separatedBy: "@").first?.capitalized ?? String(localized: "Pianista")
                 let idToken = json["idToken"] as? String
                 let refreshToken = json["refreshToken"] as? String
                 
@@ -289,7 +299,7 @@ final class AuthService {
         
         // If both failed, parse error message
         let errorJson = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? [String: Any]
-        let message = errorJson?["message"] as? String ?? "Credenciais inválidas"
+        let message = errorJson?["message"] as? String ?? String(localized: "Credenciais inválidas")
         throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: message])
     }
     
@@ -311,7 +321,7 @@ final class AuthService {
         switch result {
         case .failure(let error):
             if (error as? ASAuthorizationError)?.code != .canceled {
-                authError = "Falha no Sign in with Apple: \(error.localizedDescription)"
+                authError = String(localized: "Falha no Sign in with Apple: \(error.localizedDescription)")
             }
         case .success(let authorization):
             isAuthenticating = true
@@ -319,7 +329,7 @@ final class AuthService {
                 let profile = try await exchangeAppleAuthorizationWithFirebase(authorization)
                 saveUser(profile)
             } catch {
-                authError = "Falha no Sign in with Apple: \(error.localizedDescription)"
+                authError = String(localized: "Falha no Sign in with Apple: \(error.localizedDescription)")
             }
             isAuthenticating = false
         }
@@ -330,7 +340,7 @@ final class AuthService {
               let tokenData = credential.identityToken,
               let appleIdToken = String(data: tokenData, encoding: .utf8),
               let nonce = currentAppleNonce else {
-            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Credencial da Apple inválida"])
+            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: String(localized: "Credencial da Apple inválida")])
         }
 
         let json = try await postIdentityToolkit("v1/accounts:signInWithIdp", body: [
@@ -339,7 +349,7 @@ final class AuthService {
             "returnSecureToken": true
         ])
         guard let localId = json["localId"] as? String else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "Resposta inválida do Firebase"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "Resposta inválida do Firebase")])
         }
 
         // Apple only sends the name on the first authorization, so keep it on the Firebase profile.
@@ -357,7 +367,7 @@ final class AuthService {
         return UserProfile(
             id: localId,
             email: email,
-            displayName: displayName ?? email.components(separatedBy: "@").first?.capitalized ?? "Pianista",
+            displayName: displayName ?? email.components(separatedBy: "@").first?.capitalized ?? String(localized: "Pianista"),
             photoURL: nil,
             authProvider: .apple,
             idToken: idToken,
@@ -381,7 +391,7 @@ final class AuthService {
         let profile = UserProfile(
             id: "guest_\(UUID().uuidString.prefix(8))",
             email: "guest@luksmusic.local",
-            displayName: "Convidado Local",
+            displayName: String(localized: "Convidado Local"),
             photoURL: nil,
             authProvider: .guest
         )
@@ -422,7 +432,7 @@ final class AuthService {
             }
 
             guard confirmed.id == user.id, let idToken = confirmed.idToken else {
-                throw NSError(domain: "luksMusic", code: 403, userInfo: [NSLocalizedDescriptionKey: "Confirme com a mesma conta que está conectada."])
+                throw NSError(domain: "luksMusic", code: 403, userInfo: [NSLocalizedDescriptionKey: String(localized: "Confirme com a mesma conta que está conectada.")])
             }
 
             try await CloudSyncService.shared.deleteRemoteData(userId: user.id, idToken: idToken)
@@ -435,7 +445,7 @@ final class AuthService {
             signOut()
             return true
         } catch {
-            authError = "Não foi possível excluir a conta: \(error.localizedDescription)"
+            authError = String(localized: "Não foi possível excluir a conta: \(error.localizedDescription)")
             return false
         }
     }
@@ -471,7 +481,7 @@ final class AuthService {
     @discardableResult
     private func postIdentityToolkit(_ path: String, body: [String: Any]) async throws -> [String: Any] {
         guard let url = URL(string: "https://identitytoolkit.googleapis.com/\(path)?key=\(FirebaseConfig.apiKey)") else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL inválida")])
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -481,7 +491,7 @@ final class AuthService {
         let (data, response) = try await URLSession.shared.data(for: request)
         let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let message = (json["error"] as? [String: Any])?["message"] as? String ?? "Erro desconhecido"
+            let message = (json["error"] as? [String: Any])?["message"] as? String ?? String(localized: "Erro desconhecido")
             throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: message])
         }
         return json
@@ -492,14 +502,14 @@ final class AuthService {
     /// A Firebase ID token that is still valid; they expire after an hour, so this refreshes it when needed.
     func freshIdToken() async throws -> String {
         guard var user = currentUser, let refreshToken = user.refreshToken else {
-            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Entre com sua conta para continuar."])
+            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: String(localized: "Entre com sua conta para continuar.")])
         }
         if let idToken = user.idToken, let expiry = Self.expiryDate(of: idToken), expiry.timeIntervalSinceNow > 60 {
             return idToken
         }
 
         guard let url = URL(string: "https://securetoken.googleapis.com/v1/token?key=\(FirebaseConfig.apiKey)") else {
-            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
+            throw NSError(domain: "luksMusic", code: 400, userInfo: [NSLocalizedDescriptionKey: String(localized: "URL inválida")])
         }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -510,7 +520,7 @@ final class AuthService {
         guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let idToken = json["id_token"] as? String else {
-            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: "Sua sessão expirou. Entre novamente."])
+            throw NSError(domain: "luksMusic", code: 401, userInfo: [NSLocalizedDescriptionKey: String(localized: "Sua sessão expirou. Entre novamente.")])
         }
         user.idToken = idToken
         user.refreshToken = json["refresh_token"] as? String ?? refreshToken

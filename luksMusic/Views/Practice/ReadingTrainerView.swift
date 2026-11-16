@@ -19,7 +19,7 @@ struct ReadingTrainerView: View {
     var body: some View {
         GeometryReader { geo in
             VStack(spacing: 0) {
-                PlayerTopBar(title: "Treino de leitura", subtitle: viewModel.title, onBack: close) {
+                PlayerTopBar(title: String(localized: "Treino de leitura"), subtitle: viewModel.title, onBack: close) {
                     settingsMenu
                 }
 
@@ -198,20 +198,20 @@ struct ReadingTrainerView: View {
         switch viewModel.feedback {
         case .prompt(let chord):
             return chord > 1
-                ? ("hand.tap", "Toque as \(chord) notas azuis (acorde)", PlayerTheme.text)
-                : ("hand.tap", "Toque a nota azul no teclado", PlayerTheme.text)
+                ? ("hand.tap", String(localized: "Toque as \(chord) notas azuis (acorde)"), PlayerTheme.text)
+                : ("hand.tap", String(localized: "Toque a nota azul no teclado"), PlayerTheme.text)
         case .correct(let name):
-            return ("checkmark.circle.fill", "Certo! \(name)", PlayerTheme.green)
+            return ("checkmark.circle.fill", String(localized: "Certo! \(name)"), PlayerTheme.green)
         case .wrong(let name):
-            return ("xmark.circle.fill", "Você tocou \(name). Tente de novo.", Color(red: 248 / 255, green: 113 / 255, blue: 113 / 255))
+            return ("xmark.circle.fill", String(localized: "Você tocou \(name). Tente de novo."), Color(red: 248 / 255, green: 113 / 255, blue: 113 / 255))
         case .revealed(let name):
-            return ("lightbulb.fill", "A nota é \(name)", Color(red: 251 / 255, green: 191 / 255, blue: 36 / 255))
+            return ("lightbulb.fill", String(localized: "A nota é \(name)"), Color(red: 251 / 255, green: 191 / 255, blue: 36 / 255))
         case .segmentDone(let clean, let total):
             return clean == total
-                ? ("star.fill", "Perfeito! \(total) de \(total) de primeira", PlayerTheme.green)
-                : ("flag.checkered", "Trecho concluído: \(clean) de \(total) de primeira", Color(red: 251 / 255, green: 191 / 255, blue: 36 / 255))
+                ? ("star.fill", String(localized: "Perfeito! \(total) de \(total) de primeira"), PlayerTheme.green)
+                : ("flag.checkered", String(localized: "Trecho concluído: \(clean) de \(total) de primeira"), Color(red: 251 / 255, green: 191 / 255, blue: 36 / 255))
         case .noNotes:
-            return ("music.note", "Escolha a outra mão", PlayerTheme.muted)
+            return ("music.note", String(localized: "Escolha a outra mão"), PlayerTheme.muted)
         }
     }
 
@@ -220,23 +220,23 @@ struct ReadingTrainerView: View {
     private var controls: some View {
         let done = viewModel.segment.isComplete && !viewModel.segment.steps.isEmpty
         return HStack(spacing: 8) {
-            controlButton("backward.fill", label: "Anterior", identifier: "readingPreviousButton") {
+            controlButton("backward.fill", label: String(localized: "Anterior"), identifier: "readingPreviousButton") {
                 viewModel.previousSegment()
             }
             .disabled(!viewModel.canGoBack)
             .opacity(viewModel.canGoBack ? 1 : 0.4)
 
-            controlButton("speaker.wave.2.fill", label: "Ouvir", identifier: "readingListenButton") {
+            controlButton("speaker.wave.2.fill", label: String(localized: "Ouvir"), identifier: "readingListenButton") {
                 viewModel.listen()
             }
 
-            controlButton("lightbulb", label: "Dica", identifier: "readingHintButton") {
+            controlButton("lightbulb", label: String(localized: "Dica"), identifier: "readingHintButton") {
                 viewModel.reveal()
             }
             .disabled(viewModel.segment.isComplete)
             .opacity(viewModel.segment.isComplete ? 0.4 : 1)
 
-            controlButton("arrow.counterclockwise", label: "Repetir", identifier: "readingRepeatButton") {
+            controlButton("arrow.counterclockwise", label: String(localized: "Repetir"), identifier: "readingRepeatButton") {
                 viewModel.repeatSegment()
             }
 

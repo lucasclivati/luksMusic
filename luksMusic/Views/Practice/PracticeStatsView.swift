@@ -110,10 +110,10 @@ struct PracticeStatsView: View {
     @ViewBuilder
     private func statsGrid() -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            statItem(title: "Notas certas", value: "\(session.correctNotes)", icon: "checkmark.circle.fill", color: .green)
-            statItem(title: "Erradas", value: "\(session.incorrectNotes)", icon: "xmark.circle.fill", color: .red)
-            statItem(title: "Maior sequência", value: "\(session.longestStreak)", icon: "flame.fill", color: .orange)
-            statItem(title: "Notas tocadas", value: "\(session.totalNotesPlayed)", icon: "pianokeys", color: .blue)
+            statItem(title: String(localized: "Notas certas"), value: "\(session.correctNotes)", icon: "checkmark.circle.fill", color: .green)
+            statItem(title: String(localized: "Erradas"), value: "\(session.incorrectNotes)", icon: "xmark.circle.fill", color: .red)
+            statItem(title: String(localized: "Maior sequência"), value: "\(session.longestStreak)", icon: "flame.fill", color: .orange)
+            statItem(title: String(localized: "Notas tocadas"), value: "\(session.totalNotesPlayed)", icon: "pianokeys", color: .blue)
         }
     }
     
@@ -144,11 +144,11 @@ struct PracticeStatsView: View {
     @ViewBuilder
     private func sessionDetailsCard() -> some View {
         VStack(spacing: 12) {
-            detailRow(title: "Andamento", value: "\(session.tempoUsed) BPM")
+            detailRow(title: String(localized: "Andamento"), value: "\(session.tempoUsed) BPM")
             Divider()
-            detailRow(title: "Trechos concluídos", value: "\(session.sectionsCompleted)")
+            detailRow(title: String(localized: "Trechos concluídos"), value: "\(session.sectionsCompleted)")
             Divider()
-            detailRow(title: "Duração", value: formatDuration(session.duration))
+            detailRow(title: String(localized: "Duração"), value: formatDuration(session.duration))
         }
         .padding(16)
         .background(Color(.secondarySystemBackground))

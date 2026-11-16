@@ -56,8 +56,12 @@ struct LoginView: View {
                     
                     // Features Highlights
                     VStack(spacing: 12) {
-                        featureRow(icon: "icloud.fill", color: .blue, title: "Biblioteca na nuvem", subtitle: "Entre com sua conta para guardar suas partituras")
-                        featureRow(icon: "waveform", color: .green, title: "Piano Interativo e Prática", subtitle: "Teclado interativo, metrônomo e partitura conectada")
+                        featureRow(icon: "icloud.fill", color: .blue,
+                                   title: String(localized: "Biblioteca na nuvem"),
+                                   subtitle: String(localized: "Entre com sua conta para guardar suas partituras"))
+                        featureRow(icon: "waveform", color: .green,
+                                   title: String(localized: "Piano Interativo e Prática"),
+                                   subtitle: String(localized: "Teclado interativo, metrônomo e partitura conectada"))
                     }
                     .padding(.horizontal, 24)
                     

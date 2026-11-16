@@ -38,32 +38,32 @@ struct ScoreSettingsView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 22) {
-                    section("EXIBIÇÃO") {
-                        displayModeRow(mode: .verticalScroll, title: "Página", detail: "Dois compassos por linha", iconName: "doc.text")
-                        displayModeRow(mode: .portraitView, title: "Ampliada", detail: "Um compasso por linha, notas maiores", iconName: "rectangle.portrait")
-                        displayModeRow(mode: .singleLine, title: "Linha única", detail: "A partitura corre para o lado", iconName: "arrow.right.to.line")
+                    section(String(localized: "EXIBIÇÃO")) {
+                        displayModeRow(mode: .verticalScroll, title: String(localized: "Página"), detail: String(localized: "Dois compassos por linha"), iconName: "doc.text")
+                        displayModeRow(mode: .portraitView, title: String(localized: "Ampliada"), detail: String(localized: "Um compasso por linha, notas maiores"), iconName: "rectangle.portrait")
+                        displayModeRow(mode: .singleLine, title: String(localized: "Linha única"), detail: String(localized: "A partitura corre para o lado"), iconName: "arrow.right.to.line")
                     }
 
-                    section("CLAVES") {
-                        clefRow(title: "Mão direita", choice: $rightClef, identifier: "rightClef")
-                        clefRow(title: "Mão esquerda", choice: $leftClef, identifier: "leftClef")
+                    section(String(localized: "CLAVES")) {
+                        clefRow(title: String(localized: "Mão direita"), choice: $rightClef, identifier: "rightClef")
+                        clefRow(title: String(localized: "Mão esquerda"), choice: $leftClef, identifier: "leftClef")
                         if rightClef == .automatic || leftClef == .automatic {
-                            toggleRow(title: "Clave de dó na automática", detail: "A troca automática também usa a clave de dó",
+                            toggleRow(title: String(localized: "Clave de dó na automática"), detail: String(localized: "A troca automática também usa a clave de dó"),
                                       isOn: $automaticUsesAlto)
                                 .accessibilityIdentifier("automaticAltoToggle")
                         }
                     }
 
-                    section("SOM") {
-                        toggleRow(title: "Sala de concerto", detail: "Reverberação no som do piano", isOn: $hqSoundEnabled)
+                    section(String(localized: "SOM")) {
+                        toggleRow(title: String(localized: "Sala de concerto"), detail: String(localized: "Reverberação no som do piano"), isOn: $hqSoundEnabled)
                     }
 
-                    section("TECLADO") {
-                        toggleRow(title: "Mostrar teclado", detail: "As teclas sob o cursor acendem", isOn: $showKeyboard)
+                    section(String(localized: "TECLADO")) {
+                        toggleRow(title: String(localized: "Mostrar teclado"), detail: String(localized: "As teclas sob o cursor acendem"), isOn: $showKeyboard)
                             .accessibilityIdentifier("displayKeyboardToggle")
                     }
 
-                    section("TRANSPOSIÇÃO") {
+                    section(String(localized: "TRANSPOSIÇÃO")) {
                         HStack(alignment: .center, spacing: 10) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(viewModel.transpositionKeyText)
@@ -76,10 +76,10 @@ struct ScoreSettingsView: View {
 
                             Spacer()
 
-                            stepButton("minus", label: "Meio tom abaixo") {
+                            stepButton("minus", label: String(localized: "Meio tom abaixo")) {
                                 viewModel.transpositionSemitones -= 1
                             }
-                            stepButton("plus", label: "Meio tom acima") {
+                            stepButton("plus", label: String(localized: "Meio tom acima")) {
                                 viewModel.transpositionSemitones += 1
                             }
 
@@ -104,11 +104,11 @@ struct ScoreSettingsView: View {
 
     private var transpositionDetail: String {
         switch viewModel.transpositionSemitones {
-        case 0: return "Tom original"
-        case 1: return "1 semitom acima"
-        case -1: return "1 semitom abaixo"
-        case let n where n > 0: return "\(n) semitons acima"
-        case let n: return "\(-n) semitons abaixo"
+        case 0: return String(localized: "Tom original")
+        case 1: return String(localized: "1 semitom acima")
+        case -1: return String(localized: "1 semitom abaixo")
+        case let n where n > 0: return String(localized: "\(n) semitons acima")
+        case let n: return String(localized: "\(-n) semitons abaixo")
         }
     }
 

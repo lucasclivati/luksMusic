@@ -18,6 +18,16 @@ enum LibrarySortOption: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// Name shown in the sort menu
+    var displayName: String {
+        switch self {
+        case .dateCreated: return String(localized: "Data de inclusão")
+        case .title: return String(localized: "Título")
+        case .difficulty: return String(localized: "Dificuldade")
+        case .lastPracticed: return String(localized: "Último estudo")
+        }
+    }
+
     var iconName: String {
         switch self {
         case .dateCreated: return "calendar"
@@ -249,7 +259,7 @@ struct LibraryView: View {
                 }
                 .overlay(alignment: .bottomLeading) {
                     if download == nil {
-                        Label(isDownloaded ? "Baixada" : "Baixar",
+                        Label(isDownloaded ? String(localized: "Baixada") : String(localized: "Baixar"),
                               systemImage: isDownloaded ? "checkmark.circle.fill" : "arrow.down.circle.fill")
                             .font(.caption2.weight(.bold))
                             .foregroundStyle(.white)
@@ -471,7 +481,7 @@ struct LibraryView: View {
             } label: {
                 Image(systemName: layout == .grid ? "rectangle.grid.1x2" : "square.grid.2x2")
             }
-            .accessibilityLabel(layout == .grid ? "Mostrar em lista" : "Mostrar em grade")
+            .accessibilityLabel(layout == .grid ? String(localized: "Mostrar em lista") : String(localized: "Mostrar em grade"))
 
             Menu {
                 ForEach(LibrarySortOption.allCases) { option in
@@ -484,7 +494,7 @@ struct LibraryView: View {
                         }
                     } label: {
                         HStack {
-                            Label(option.rawValue, systemImage: option.iconName)
+                            Label(option.displayName, systemImage: option.iconName)
                             if sortOption == option {
                                 Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
                             }
@@ -555,7 +565,7 @@ struct LibraryView: View {
             toggleFavorite(score)
         } label: {
             Label(
-                score.isFavorite ? "Remover dos favoritos" : "Favoritar",
+                score.isFavorite ? String(localized: "Remover dos favoritos") : String(localized: "Favoritar"),
                 systemImage: score.isFavorite ? "star.slash" : "star.fill"
             )
         }
@@ -592,7 +602,7 @@ struct LibraryView: View {
     }
 
     private func createNewScore() {
-        let score = Score(title: "Partitura sem título", composer: "", source: .manual)
+        let score = Score(title: String(localized: "Partitura sem título"), composer: "", source: .manual)
         modelContext.insert(score)
     }
 

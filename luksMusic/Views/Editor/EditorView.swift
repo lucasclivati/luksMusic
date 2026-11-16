@@ -73,7 +73,7 @@ struct EditorView: View {
                     
                     Spacer()
                     
-                    Text("Pauta: \(viewModel.selectedStaff == .treble ? "Clave de sol (mão dir.)" : "Clave de fá (mão esq.)")")
+                    Text("Pauta: \(viewModel.selectedStaff == .treble ? String(localized: "Clave de sol (mão dir.)") : String(localized: "Clave de fá (mão esq.)"))")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

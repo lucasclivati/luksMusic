@@ -19,11 +19,11 @@ enum PracticeMode: String, Codable, CaseIterable {
     /// A human-readable label for display.
     var displayName: String {
         switch self {
-        case .freePlay:             return "Livre"
-        case .guided:               return "Guiado"
-        case .handsSeparateRight:   return "Mão direita"
-        case .handsSeparateLeft:    return "Mão esquerda"
-        case .slowPractice:         return "Lento"
+        case .freePlay:             return String(localized: "Livre")
+        case .guided:               return String(localized: "Guiado")
+        case .handsSeparateRight:   return String(localized: "Mão direita")
+        case .handsSeparateLeft:    return String(localized: "Mão esquerda")
+        case .slowPractice:         return String(localized: "Lento")
         }
     }
 
@@ -146,11 +146,11 @@ final class PracticeSession {
     /// A qualitative performance label based on accuracy.
     var performanceLabel: String {
         switch accuracy {
-        case 95...100: return "Perfeito"
-        case 85..<95:  return "Excelente"
-        case 70..<85:  return "Bom"
-        case 50..<70:  return "Precisa praticar"
-        default:       return "Continue tentando"
+        case 95...100: return String(localized: "Perfeito")
+        case 85..<95:  return String(localized: "Excelente")
+        case 70..<85:  return String(localized: "Bom")
+        case 50..<70:  return String(localized: "Precisa praticar")
+        default:       return String(localized: "Continue tentando")
         }
     }
 

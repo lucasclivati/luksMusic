@@ -20,10 +20,10 @@ enum Difficulty: String, Codable, CaseIterable, Identifiable {
     /// Name shown in the app (the raw value is what the library stores).
     var displayName: String {
         switch self {
-        case .beginner: return "Iniciante"
-        case .intermediate: return "Intermediário"
-        case .advanced: return "Avançado"
-        case .expert: return "Virtuoso"
+        case .beginner: return String(localized: "Iniciante")
+        case .intermediate: return String(localized: "Intermediário")
+        case .advanced: return String(localized: "Avançado")
+        case .expert: return String(localized: "Virtuoso")
         }
     }
 
@@ -49,9 +49,9 @@ enum ScoreSource: String, Codable, CaseIterable, Identifiable {
     /// Name shown in the app (the raw value is what the library stores).
     var displayName: String {
         switch self {
-        case .manual: return "Criadas no app"
-        case .imported: return "Importadas"
-        case .scanned: return "Digitalizadas"
+        case .manual: return String(localized: "Criadas no app")
+        case .imported: return String(localized: "Importadas")
+        case .scanned: return String(localized: "Digitalizadas")
         }
     }
 

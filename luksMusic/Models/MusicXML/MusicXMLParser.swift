@@ -15,13 +15,13 @@ enum MusicXMLParserError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .dataCorrupted:
-            return "O arquivo MusicXML está danificado ou não é válido."
+            return String(localized: "O arquivo MusicXML está danificado ou não é válido.")
         case .missingPart:
-            return "A partitura MusicXML não tem nenhuma parte."
+            return String(localized: "A partitura MusicXML não tem nenhuma parte.")
         case .missingScoreFile:
-            return "O arquivo .mxl não contém uma partitura MusicXML."
+            return String(localized: "O arquivo .mxl não contém uma partitura MusicXML.")
         case .parsingFailed(let reason):
-            return "Não foi possível ler o MusicXML: \(reason)"
+            return String(localized: "Não foi possível ler o MusicXML: \(reason)")
         }
     }
 }

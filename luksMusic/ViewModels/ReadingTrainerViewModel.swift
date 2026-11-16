@@ -97,7 +97,9 @@ final class ReadingTrainerViewModel {
         let size = defaults.integer(forKey: Self.sizeKey)
         self.segmentSize = Self.segmentSizes.contains(size) ? size : 3
         self.advancesAutomatically = defaults.object(forKey: Self.autoAdvanceKey) as? Bool ?? true
-        self.keyLabels = ReadingKeyLabels(rawValue: defaults.string(forKey: Self.keyLabelsKey) ?? "") ?? .solfege
+        // Until chosen, the keys are named the app's way: letters in English, solfège in Portuguese
+        self.keyLabels = ReadingKeyLabels(rawValue: defaults.string(forKey: Self.keyLabelsKey) ?? "")
+            ?? (AppLanguage.usesLetterNames ? .letters : .solfege)
 
         applyKeyLabels()
         loadSteps(resume: true)
@@ -197,12 +199,12 @@ final class ReadingTrainerViewModel {
         guard let first = segment.steps.first?.measureNumber, let last = segment.steps.last?.measureNumber else { return "" }
         if first == 0 {
             switch last {
-            case 0: return "Anacruse"
-            case 1: return "Anacruse e compasso 1"
-            default: return "Anacruse e compassos 1–\(last)"
+            case 0: return String(localized: "Anacruse")
+            case 1: return String(localized: "Anacruse e compasso 1")
+            default: return String(localized: "Anacruse e compassos 1–\(last)")
             }
         }
-        return first == last ? "Compasso \(first)" : "Compassos \(first)–\(last)"
+        return first == last ? String(localized: "Compasso \(first)") : String(localized: "Compassos \(first)–\(last)")
     }
 
     var canGoBack: Bool { order == .sequential && segmentStart > 0 }
@@ -477,10 +479,10 @@ enum ReadingKeyLabels: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .solfege: return "Dó Ré Mi"
+        case .solfege: return String(localized: "Dó Ré Mi")
         case .letters: return "C D E"
-        case .octavesOnly: return "Só os Dós"
-        case .hidden: return "Sem nomes"
+        case .octavesOnly: return String(localized: "Só os Dós")
+        case .hidden: return String(localized: "Sem nomes")
         }
     }
 }

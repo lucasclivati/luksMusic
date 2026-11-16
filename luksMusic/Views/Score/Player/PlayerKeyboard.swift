@@ -91,7 +91,7 @@ struct PlayerKeyboard: View {
             )
             .overlay(alignment: .bottom) {
                 if midi % 12 == 0 {
-                    Text("Dó\(midi / 12 - 1)")
+                    Text(verbatim: Self.name(midi))
                         .font(.system(size: 8, weight: .bold))
                         .foregroundStyle(lit ? Color.white : Color(red: 100 / 255, green: 116 / 255, blue: 139 / 255))
                         .padding(.bottom, 4)
@@ -148,10 +148,13 @@ struct PlayerKeyboard: View {
             }
     }
 
-    private static let names = ["Dó", "Dó♯", "Ré", "Ré♯", "Mi", "Fá", "Fá♯", "Sol", "Sol♯", "Lá", "Lá♯", "Si"]
+    private static let solfegeNames = ["Dó", "Dó♯", "Ré", "Ré♯", "Mi", "Fá", "Fá♯", "Sol", "Sol♯", "Lá", "Lá♯", "Si"]
+    private static let letterNames = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
 
-    private static func name(_ midi: Int) -> String {
-        "\(names[((midi % 12) + 12) % 12])\(midi / 12 - 1)"
+    /// The key's name with its octave: in solfège ("Dó♯4"), or with letters ("C♯4") when the app is in English.
+    private static func name(_ midi: Int, letters: Bool = AppLanguage.usesLetterNames) -> String {
+        let names = letters ? letterNames : solfegeNames
+        return "\(names[((midi % 12) + 12) % 12])\(midi / 12 - 1)"
     }
 
     // MARK: - Following the Cursor

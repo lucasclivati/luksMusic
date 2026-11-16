@@ -32,7 +32,8 @@ struct ScoreListItemView: View {
             Button {
                 score.isFavorite.toggle()
             } label: {
-                Label(score.isFavorite ? "Remover dos Favoritos" : "Favoritar", systemImage: score.isFavorite ? "star.slash" : "star")
+                Label(score.isFavorite ? String(localized: "Remover dos favoritos") : String(localized: "Favoritar"),
+                      systemImage: score.isFavorite ? "star.slash" : "star")
             }
         }
     }

@@ -12,6 +12,8 @@ final class WebLibraryScreenshotTests: XCTestCase {
     private let app = XCUIApplication()
 
     func testCatalogDownload() {
+        // The test finds controls by their Portuguese names, whatever the simulator's language
+        app.launchArguments += ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
         app.launch()
 
         let guestButton = app.buttons["Continuar como Convidado (Offline)"]

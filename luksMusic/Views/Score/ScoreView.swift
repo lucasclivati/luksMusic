@@ -61,7 +61,9 @@ struct ScoreView: View {
             parts.append(viewModel.score.composer)
         }
         parts.append("\(viewModel.score.tempo) BPM")
-        parts.append("\(viewModel.score.measureCount) compassos")
+        parts.append(viewModel.score.measureCount == 1
+                     ? String(localized: "1 compasso")
+                     : String(localized: "\(viewModel.score.measureCount) compassos"))
         return parts.joined(separator: " • ")
     }
 
@@ -75,7 +77,7 @@ struct ScoreView: View {
                     PlayerMenuLabel(systemName: isFavorite ? "heart.fill" : "heart",
                                     tint: isFavorite ? Color(red: 244 / 255, green: 63 / 255, blue: 94 / 255) : PlayerTheme.text)
                 }
-                .accessibilityLabel(isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos")
+                .accessibilityLabel(isFavorite ? String(localized: "Remover dos favoritos") : String(localized: "Adicionar aos favoritos"))
 
                 Button(action: openReadingTrainer) {
                     PlayerMenuLabel(systemName: "music.quarternote.3")
@@ -207,8 +209,8 @@ struct ScoreView: View {
             .pickerStyle(.menu)
 
             Section("Claves") {
-                clefPicker("Mão direita", selection: $rightClef)
-                clefPicker("Mão esquerda", selection: $leftClef)
+                clefPicker(String(localized: "Mão direita"), selection: $rightClef)
+                clefPicker(String(localized: "Mão esquerda"), selection: $leftClef)
             }
 
             Section {

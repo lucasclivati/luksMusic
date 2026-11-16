@@ -21,15 +21,15 @@ enum AudioEngineError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .engineNotRunning:
-            return "Audio engine is not running."
+            return String(localized: "O motor de áudio não está ligado.")
         case .soundFontNotFound(let name):
-            return "SoundFont file '\(name).sf2' not found in bundle."
+            return String(localized: "O arquivo SoundFont '\(name).sf2' não está no app.")
         case .soundFontLoadFailed(let name, let underlying):
-            return "Failed to load SoundFont '\(name)': \(underlying.localizedDescription)"
+            return String(localized: "Não foi possível carregar o SoundFont '\(name)': \(underlying.localizedDescription)")
         case .audioSessionSetupFailed(let underlying):
-            return "Audio session setup failed: \(underlying.localizedDescription)"
+            return String(localized: "Não foi possível preparar o áudio: \(underlying.localizedDescription)")
         case .engineStartFailed(let underlying):
-            return "Audio engine failed to start: \(underlying.localizedDescription)"
+            return String(localized: "Não foi possível ligar o motor de áudio: \(underlying.localizedDescription)")
         }
     }
 }

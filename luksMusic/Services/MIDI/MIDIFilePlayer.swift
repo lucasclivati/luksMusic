@@ -22,15 +22,15 @@ enum MIDIFilePlayerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileNotFound(let url):
-            return "MIDI file not found at: \(url.path)"
+            return String(localized: "Arquivo MIDI não encontrado em: \(url.path)")
         case .loadFailed(let underlying):
-            return "Failed to load MIDI file: \(underlying.localizedDescription)"
+            return String(localized: "Não foi possível carregar o arquivo MIDI: \(underlying.localizedDescription)")
         case .engineNotRunning:
-            return "Audio engine is not running."
+            return String(localized: "O motor de áudio não está ligado.")
         case .playbackFailed(let underlying):
-            return "Playback failed: \(underlying.localizedDescription)"
+            return String(localized: "Não foi possível tocar: \(underlying.localizedDescription)")
         case .invalidSeekPosition(let beat):
-            return "Invalid seek position: \(beat)"
+            return String(localized: "Posição inválida: \(beat)")
         }
     }
 }
