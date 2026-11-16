@@ -1,8 +1,8 @@
 // ScoreSettingsView.swift
 // luksMusic
 //
-// The score's settings sheet: how the engraving is laid out, the piano's room sound, the keyboard,
-// and transposition by semitones.
+// The score's settings sheet: how the engraving is laid out, the clef of each hand's staff, the piano's room
+// sound, the keyboard, and transposition by semitones.
 
 import SwiftUI
 
@@ -17,6 +17,9 @@ struct ScoreSettingsView: View {
     @Binding var displayMode: ScoreDisplayMode
     @Binding var hqSoundEnabled: Bool
     @Binding var showKeyboard: Bool
+    @AppStorage(ClefChoice.rightHandKey) private var rightClef: ClefChoice = .score
+    @AppStorage(ClefChoice.leftHandKey) private var leftClef: ClefChoice = .score
+    @AppStorage(ClefChoice.automaticUsesAltoKey) private var automaticUsesAlto: Bool = true
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -38,6 +41,16 @@ struct ScoreSettingsView: View {
                         displayModeRow(mode: .verticalScroll, title: "Página", detail: "Dois compassos por linha", iconName: "doc.text")
                         displayModeRow(mode: .portraitView, title: "Ampliada", detail: "Um compasso por linha, notas maiores", iconName: "rectangle.portrait")
                         displayModeRow(mode: .singleLine, title: "Linha única", detail: "A partitura corre para o lado", iconName: "arrow.right.to.line")
+                    }
+
+                    section("CLAVES") {
+                        clefRow(title: "Mão direita", choice: $rightClef, identifier: "rightClef")
+                        clefRow(title: "Mão esquerda", choice: $leftClef, identifier: "leftClef")
+                        if rightClef == .automatic || leftClef == .automatic {
+                            toggleRow(title: "Clave de dó na automática", detail: "A troca automática também usa a clave de dó",
+                                      isOn: $automaticUsesAlto)
+                                .accessibilityIdentifier("automaticAltoToggle")
+                        }
                     }
 
                     section("SOM") {
@@ -152,6 +165,45 @@ struct ScoreSettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private func clefRow(title: String, choice: Binding<ClefChoice>, identifier: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(PlayerTheme.text)
+                Spacer()
+                Text(choice.wrappedValue.detail)
+                    .font(.system(size: 12))
+                    .foregroundStyle(PlayerTheme.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            HStack(spacing: 6) {
+                ForEach(ClefChoice.allCases) { option in
+                    let selected = choice.wrappedValue == option
+                    Button {
+                        choice.wrappedValue = option
+                    } label: {
+                        Text(option.displayName)
+                            .font(.system(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .foregroundStyle(selected ? Color.white : PlayerTheme.text)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                            .background(selected ? PlayerTheme.blue : PlayerTheme.raised,
+                                        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(title): \(option.fixedClef?.displayName ?? option.displayName)")
+                    .accessibilityIdentifier("\(identifier).\(option.rawValue)")
+                    .accessibilityAddTraits(selected ? .isSelected : [])
+                }
+            }
+        }
     }
 
     private func toggleRow(title: String, detail: String, isOn: Binding<Bool>) -> some View {

@@ -110,6 +110,124 @@
       return instance;
     }
 
+    // Each hand's clef as the app chose it (state.clefs = {right, left}: "score", "automatic", "treble", "bass"
+    // or "alto"; alto: whether "automatic" may use the alto clef). The file's clefs on that hand's staff are
+    // replaced before OSMD reads it: one clef throughout, or for "automatic" the clef that writes each measure
+    // with the fewest ledger lines.
+    const CLEFS = {
+      treble: { sign: "G", line: 2, middle: 34 },
+      bass: { sign: "F", line: 4, middle: 22 },
+      alto: { sign: "C", line: 3, middle: 28 },
+    };
+    const STEPS = { C: 0, D: 1, E: 2, F: 3, G: 4, A: 5, B: 6 };
+    // A clef change costs as much as this many ledger lines, so one high or low note does not flip the clef
+    const CLEF_CHANGE_COST = 4;
+
+    const childNamed = (el, name) => Array.from(el.children).find((c) => c.tagName === name);
+    const staffNumber = (el, attribute) => {
+      const value = attribute ? el.getAttribute("number") : (childNamed(el, "staff") || {}).textContent;
+      return parseInt(value, 10) || 1;
+    };
+
+    function applyClefs(xml, clefs, transpose) {
+      const hands = [["right", 1], ["left", 2]]
+        .filter(([hand]) => clefs && (CLEFS[clefs[hand]] || clefs[hand] === "automatic"));
+      if (hands.length === 0) return xml;
+      const doc = new DOMParser().parseFromString(xml, "application/xml");
+      if (doc.getElementsByTagName("parsererror").length) return xml;
+      // The app plays the first part: its first staff is the right hand, its second the left
+      const part = doc.querySelector("score-partwise > part");
+      if (!part) return xml;
+      const measures = Array.from(part.children).filter((c) => c.tagName === "measure");
+      const stavesElement = part.querySelector("attributes > staves");
+      const staves = stavesElement ? parseInt(stavesElement.textContent, 10) || 1 : 1;
+      // Transposing moves the notes about 7 steps an octave
+      const shift = Math.round((transpose || 0) * 7 / 12);
+      for (const [hand, staff] of hands) {
+        if (staff > staves || measures.length === 0) continue;
+        const plan = clefs[hand] === "automatic"
+          ? automaticClefs(measures, staff, staff === 1 ? "treble" : "bass", clefs.alto !== false, shift)
+          : measures.map(() => clefs[hand]);
+        Array.from(part.getElementsByTagName("clef"))
+          .filter((clef) => staffNumber(clef, true) === staff)
+          .forEach((clef) => clef.remove());
+        plan.forEach((clef, index) => {
+          if (index === 0 || clef !== plan[index - 1]) insertClef(doc, measures[index], staff, clef);
+        });
+      }
+      return new XMLSerializer().serializeToString(doc);
+    }
+
+    // The fewest ledger lines over the piece, measure by measure, counting each clef change; ties keep the hand's
+    // usual clef, then the other piano clef, and the alto clef last
+    function automaticClefs(measures, staff, usual, usesAlto, shift) {
+      const names = [usual, usual === "treble" ? "bass" : "treble"].concat(usesAlto ? ["alto"] : []);
+      const costs = measures.map((measure) => {
+        const steps = [];
+        for (const note of measure.children) {
+          if (note.tagName !== "note" || staffNumber(note, false) !== staff) continue;
+          const pitch = childNamed(note, "pitch");
+          if (!pitch) continue;
+          const step = STEPS[((childNamed(pitch, "step") || {}).textContent || "").trim()];
+          const octave = parseInt((childNamed(pitch, "octave") || {}).textContent, 10);
+          if (step !== undefined && !isNaN(octave)) steps.push(octave * 7 + step + shift);
+        }
+        return names.map((name, i) => i * 0.01 + steps.reduce((sum, s) => sum + ledgerLines(s - CLEFS[name].middle), 0));
+      });
+      let totals = costs[0].slice();
+      const cameFrom = [];
+      for (let m = 1; m < costs.length; m++) {
+        const from = names.map((_, i) => {
+          let best = i;
+          names.forEach((_, j) => {
+            if (totals[j] + CLEF_CHANGE_COST < totals[best]) best = j;
+          });
+          return best;
+        });
+        totals = names.map((_, i) => totals[from[i]] + (from[i] === i ? 0 : CLEF_CHANGE_COST) + costs[m][i]);
+        cameFrom.push(from);
+      }
+      let index = totals.indexOf(Math.min(...totals));
+      const plan = [names[index]];
+      for (let m = cameFrom.length - 1; m >= 0; m--) {
+        index = cameFrom[m][index];
+        plan.unshift(names[index]);
+      }
+      return plan;
+    }
+
+    function ledgerLines(position) {
+      const distance = Math.abs(position);
+      return distance >= 6 ? Math.floor((distance - 4) / 2) : 0;
+    }
+
+    // The clef goes in the measure's attributes before its first note (new ones at its start), in MusicXML's order
+    function insertClef(doc, measure, staff, name) {
+      const clef = doc.createElement("clef");
+      clef.setAttribute("number", String(staff));
+      const sign = doc.createElement("sign");
+      sign.textContent = CLEFS[name].sign;
+      const line = doc.createElement("line");
+      line.textContent = String(CLEFS[name].line);
+      clef.append(sign, line);
+      let attributes = null;
+      for (const child of measure.children) {
+        if (child.tagName === "attributes") {
+          attributes = child;
+          break;
+        }
+        if (["note", "backup", "forward"].includes(child.tagName)) break;
+      }
+      if (!attributes) {
+        attributes = doc.createElement("attributes");
+        measure.insertBefore(attributes, Array.from(measure.children).find((c) => c.tagName !== "print") || null);
+      }
+      const later = ["staff-details", "transpose", "for-part", "directive", "measure-style"];
+      const next = Array.from(attributes.children).find((c) => later.includes(c.tagName)
+        || (c.tagName === "clef" && staffNumber(c, true) > staff));
+      attributes.insertBefore(clef, next || null);
+    }
+
     function measuresPerLine(zoom) {
       // One measure per system reads like a phone score; zooming out fits more per line
       return zoom >= 0.95 ? 1 : 2;
@@ -123,7 +241,7 @@
       container.style.marginTop = "";
       container.style.height = "";
       osmd = createOSMD(horizontal, fit);
-      await osmd.load(state.xml);
+      await osmd.load(applyClefs(state.xml, state.clefs, state.transpose));
       osmd.Sheet.Transpose = state.transpose || 0;
       osmd.EngravingRules.RenderXMeasuresPerLineAkaSystem = horizontal ? 0 : measuresPerLine(state.zoom || 1);
       osmd.EngravingRules.HorizontalBetweenLyricsDistance = 0.6;
@@ -281,6 +399,7 @@
           const needsRender = (next.xml !== undefined && next.xml !== state.xml)
             || next.zoom !== state.zoom
             || next.transpose !== state.transpose
+            || JSON.stringify(next.clefs) !== JSON.stringify(state.clefs)
             || next.mode !== state.mode
             || next.fit !== state.fit;
           const moved = next.measure !== state.measure || next.beat !== state.beat;

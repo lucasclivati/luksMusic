@@ -30,6 +30,11 @@ struct ScoreView: View {
     @State private var showKeyboard: Bool = true
     @State private var isFavorite: Bool = false
 
+    // The clef each hand's staff shows (chosen in Configurações)
+    @AppStorage(ClefChoice.rightHandKey) private var rightClef: ClefChoice = .score
+    @AppStorage(ClefChoice.leftHandKey) private var leftClef: ClefChoice = .score
+    @AppStorage(ClefChoice.automaticUsesAltoKey) private var automaticUsesAlto: Bool = true
+
     private static let zoomLevels: [Double] = [0.8, 1.0, 1.15, 1.3]
 
     init(score: Score) {
@@ -81,6 +86,9 @@ struct ScoreView: View {
                 cursorBeat: viewModel.cursorBeat,
                 zoom: renderZoom,
                 transposition: viewModel.transpositionSemitones,
+                rightClef: rightClef,
+                leftClef: leftClef,
+                automaticUsesAlto: automaticUsesAlto,
                 horizontal: displayMode == .singleLine,
                 isDark: true,
                 topInset: 0,
@@ -180,6 +188,11 @@ struct ScoreView: View {
             }
             .pickerStyle(.menu)
 
+            Section("Claves") {
+                clefPicker("Mão direita", selection: $rightClef)
+                clefPicker("Mão esquerda", selection: $leftClef)
+            }
+
             Section {
                 Button {
                     viewModel.pause()
@@ -201,6 +214,17 @@ struct ScoreView: View {
         }
         .accessibilityLabel("Opções da partitura")
         .accessibilityIdentifier("scoreMenuButton")
+    }
+
+    private func clefPicker(_ hand: String, selection: Binding<ClefChoice>) -> some View {
+        Picker(selection: selection) {
+            ForEach(ClefChoice.allCases) { choice in
+                Text(choice.fixedClef?.displayName ?? choice.displayName).tag(choice)
+            }
+        } label: {
+            Label(hand, systemImage: "music.note")
+        }
+        .pickerStyle(.menu)
     }
 
     private func close() {

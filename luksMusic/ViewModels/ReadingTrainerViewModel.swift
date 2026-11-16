@@ -37,6 +37,9 @@ final class ReadingTrainerViewModel {
     /// Goes to the next segment by itself when every note was right on the first try
     private(set) var advancesAutomatically: Bool
     private(set) var keyLabels: ReadingKeyLabels
+    /// The current hand's clef, remembered per hand with the score player's
+    private(set) var clefChoice: ClefChoice
+    private(set) var automaticUsesAlto: Bool
 
     private(set) var steps: [ReadingStep] = []
     private(set) var segmentStart: Int = 0
@@ -94,7 +97,10 @@ final class ReadingTrainerViewModel {
         self.storageKey = storageKey
 
         let defaults = Self.defaults
-        self.hand = ReadingHand(rawValue: defaults.string(forKey: Self.handKey) ?? "") ?? .right
+        let hand = ReadingHand(rawValue: defaults.string(forKey: Self.handKey) ?? "") ?? .right
+        self.hand = hand
+        self.clefChoice = Self.storedClefChoice(for: hand)
+        self.automaticUsesAlto = defaults.object(forKey: ClefChoice.automaticUsesAltoKey) as? Bool ?? true
         self.order = ReadingOrder(rawValue: defaults.string(forKey: Self.orderKey) ?? "") ?? .sequential
         let size = defaults.integer(forKey: Self.sizeKey)
         self.segmentSize = Self.segmentSizes.contains(size) ? size : 3
@@ -120,7 +126,34 @@ final class ReadingTrainerViewModel {
         guard newHand != hand else { return }
         hand = newHand
         Self.defaults.set(newHand.rawValue, forKey: Self.handKey)
+        clefChoice = Self.storedClefChoice(for: newHand)
         loadSteps(resume: true)
+    }
+
+    func setClefChoice(_ choice: ClefChoice) {
+        clefChoice = choice
+        Self.defaults.set(choice.rawValue, forKey: ClefChoice.key(for: hand.staff))
+    }
+
+    func setAutomaticUsesAlto(_ value: Bool) {
+        automaticUsesAlto = value
+        Self.defaults.set(value, forKey: ClefChoice.automaticUsesAltoKey)
+    }
+
+    /// The clef the staff shows: the chosen one, or for "Automática" the one that writes this segment with the
+    /// fewest ledger lines. "Original" is the hand's usual clef, sol for the right and fá for the left.
+    var clef: Clef {
+        let usual = Clef(hand.staff)
+        if let fixed = clefChoice.fixedClef {
+            return fixed
+        }
+        guard clefChoice == .automatic else { return usual }
+        let pitches = segment.steps.flatMap(\.notes).filter { !$0.isRest }.map(\.pitch)
+        return Clef.fewestLedgerLines(for: pitches, usual: usual, usesAlto: automaticUsesAlto)
+    }
+
+    private static func storedClefChoice(for hand: ReadingHand) -> ClefChoice {
+        ClefChoice(rawValue: defaults.string(forKey: ClefChoice.key(for: hand.staff)) ?? "") ?? .score
     }
 
     func setOrder(_ newOrder: ReadingOrder) {

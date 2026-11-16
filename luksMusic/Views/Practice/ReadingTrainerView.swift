@@ -131,7 +131,7 @@ struct ReadingTrainerView: View {
                     accidentals: viewModel.accidentals,
                     results: viewModel.segment.results,
                     current: viewModel.segment.current,
-                    staff: viewModel.hand.staff,
+                    clef: viewModel.clef,
                     keySignature: viewModel.keySignature,
                     wrongPitch: viewModel.wrongPitch,
                     listeningStep: viewModel.listeningStep
@@ -368,6 +368,22 @@ struct ReadingTrainerView: View {
                 Label("Notas por trecho", systemImage: "music.note.list")
             }
             .pickerStyle(.menu)
+
+            Picker(selection: Binding(get: { viewModel.clefChoice }, set: { viewModel.setClefChoice($0) })) {
+                ForEach(ClefChoice.allCases) { choice in
+                    Text(choice.displayName).tag(choice)
+                }
+            } label: {
+                Label("Clave da \(viewModel.hand.displayName.lowercased())", systemImage: "music.note")
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("readingClefPicker")
+
+            if viewModel.clefChoice == .automatic {
+                Toggle(isOn: Binding(get: { viewModel.automaticUsesAlto }, set: { viewModel.setAutomaticUsesAlto($0) })) {
+                    Label("Clave de dó na automática", systemImage: "music.note.list")
+                }
+            }
 
             Picker(selection: Binding(get: { viewModel.keyLabels }, set: { viewModel.setKeyLabels($0) })) {
                 ForEach(ReadingKeyLabels.allCases) { labels in

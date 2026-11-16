@@ -1,8 +1,9 @@
 // ScoreWebView.swift
 // luksMusic
 //
-// Engraved score rendered by OpenSheetMusicDisplay (bundled in ScoreViewer/) inside a WKWebView.
-// OSMD's note-by-note cursor follows the native player, and taps on the score seek to the tapped note.
+// Engraved score rendered by OpenSheetMusicDisplay (bundled in ScoreViewer/) inside a WKWebView, in the clefs
+// chosen for each hand. OSMD's note-by-note cursor follows the native player, and taps on the score seek to the
+// tapped note.
 
 import SwiftUI
 import WebKit
@@ -15,6 +16,10 @@ struct ScoreWebView: UIViewRepresentable {
     let cursorBeat: Double
     var zoom: Double = 1.0
     var transposition: Int = 0
+    /// The clef each hand's staff shows (the score's own by default)
+    var rightClef: ClefChoice = .score
+    var leftClef: ClefChoice = .score
+    var automaticUsesAlto: Bool = true
     var horizontal: Bool = false
     /// Scales the single line to fill the view's height (practice strip) instead of using `zoom`.
     var fitsHeight: Bool = false
@@ -58,6 +63,7 @@ struct ScoreWebView: UIViewRepresentable {
             "beat": cursorBeat,
             "zoom": zoom,
             "transpose": transposition,
+            "clefs": ["right": rightClef.rawValue, "left": leftClef.rawValue, "alto": automaticUsesAlto] as [String: Any],
             "mode": horizontal ? "singleLine" : "portraitView",
             "fit": fitsHeight,
             "theme": isDark ? "dark" : "light",

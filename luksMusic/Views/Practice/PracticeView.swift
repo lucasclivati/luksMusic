@@ -15,8 +15,11 @@ struct PracticeView: View {
     @State private var keyboardVM = PianoKeyboardViewModel()
     @State private var showStats: Bool = false
     
-    // Engraved score source for the staff strip
+    // Engraved score source for the staff strip, in each hand's clef from the score player's settings
     @State private var musicXML: String = ""
+    @AppStorage(ClefChoice.rightHandKey) private var rightClef: ClefChoice = .score
+    @AppStorage(ClefChoice.leftHandKey) private var leftClef: ClefChoice = .score
+    @AppStorage(ClefChoice.automaticUsesAltoKey) private var automaticUsesAlto: Bool = true
     
     init(score: Score) {
         let vm = PracticeViewModel(score: score)
@@ -131,6 +134,9 @@ struct PracticeView: View {
             musicXML: musicXML,
             measureIndex: viewModel.currentMeasureIndex,
             cursorBeat: viewModel.cursorBeat,
+            rightClef: rightClef,
+            leftClef: leftClef,
+            automaticUsesAlto: automaticUsesAlto,
             horizontal: true,
             fitsHeight: true,
             topInset: 0,

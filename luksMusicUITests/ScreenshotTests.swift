@@ -63,9 +63,36 @@ final class ScreenshotTests: XCTestCase {
                 if tapIfExists(app.buttons["Configurações"]) {
                     pause(2)
                     capture("03-score-settings")
-                    app.swipeDown(velocity: .fast)
+                    // Each hand's clef: the right hand in the C clef, the left hand changing by itself
+                    tapIfExists(app.buttons["rightClef.alto"])
+                    tapIfExists(app.buttons["leftClef.automatic"])
                     pause(1)
+                    capture("18-score-settings-clefs")
+                    app.swipeDown(velocity: .fast)
+                    // Let the score render again in the new clefs
+                    pause(5)
+                    capture("19-score-clefs")
                 }
+            }
+
+            // The metronome clicks along while the piece plays
+            if tapIfExists(app.buttons["metronomeButton"]) {
+                playButton.tap()
+                pause(3)
+                capture("20-score-metronome")
+                playButton.tap()
+                waitForLabel(playButton, "Tocar")
+                tapIfExists(app.buttons["metronomeButton"])
+                tapIfExists(app.buttons["Voltar ao início"])
+            }
+
+            // Back to the score's own clefs for the screens that follow
+            if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["Configurações"]) {
+                pause(1)
+                tapIfExists(app.buttons["rightClef.score"])
+                tapIfExists(app.buttons["leftClef.score"])
+                app.swipeDown(velocity: .fast)
+                pause(4)
             }
 
             if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["Modo Estudo"]) {

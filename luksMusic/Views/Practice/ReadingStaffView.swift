@@ -1,9 +1,9 @@
 // ReadingStaffView.swift
 // luksMusic
 //
-// The sight-reading drill's staff: one clef (treble for the right hand, bass for the left), the key signature and
-// the segment's notes, each colored by how it was read. A wrong key shows faintly where it would be written, and
-// a note's name appears under it once it was found.
+// The sight-reading drill's staff: one clef (sol, fá or dó), the key signature and the segment's notes, each
+// colored by how it was read. A wrong key shows faintly where it would be written, and a note's name appears under
+// it once it was found.
 
 import CoreText
 import SwiftUI
@@ -15,7 +15,7 @@ struct ReadingStaffView: View {
     let results: [ReadingStepResult]
     /// Index of the step being read; `steps.count` when the segment is done
     let current: Int
-    let staff: Staff
+    let clef: Clef
     let keySignature: Int
     var wrongPitch: Pitch? = nil
     var listeningStep: Int? = nil
@@ -64,17 +64,11 @@ struct ReadingStaffView: View {
     }
 
     private var keyAccidentalSteps: [Int] {
-        // Steps above the bottom line, in key-signature order
-        switch (staff, keySignature > 0) {
-        case (.treble, true): return [8, 5, 9, 6, 3, 7, 4]
-        case (.treble, false): return [4, 7, 3, 6, 2, 5, 1]
-        case (.bass, true): return [6, 3, 7, 4, 1, 5, 2]
-        case (.bass, false): return [2, 5, 1, 4, 0, 3, -1]
-        }
+        clef.keySignatureSteps(sharps: keySignature > 0)
     }
 
     private func position(of pitch: Pitch) -> Int {
-        Note(pitch: pitch, staff: staff).staffPosition
+        clef.position(of: pitch)
     }
 
     private func hasStem(_ duration: NoteDuration) -> Bool {
@@ -155,13 +149,16 @@ struct ReadingStaffView: View {
         }
 
         // Clef, sized and placed by its ink as an engraving font would: the treble clef's curl around the G line,
-        // the bass clef's dots around the F line
-        if staff == .treble {
+        // the bass clef's dots around the F line, the C clef's point on the middle line
+        switch clef {
+        case .treble:
             drawSymbol("𝄞", in: &context, inkHeight: space * 7.0, left: left + space * 0.3,
                        bottom: layout.y(-7) + unit * 0.3)
-        } else {
+        case .bass:
             drawSymbol("𝄢", in: &context, inkHeight: space * 3.6, left: left + space * 0.3,
                        bottom: layout.y(-3) + unit * 0.1)
+        case .alto:
+            context.fill(Self.cClefPath(left: left + space * 0.3, middle: layout.y(0), space: space), with: .color(Self.ink))
         }
         let keySymbol = keySignature > 0 ? "♯" : "♭"
         for index in 0..<keyCount {
@@ -341,6 +338,39 @@ struct ReadingStaffView: View {
         return path
     }
 
+    /// The C clef, drawn rather than typed because the system fonts may not have it: a thick and a thin bar the
+    /// height of the staff, and two curls meeting in a point on the middle line (`middle`), which is middle C.
+    private static func cClefPath(left: CGFloat, middle: CGFloat, space: CGFloat) -> Path {
+        var path = Path()
+        path.addRect(CGRect(x: left, y: middle - space * 2, width: space * 0.48, height: space * 4))
+        path.addRect(CGRect(x: left + space * 0.64, y: middle - space * 2, width: space * 0.12, height: space * 4))
+        // The upper curl from its point on the middle line, in spaces right of `left` and above the middle line:
+        // end, first control, second control. The lower curl is its mirror image.
+        let curl: [[CGFloat]] = [
+            [2.55, 1.05, 1.40, 0.36, 2.55, 0.36],
+            [1.72, 2.04, 2.55, 1.70, 2.20, 2.04],
+            [0.98, 1.58, 1.30, 2.04, 0.98, 1.86],
+            [1.38, 1.16, 0.98, 1.32, 1.16, 1.16],
+            [1.78, 1.54, 1.60, 1.16, 1.78, 1.32],
+            [1.84, 1.68, 1.78, 1.60, 1.80, 1.66],
+            [2.02, 1.08, 1.98, 1.62, 2.02, 1.36],
+            [1.64, 0.58, 2.02, 0.80, 1.88, 0.58],
+            [1.04, 0.00, 1.34, 0.58, 1.12, 0.26],
+        ]
+        for direction: CGFloat in [1, -1] {
+            func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+                CGPoint(x: left + x * space, y: middle - direction * y * space)
+            }
+            path.move(to: point(0.80, 0))
+            for segment in curl {
+                path.addCurve(to: point(segment[0], segment[1]), control1: point(segment[2], segment[3]),
+                              control2: point(segment[4], segment[5]))
+            }
+            path.closeSubpath()
+        }
+        return path
+    }
+
     /// Draws a music symbol from the system fonts with its ink `inkHeight` points tall, the ink's left edge at
     /// `left` and its lowest point at `bottom`. A Text's frame follows the font's line height, not the glyph,
     /// so music symbols drawn as Text land off their staff lines.
@@ -399,8 +429,7 @@ struct ReadingStaffView: View {
     }
 
     private var accessibilityText: String {
-        let clef = staff == .treble ? "Clave de sol" : "Clave de fá"
-        return "\(clef), \(steps.count) notas"
+        "\(clef.displayName), \(steps.count) notas"
     }
 }
 

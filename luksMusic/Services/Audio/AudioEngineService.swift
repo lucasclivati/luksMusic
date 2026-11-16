@@ -89,6 +89,11 @@ final class AudioEngineService {
     
     /// Reverb effect unit.
     private let reverb = AVAudioUnitReverb()
+
+    /// Plays the metronome's clicks, apart from the piano so a click never sounds like a note of the piece.
+    private let clickPlayer = AVAudioPlayerNode()
+    private var accentClick: AVAudioPCMBuffer?
+    private var beatClick: AVAudioPCMBuffer?
     
     /// Logger for structured logging.
     private let logger = Logger(subsystem: "com.luksMusic.audio", category: "AudioEngine")
@@ -139,13 +144,26 @@ final class AudioEngineService {
         let format = engine.mainMixerNode.outputFormat(forBus: 0)
         engine.connect(sampler, to: reverb, format: format)
         engine.connect(reverb, to: engine.mainMixerNode, format: format)
-        
+
+        // Metronome clicks: mono buffers, connected in their own format (the mixer spreads them to the output)
+        if clickPlayer.engine == nil,
+           let clickFormat = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate > 0 ? format.sampleRate : 44_100, channels: 1) {
+            engine.attach(clickPlayer)
+            engine.connect(clickPlayer, to: engine.mainMixerNode, format: clickFormat)
+            accentClick = Self.clickBuffer(frequency: 1000, amplitude: 0.6, format: clickFormat)
+            beatClick = Self.clickBuffer(frequency: 750, amplitude: 0.45, format: clickFormat)
+        }
+
         // Set initial volume
         engine.mainMixerNode.outputVolume = volume
         
         // Prepare and start
         engine.prepare()
-        
+        // So the next click starts the click player again, should this start an engine the system had stopped
+        if clickPlayer.engine != nil {
+            clickPlayer.stop()
+        }
+
         do {
             try engine.start()
             isEngineRunning = true
@@ -234,6 +252,31 @@ final class AudioEngineService {
         isPlaying = false
     }
     
+    // MARK: - Metronome Click
+
+    /// The metronome's click: higher and louder on the first beat of a measure (`accent`).
+    func playClick(accent: Bool) {
+        guard engine.isRunning, let buffer = accent ? accentClick : beatClick else { return }
+        // A player node stops with its engine and has to be started again
+        if !clickPlayer.isPlaying {
+            clickPlayer.play()
+        }
+        clickPlayer.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
+    }
+
+    /// A tone that dies away in about 40 ms, like the web player's click.
+    private static func clickBuffer(frequency: Double, amplitude: Float, format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let frames = AVAudioFrameCount(format.sampleRate * 0.05)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames),
+              let samples = buffer.floatChannelData?[0] else { return nil }
+        buffer.frameLength = frames
+        for frame in 0..<Int(frames) {
+            let time = Double(frame) / format.sampleRate
+            samples[frame] = Float(sin(2 * .pi * frequency * time) * exp(-time * 120)) * amplitude
+        }
+        return buffer
+    }
+
     // MARK: - Volume Control
     
     /// Sets the master volume of the audio engine.
@@ -279,6 +322,8 @@ final class AudioEngineService {
         do {
             try engine.start()
             isEngineRunning = true
+            // So the next click starts the click player again on the restarted engine
+            clickPlayer.stop()
             logger.info("Audio engine restarted successfully.")
         } catch {
             let audioError = AudioEngineError.engineStartFailed(underlying: error)

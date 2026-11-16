@@ -19,6 +19,9 @@ enum PlayerTheme {
     static let green = Color(red: 74 / 255, green: 222 / 255, blue: 128 / 255)
     static let text = Color(red: 248 / 255, green: 250 / 255, blue: 252 / 255)
     static let muted = Color(red: 148 / 255, green: 163 / 255, blue: 184 / 255)
+    /// The metronome's light on the first beat of a measure and on the others
+    static let downbeat = Color(red: 239 / 255, green: 68 / 255, blue: 68 / 255)
+    static let beat = Color(red: 234 / 255, green: 179 / 255, blue: 8 / 255)
 }
 
 // MARK: - Top Bar
@@ -92,6 +95,8 @@ struct PlayerDock: View {
 
     /// Timeline position while the finger is on the slider; the player seeks when it lets go.
     @State private var scrubProgress: Double?
+    /// The metronome's light, on for a moment at each click
+    @State private var metronomeLight: Color?
 
     private static let speeds: [Double] = [0.5, 0.75, 1.0, 1.25]
 
@@ -196,10 +201,10 @@ struct PlayerDock: View {
                 viewModel.togglePlayback()
             } label: {
                 Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 19, weight: .bold))
                     .foregroundStyle(.white)
                     .offset(x: viewModel.isPlaying ? 0 : 2)
-                    .frame(width: 52, height: 52)
+                    .frame(width: 48, height: 48)
                     .background(
                         Circle().fill(LinearGradient(colors: [PlayerTheme.blue, PlayerTheme.deepBlue], startPoint: .top, endPoint: .bottom))
                     )
@@ -223,13 +228,16 @@ struct PlayerDock: View {
             } label: {
                 Text(Self.speedLabel(viewModel.playbackSpeed))
                     .font(.system(size: 13, weight: .bold))
+                    .minimumScaleFactor(0.8)
                     .foregroundStyle(viewModel.playbackSpeed == 1.0 ? PlayerTheme.text : PlayerTheme.cyan)
-                    .frame(width: 40, height: 36)
+                    .frame(width: 38, height: 36)
                     .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
             }
             .accessibilityLabel("Velocidade")
 
+            Spacer(minLength: 4)
+            metronomeButton
             Spacer(minLength: 4)
             controlButton("slider.vertical.3", label: "Mixer de mãos", action: onMixer)
             Spacer(minLength: 4)
@@ -239,8 +247,34 @@ struct PlayerDock: View {
                 }
             }
         }
-        .padding(.horizontal, 12)
+        // Nine controls fit a 375-point-wide phone
+        .padding(.horizontal, 8)
         .padding(.vertical, 8)
+    }
+
+    /// Clicks on every beat while the piece plays, like the web player's metronome; its light flashes red on the
+    /// first beat of the measure and yellow on the others.
+    private var metronomeButton: some View {
+        controlButton(viewModel.isMetronomeOn ? "metronome.fill" : "metronome", label: "Metrônomo",
+                      isOn: viewModel.isMetronomeOn, identifier: "metronomeButton") {
+            viewModel.isMetronomeOn.toggle()
+        }
+        .overlay(alignment: .topTrailing) {
+            Circle()
+                .fill(metronomeLight ?? Color.clear)
+                .frame(width: 7, height: 7)
+                .shadow(color: metronomeLight ?? Color.clear, radius: 4)
+                .padding(4)
+                .allowsHitTesting(false)
+        }
+        .onChange(of: viewModel.metronomeClicks) { _, clicks in
+            metronomeLight = viewModel.metronomeAccent ? PlayerTheme.downbeat : PlayerTheme.beat
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                if viewModel.metronomeClicks == clicks {
+                    metronomeLight = nil
+                }
+            }
+        }
     }
 
     private func controlButton(_ systemName: String, label: String, isOn: Bool = false, identifier: String? = nil,
@@ -249,7 +283,7 @@ struct PlayerDock: View {
             Image(systemName: systemName)
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(isOn ? PlayerTheme.cyan : PlayerTheme.text)
-                .frame(width: 36, height: 36)
+                .frame(width: 34, height: 36)
                 .background(isOn ? PlayerTheme.cyan.opacity(0.15) : PlayerTheme.raised,
                             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -308,9 +342,9 @@ struct HandsMixerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 18) {
-                channel(symbol: "𝄞", title: "Mão direita (clave de sol)", color: PlayerTheme.cyan,
+                channel(symbol: "𝄞", title: "Mão direita", color: PlayerTheme.cyan,
                         volume: $viewModel.trebleVolume, muted: $viewModel.trebleMuted)
-                channel(symbol: "𝄢", title: "Mão esquerda (clave de fá)", color: PlayerTheme.green,
+                channel(symbol: "𝄢", title: "Mão esquerda", color: PlayerTheme.green,
                         volume: $viewModel.bassVolume, muted: $viewModel.bassMuted)
 
                 HStack(spacing: 8) {

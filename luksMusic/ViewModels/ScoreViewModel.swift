@@ -40,6 +40,12 @@ final class ScoreViewModel {
     var trebleMuted: Bool = false
     var bassMuted: Bool = false
     
+    // Metronome: a click on every beat while the piece plays, accented on the first beat of each measure
+    var isMetronomeOn: Bool = false
+    /// Clicks so far, so the view can flash on each; `metronomeAccent` tells whether the last was a first beat
+    private(set) var metronomeClicks: Int = 0
+    private(set) var metronomeAccent: Bool = false
+
     // Looping
     var isLooping: Bool = false
     var loopStartMeasure: Int = 1
@@ -130,7 +136,11 @@ final class ScoreViewModel {
         
         // Immediately trigger notes on current starting beat
         triggerNotes(around: currentBeat)
-        
+        // Starting on a beat clicks it; otherwise the next beat crossed does
+        if currentBeat - currentBeat.rounded(.down) < 0.02 {
+            clickMetronome(onBeat: Int(currentBeat.rounded(.down)))
+        }
+
         // 50 Hz high-precision continuous clock for smooth cursor & exact note timing
         playbackTimer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
             self?.tickPlayback()
@@ -297,11 +307,24 @@ final class ScoreViewModel {
                 return
             }
             triggerNotes(around: currentBeat)
+            clickMetronome(onBeat: 1)
         } else {
             currentBeat = newBeat
             triggerNotesBetween(startBeat: prevBeat, endBeat: newBeat)
+            let beat = Int(newBeat.rounded(.down))
+            if beat > Int(prevBeat.rounded(.down)) {
+                clickMetronome(onBeat: beat)
+            }
         }
         refreshActiveNotes()
+    }
+
+    /// Beat 1 is the first of the measure and gets the accented click.
+    private func clickMetronome(onBeat beat: Int) {
+        guard isMetronomeOn else { return }
+        audioEngine.playClick(accent: beat == 1)
+        metronomeAccent = beat == 1
+        metronomeClicks += 1
     }
     
     private func triggerNotesBetween(startBeat: Double, endBeat: Double) {
