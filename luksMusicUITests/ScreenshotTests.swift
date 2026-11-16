@@ -27,7 +27,7 @@ final class ScreenshotTests: XCTestCase {
 
         let furElise = element(containing: "Für Elise (Bagatelle No. 25)")
         if furElise.waitForExistence(timeout: 15) {
-            // Let the online scores row load above the user's scores
+            // Let the catalog row load above the user's scores
             pause(4)
             capture("01-library")
             furElise.tap()
@@ -67,19 +67,26 @@ final class ScreenshotTests: XCTestCase {
                     tapIfExists(app.buttons["rightClef.alto"])
                     tapIfExists(app.buttons["leftClef.automatic"])
                     pause(1)
-                    capture("18-score-settings-clefs")
+                    capture("41-score-settings-clefs")
                     app.swipeDown(velocity: .fast)
                     // Let the score render again in the new clefs
                     pause(5)
-                    capture("19-score-clefs")
+                    capture("42-score-clefs")
                 }
             }
 
-            // The metronome clicks along while the piece plays
+            // The metronome clicks along while the piece plays; then "Repetir" once repeats the measure
             if tapIfExists(app.buttons["metronomeButton"]) {
                 playButton.tap()
                 pause(3)
-                capture("20-score-metronome")
+                capture("43-score-metronome")
+                if tapIfExists(app.buttons["repeatButton"]) {
+                    pause(4)
+                    capture("45-score-repeat-measure")
+                    // Measure → whole piece → off
+                    tapIfExists(app.buttons["repeatButton"])
+                    tapIfExists(app.buttons["repeatButton"])
+                }
                 playButton.tap()
                 waitForLabel(playButton, "Tocar")
                 tapIfExists(app.buttons["metronomeButton"])
@@ -110,6 +117,12 @@ final class ScreenshotTests: XCTestCase {
                 }
                 pause(2)
                 capture("07-practice-progress")
+                // Modo Estudo's own metronome, off again afterwards (it is remembered)
+                if tapIfExists(app.buttons["practiceMetronomeButton"]) {
+                    pause(2)
+                    capture("46-practice-metronome")
+                    tapIfExists(app.buttons["practiceMetronomeButton"])
+                }
                 tapIfExists(app.buttons["Concluir"])
             }
 

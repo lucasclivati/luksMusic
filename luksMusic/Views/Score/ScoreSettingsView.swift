@@ -6,6 +6,7 @@
 
 import SwiftUI
 
+/// The player remembers the chosen mode by its raw value, so the raw values must not change.
 enum ScoreDisplayMode: String, CaseIterable {
     case verticalScroll = "Vertical Scroll"
     case singleLine = "Single Line"
@@ -55,14 +56,6 @@ struct ScoreSettingsView: View {
 
                     section("SOM") {
                         toggleRow(title: "Sala de concerto", detail: "Reverberação no som do piano", isOn: $hqSoundEnabled)
-                            .onChange(of: hqSoundEnabled) { _, isEnabled in
-                                if isEnabled {
-                                    AudioEngineService.shared.setReverb(0.25)
-                                    AudioEngineService.shared.loadSoundFont(name: "Piano")
-                                } else {
-                                    AudioEngineService.shared.setReverb(0.0)
-                                }
-                            }
                     }
 
                     section("TECLADO") {

@@ -21,14 +21,19 @@ struct ScoreView: View {
     // Engraved score source, rebuilt when the score is edited
     @State private var musicXML: String = ""
 
+    // Display settings, remembered from score to score
+    @AppStorage("scorePlayer.displayMode") private var displayMode: ScoreDisplayMode = .portraitView
     // Zoom of the engraving (below 0.95 fits two measures per line)
-    @State private var zoomScale: Double = 1.0
+    @AppStorage("scorePlayer.zoom") private var zoomScale: Double = 1.0
+    @AppStorage("scorePlayer.showKeyboard") private var showKeyboard: Bool = true
+    // "Sala de concerto": reverb on the piano
+    @AppStorage("scorePlayer.concertHall") private var hqSoundEnabled: Bool = true
 
-    // Display settings
-    @State private var displayMode: ScoreDisplayMode = .portraitView
-    @State private var hqSoundEnabled: Bool = true
-    @State private var showKeyboard: Bool = true
     @State private var isFavorite: Bool = false
+
+    // The player's metronome and speed, also remembered from score to score; the view model holds them while open
+    private static let metronomeKey = "scorePlayer.metronome"
+    private static let speedKey = "scorePlayer.speed"
 
     // The clef each hand's staff shows (chosen in Configurações)
     @AppStorage(ClefChoice.rightHandKey) private var rightClef: ClefChoice = .score
@@ -38,7 +43,10 @@ struct ScoreView: View {
     private static let zoomLevels: [Double] = [0.8, 1.0, 1.15, 1.3]
 
     init(score: Score) {
-        _viewModel = State(initialValue: ScoreViewModel(score: score))
+        let viewModel = ScoreViewModel(score: score)
+        viewModel.isMetronomeOn = UserDefaults.standard.bool(forKey: Self.metronomeKey)
+        viewModel.playbackSpeed = UserDefaults.standard.object(forKey: Self.speedKey) as? Double ?? 1.0
+        _viewModel = State(initialValue: viewModel)
         _isFavorite = State(initialValue: score.isFavorite)
     }
 
@@ -109,12 +117,22 @@ struct ScoreView: View {
         // The file the score was read from when its notes were not edited, else the edited measures
         .onAppear {
             musicXML = viewModel.score.originalMusicXML ?? MusicXMLExporter.export(viewModel.score)
+            applyConcertHall()
         }
         .onChange(of: viewModel.score.lastModified) { _, _ in
             musicXML = viewModel.score.originalMusicXML ?? MusicXMLExporter.export(viewModel.score)
         }
         .onChange(of: viewModel.transpositionSemitones) { _, _ in
             viewModel.refreshActiveNotes()
+        }
+        .onChange(of: hqSoundEnabled) { _, _ in
+            applyConcertHall()
+        }
+        .onChange(of: viewModel.isMetronomeOn) { _, isOn in
+            UserDefaults.standard.set(isOn, forKey: Self.metronomeKey)
+        }
+        .onChange(of: viewModel.playbackSpeed) { _, speed in
+            UserDefaults.standard.set(speed, forKey: Self.speedKey)
         }
         .sheet(isPresented: $showPracticeMode) {
             PracticeView(score: viewModel.score)
@@ -225,6 +243,11 @@ struct ScoreView: View {
             Label(hand, systemImage: "music.note")
         }
         .pickerStyle(.menu)
+    }
+
+    /// The reverb belongs to the audio engine the whole app shares, so the remembered choice is set again on opening.
+    private func applyConcertHall() {
+        AudioEngineService.shared.setReverb(hqSoundEnabled ? 0.25 : 0.0)
     }
 
     private func close() {

@@ -111,6 +111,10 @@ final class Score {
     /// and the viewer then draws the edited measures.
     @Attribute(.externalStorage) var musicXMLData: Data?
 
+    /// The luksmusic.web.app catalog score this was downloaded from (`OnlineScore.id`), so it is never downloaded
+    /// twice. `nil` for the scores made or imported on the phone.
+    var catalogId: String?
+
     init(
         title: String = "Untitled Piano Piece",
         composer: String = "Anonymous",

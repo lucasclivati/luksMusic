@@ -92,8 +92,9 @@ final class AudioEngineService {
 
     /// Plays the metronome's clicks, apart from the piano so a click never sounds like a note of the piece.
     private let clickPlayer = AVAudioPlayerNode()
-    private var accentClick: AVAudioPCMBuffer?
-    private var beatClick: AVAudioPCMBuffer?
+    // Made once in `setupEngine`, then only read (also off the main thread, by `playClick`)
+    @ObservationIgnored private var accentClick: AVAudioPCMBuffer?
+    @ObservationIgnored private var beatClick: AVAudioPCMBuffer?
     
     /// Logger for structured logging.
     private let logger = Logger(subsystem: "com.luksMusic.audio", category: "AudioEngine")
@@ -138,7 +139,9 @@ final class AudioEngineService {
         
         // Configure reverb with a reasonable default
         reverb.loadFactoryPreset(.mediumHall)
-        reverb.wetDryMix = 20.0
+        // The score player's "Sala de concerto" setting (on unless turned off), so lessons and practice sound the same
+        let concertHall = UserDefaults.standard.object(forKey: "scorePlayer.concertHall") as? Bool ?? true
+        reverb.wetDryMix = concertHall ? 25.0 : 0.0
         
         // Connect: Sampler → Reverb → MainMixer → Output
         let format = engine.mainMixerNode.outputFormat(forBus: 0)
@@ -254,7 +257,8 @@ final class AudioEngineService {
     
     // MARK: - Metronome Click
 
-    /// The metronome's click: higher and louder on the first beat of a measure (`accent`).
+    /// The metronome's click: higher and louder on the first beat of a measure (`accent`). Callable from any thread
+    /// (MetronomeService clicks from its own queue): it only touches the engine, the click player and the buffers.
     func playClick(accent: Bool) {
         guard engine.isRunning, let buffer = accent ? accentClick : beatClick else { return }
         // A player node stops with its engine and has to be started again
@@ -275,6 +279,14 @@ final class AudioEngineService {
             samples[frame] = Float(sin(2 * .pi * frequency * time) * exp(-time * 120)) * amplitude
         }
         return buffer
+    }
+
+    // MARK: - Audio Route
+
+    /// Whether the app's sound goes to headphones, out of the microphone's hearing. Callable from any thread.
+    static var hasHeadphones: Bool {
+        let headphones: [AVAudioSession.Port] = [.headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE]
+        return AVAudioSession.sharedInstance().currentRoute.outputs.contains { headphones.contains($0.portType) }
     }
 
     // MARK: - Volume Control

@@ -1,0 +1,7 @@
+/* O que o iOS mostra quando o luksMusic pede uma permissão (português) */
+
+"NSMicrophoneUsageDescription" = "O luksMusic escuta o seu piano pelo microfone para conferir as notas que você toca nas aulas e nos estudos.";
+"NSDocumentsFolderUsageDescription" = "O luksMusic abre seus arquivos MusicXML para importar partituras e salva as partituras que você exporta.";
+"NSCameraUsageDescription" = "O luksMusic usa a câmera para fotografar partituras impressas e transformá-las em partituras que você pode tocar.";
+"NSPhotoLibraryUsageDescription" = "O luksMusic abre fotos de partituras impressas para transformá-las em partituras que você pode tocar.";
+"NSPhotoLibraryAddUsageDescription" = "O luksMusic salva imagens das suas partituras na sua biblioteca de fotos.";

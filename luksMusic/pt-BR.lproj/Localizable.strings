@@ -1,0 +1,3 @@
+/* The app's texts are written in Portuguese in the code, and each one is its own key, so Portuguese needs no
+   entries here: a key missing from this table is shown as it is. This file makes Portuguese one of the app's
+   languages; the English texts are in en.lproj/Localizable.strings. */

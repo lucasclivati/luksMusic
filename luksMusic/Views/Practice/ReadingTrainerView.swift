@@ -11,11 +11,9 @@ struct ReadingTrainerView: View {
     @State private var viewModel: ReadingTrainerViewModel
     @Environment(\.dismiss) private var dismiss
 
-    /// - Parameters:
-    ///   - storageKey: identifies the score for the remembered position
-    ///   - spellsFromKey: the score only has MIDI numbers (online scores), so notes are named for its likely key
-    init(score: Score, storageKey: String, spellsFromKey: Bool = false) {
-        _viewModel = State(initialValue: ReadingTrainerViewModel(score: score, storageKey: storageKey, spellsFromKey: spellsFromKey))
+    /// - Parameter storageKey: identifies the score for the remembered position
+    init(score: Score, storageKey: String) {
+        _viewModel = State(initialValue: ReadingTrainerViewModel(score: score, storageKey: storageKey))
     }
 
     var body: some View {

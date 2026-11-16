@@ -7,7 +7,6 @@
 // A finished step waits on a result card, so the next one never starts by surprise. The microphone is told which
 // note comes next, and goes deaf while the app is making sound, so it never hears itself.
 
-import AVFoundation
 import Foundation
 import Observation
 import QuartzCore
@@ -293,7 +292,7 @@ final class LessonPlayerViewModel {
         timedStart = start
 
         // With the microphone over the speaker, the beat is shown and the music is left out
-        let makesSound = !usesMicrophone || hasHeadphones
+        let makesSound = !usesMicrophone || AudioEngineService.hasHeadphones
         isSilentForMicrophone = !makesSound
         let playsMusic = step.kind == .playAlong && makesSound
         let steps = segment.steps
@@ -536,11 +535,6 @@ final class LessonPlayerViewModel {
         keyboard.rangeStart = keys.lowerBound
         keyboard.rangeEnd = keys.upperBound
         keyboard.buildKeys()
-    }
-
-    private var hasHeadphones: Bool {
-        let headphones: [AVAudioSession.Port] = [.headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE]
-        return AVAudioSession.sharedInstance().currentRoute.outputs.contains { headphones.contains($0.portType) }
     }
 
     private func cancelPending() {

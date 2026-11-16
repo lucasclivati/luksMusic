@@ -1,8 +1,8 @@
 // LibraryView.swift
 // luksMusic
 //
-// Main library screen: the luksMusic online scores (original engraved pages, as on luksmusic.web.app) on top,
-// then the user's own scores in a searchable, filterable grid or list.
+// Main library screen: the luksmusic.web.app catalog on top, whose scores download to the phone on a tap and then
+// open like the user's own, then the user's own scores in a searchable, filterable grid or list.
 
 import SwiftUI
 import SwiftData
@@ -36,12 +36,16 @@ enum LibraryLayout: String, CaseIterable {
 
 // MARK: - LibraryView
 
-/// The main library screen showing the online scores and the user's own scores.
+/// The main library screen showing the catalog and the user's own scores.
 struct LibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Score.dateCreated, order: .reverse) private var scores: [Score]
 
-    @State private var online = OnlineLibraryService.shared
+    @State private var catalog = OnlineLibraryService.shared
+    @State private var path: [Score] = []
+    /// The library itself is on screen, with no score or the full catalog pushed over it
+    @State private var isInFront = false
+    @State private var downloadFailure: DownloadFailure?
     @State private var searchText = ""
     @State private var sortOption: LibrarySortOption = .dateCreated
     @State private var sortAscending = false
@@ -54,6 +58,12 @@ struct LibraryView: View {
 
     /// Sources a score can still come from (the camera scanner was removed).
     private let filterableSources: [ScoreSource] = [.manual, .imported]
+
+    /// A catalog score that could not be downloaded, and why.
+    private struct DownloadFailure {
+        let score: OnlineScore
+        let message: String
+    }
 
     // MARK: Computed Properties
 
@@ -100,11 +110,11 @@ struct LibraryView: View {
         return result
     }
 
-    /// Online scores matching the search.
-    private var filteredOnlineScores: [OnlineScore] {
-        guard !searchText.isEmpty else { return online.scores }
+    /// Catalog scores matching the search.
+    private var filteredCatalog: [OnlineScore] {
+        guard !searchText.isEmpty else { return catalog.scores }
         let query = searchText.lowercased()
-        return online.scores.filter {
+        return catalog.scores.filter {
             $0.title.lowercased().contains(query) || $0.credits.lowercased().contains(query)
         }
     }
@@ -120,11 +130,11 @@ struct LibraryView: View {
     // MARK: Body
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if online.isLoading || !filteredOnlineScores.isEmpty {
-                        onlineSection
+                    if catalog.isLoading || !filteredCatalog.isEmpty {
+                        catalogSection
                     }
 
                     localSection
@@ -132,39 +142,47 @@ struct LibraryView: View {
                 .padding(.bottom, 24)
             }
             .background(Color(.systemBackground))
+            .onAppear { isInFront = true }
+            .onDisappear { isInFront = false }
             .navigationTitle("Biblioteca")
             .searchable(text: $searchText, prompt: "Buscar partituras")
             .toolbar { toolbarContent }
-            .navigationDestination(for: UUID.self) { scoreID in
-                if let score = scores.first(where: { $0.id == scoreID }) {
-                    ScoreView(score: score)
-                }
-            }
-            .navigationDestination(for: OnlineScore.self) { score in
-                OnlineScoreView(score: score)
+            .navigationDestination(for: Score.self) { score in
+                ScoreView(score: score)
             }
             .sheet(isPresented: $showAddSheet) { addScoreSheet }
             .sheet(isPresented: $showImportSheet) {
                 ImportScoreView()
             }
-            .task(id: online.account) {
-                await online.refreshIfNeeded()
+            .alert("Não foi possível baixar", isPresented: Binding(
+                get: { downloadFailure != nil },
+                set: { if !$0 { downloadFailure = nil } }
+            ), presenting: downloadFailure) { failure in
+                Button("Tentar de novo") {
+                    open(failure.score)
+                }
+                Button("Cancelar", role: .cancel) {}
+            } message: { failure in
+                Text(failure.message)
+            }
+            .task(id: catalog.account) {
+                await catalog.refreshIfNeeded()
             }
             .refreshable {
-                await online.refresh()
+                await catalog.refresh()
             }
         }
     }
 
-    // MARK: - Online Scores
+    // MARK: - Catalog
 
-    private var onlineSection: some View {
+    private var catalogSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("luksMusic Online")
+                    Text("Catálogo luksMusic")
                         .font(.title3.weight(.bold))
-                    Text("Páginas originais, iguais ao site")
+                    Text("Baixe para tocar no app, mesmo sem internet")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -181,16 +199,18 @@ struct LibraryView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 14) {
-                    if online.isLoading && online.scores.isEmpty {
+                    if catalog.isLoading && catalog.scores.isEmpty {
                         ForEach(0..<3, id: \.self) { _ in
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .fill(Color(.secondarySystemGroupedBackground))
                                 .frame(width: 140, height: 186)
                         }
                     }
-                    ForEach(filteredOnlineScores) { score in
-                        NavigationLink(value: score) {
-                            onlineCard(score)
+                    ForEach(filteredCatalog) { entry in
+                        Button {
+                            open(entry)
+                        } label: {
+                            catalogCard(entry)
                         }
                         .buttonStyle(.plain)
                     }
@@ -203,16 +223,21 @@ struct LibraryView: View {
         .padding(.bottom, 20)
     }
 
-    private func onlineCard(_ score: OnlineScore) -> some View {
-        // "Dark Dream – Curley Gao" → title on the cover, composer below it
-        let parts = score.title.components(separatedBy: " – ")
+    private func catalogCard(_ entry: OnlineScore) -> some View {
+        let download = catalog.downloads[entry.id]
+        let isDownloaded = localCopy(of: entry) != nil
         return VStack(alignment: .leading, spacing: 6) {
-            SheetCover(title: parts[0], subtitle: parts.count > 1 ? parts[1] : "")
+            SheetCover(title: entry.pieceTitle, subtitle: entry.composer)
                 .frame(width: 140, height: 186)
+                .overlay {
+                    if let download {
+                        downloadProgress(download)
+                    }
+                }
                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                 .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
                 .overlay(alignment: .topTrailing) {
-                    if score.isPrivate {
+                    if entry.isPrivate {
                         Image(systemName: "lock.fill")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.white)
@@ -222,18 +247,54 @@ struct LibraryView: View {
                             .accessibilityLabel("Privada")
                     }
                 }
+                .overlay(alignment: .bottomLeading) {
+                    if download == nil {
+                        Label(isDownloaded ? "Baixada" : "Baixar",
+                              systemImage: isDownloaded ? "checkmark.circle.fill" : "arrow.down.circle.fill")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 4)
+                            .background(isDownloaded ? Color.green : Color.indigo, in: Capsule())
+                            .padding(6)
+                    }
+                }
 
-            Text(score.title)
+            Text(entry.title)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
-            Text(score.credits)
+            Text(entry.credits)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
         }
         .frame(width: 140, alignment: .leading)
+    }
+
+    /// Over a card's cover while its score downloads: the part received when the file's size is known.
+    private func downloadProgress(_ download: CatalogDownload) -> some View {
+        VStack(spacing: 10) {
+            if let fraction = download.fraction {
+                ProgressView(value: fraction)
+                    .tint(.white)
+                    .padding(.horizontal, 22)
+            } else {
+                ProgressView()
+                    .tint(.white)
+            }
+            Text("Baixando…")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.white)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.black.opacity(0.55))
+    }
+
+    /// The phone's copy of a catalog score, or nil when it was not downloaded yet.
+    private func localCopy(of entry: OnlineScore) -> Score? {
+        scores.first { $0.catalogId == entry.id }
     }
 
     // MARK: - My Scores
@@ -281,7 +342,7 @@ struct LibraryView: View {
 
         return LazyVGrid(columns: columns, spacing: 16) {
             ForEach(filteredScores) { score in
-                NavigationLink(value: score.id) {
+                NavigationLink(value: score) {
                     ScoreListItemView(score: score, layout: .grid)
                 }
                 .buttonStyle(.plain)
@@ -297,7 +358,7 @@ struct LibraryView: View {
     private var listLayout: some View {
         LazyVStack(spacing: 12) {
             ForEach(filteredScores) { score in
-                NavigationLink(value: score.id) {
+                NavigationLink(value: score) {
                     ScoreListItemView(score: score, layout: .list)
                 }
                 .buttonStyle(.plain)
@@ -368,7 +429,7 @@ struct LibraryView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Importar arquivo")
                                     .font(.body.weight(.medium))
-                                Text("Arquivos MusicXML (.musicxml, .xml)")
+                                Text("Arquivos MusicXML (.musicxml, .xml, .mxl)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -509,6 +570,26 @@ struct LibraryView: View {
     }
 
     // MARK: - Actions
+
+    /// Opens a catalog score's copy on the phone, downloading it first when it is not there yet.
+    private func open(_ entry: OnlineScore) {
+        if let local = localCopy(of: entry) {
+            path.append(local)
+            return
+        }
+        guard catalog.downloads[entry.id] == nil else { return }
+        Task {
+            do {
+                let score = try await catalog.download(entry, into: modelContext)
+                // Never pushed over a score opened meanwhile; its card then just says "Baixada"
+                if isInFront {
+                    path.append(score)
+                }
+            } catch {
+                downloadFailure = DownloadFailure(score: entry, message: error.localizedDescription)
+            }
+        }
+    }
 
     private func createNewScore() {
         let score = Score(title: "Partitura sem título", composer: "", source: .manual)

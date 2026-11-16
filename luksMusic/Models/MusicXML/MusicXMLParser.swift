@@ -1,7 +1,7 @@
 // MusicXMLParser.swift
 // luksMusic
 //
-// Native MusicXML parser converting standard MusicXML files into luksMusic Score models.
+// Native MusicXML parser converting standard MusicXML files, plain or compressed (.mxl), into luksMusic Score models.
 
 import Foundation
 
@@ -9,26 +9,34 @@ import Foundation
 enum MusicXMLParserError: LocalizedError {
     case dataCorrupted
     case missingPart
+    case missingScoreFile
     case parsingFailed(String)
 
     var errorDescription: String? {
         switch self {
         case .dataCorrupted:
-            return "The MusicXML file data is invalid or corrupted."
+            return "O arquivo MusicXML está danificado ou não é válido."
         case .missingPart:
-            return "No musical parts found in the MusicXML score."
+            return "A partitura MusicXML não tem nenhuma parte."
+        case .missingScoreFile:
+            return "O arquivo .mxl não contém uma partitura MusicXML."
         case .parsingFailed(let reason):
-            return "MusicXML parsing failed: \(reason)"
+            return "Não foi possível ler o MusicXML: \(reason)"
         }
     }
 }
 
 /// Parses MusicXML 3.0/3.1 partwise XML files into luksMusic `Score` and `Measure` models.
 ///
-/// Reads the first part (a piano's two staves). Positions and lengths count the time signature's beat (eighths in
-/// 3/8, halves in 2/2) like the rest of the app, and come from each note's `<duration>`, so the hands written one
-/// after the other (`<backup>`, `<forward>`), tuplets and ties land where the file puts them. Repeats are read as
-/// written. The score keeps the file, which the score viewer draws as is.
+/// Positions and lengths count the time signature's beat (eighths in 3/8, halves in 2/2) like the rest of the app,
+/// and come from each note's `<duration>`, so the hands written one after the other (`<backup>`, `<forward>`),
+/// tuplets and ties land where the file puts them. Repeats are read as written. The score keeps the MusicXML text
+/// (the file inside an .mxl), which the score viewer draws as is.
+///
+/// Every part is played. A part's measures join the first part's in order, and each part counts its own divisions
+/// and ties. Staff 1 of a part is the treble staff (the right hand) and any lower staff the bass (the left hand), so a
+/// piano duet's two players share the hands. A part on one staff in a score of several parts (a flute, a cello) is
+/// one player's line, so it stays on one hand for the whole piece: the bass when its first clef is F, else the treble.
 final class MusicXMLParser: NSObject, XMLParserDelegate {
 
     // MARK: - State
@@ -45,11 +53,18 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
     private var hasTimeSignature = false
     private var keySignatureValue: Int = 0
     private var hasKeySignature = false
-    private var divisions: Int = 1 // MusicXML divisions per quarter note
+    private var divisions: Int = 1 // MusicXML divisions per quarter note, set by each part
 
     // Part and measure state
-    private var partCount = 0
+    private var scorePartCount = 0
     private var measures: [Measure] = []
+    /// Measures read in the current part; its next one joins the measure at this index
+    private var partMeasureCount = 0
+    /// Where in `measures` the measure being read goes, and how many notes earlier parts left there
+    private var measureIndex = 0
+    private var measureBase = 0
+    private var partStaves = 1
+    private var partClefSign: String?
     private var currentMeasureNumber: Int = 0
     private var currentMeasureNotes: [Note] = []
     // Where the next note starts, where the last one started and the furthest point reached, in divisions
@@ -84,26 +99,46 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
 
     // MARK: - Public Interface
 
-    /// Parse MusicXML data and return a `Score` object.
+    /// Parse MusicXML data, plain or compressed (.mxl), and return a `Score` object.
     static func parse(data: Data) throws -> Score {
         let parser = MusicXMLParser()
-        return try parser.parseData(data)
+        let xml = try data.starts(with: ZipArchive.signature) ? scoreFile(inMXL: data) : data
+        return try parser.parseData(xml)
     }
 
-    /// Parse MusicXML from a local file URL.
+    /// Parse MusicXML (.musicxml, .xml or .mxl) from a local file URL.
     static func parse(url: URL) throws -> Score {
         let data = try Data(contentsOf: url)
         return try parse(data: data)
     }
 
+    /// The MusicXML file inside compressed MusicXML (.mxl), a ZIP archive: the one META-INF/container.xml names,
+    /// else the first .musicxml or .xml file outside META-INF.
+    static func scoreFile(inMXL data: Data) throws -> Data {
+        let archive = try ZipArchive(data: data)
+        if let container = archive.entry(atPath: "META-INF/container.xml"),
+           let path = try MXLContainerReader.rootFilePath(in: archive.contents(of: container)),
+           let rootFile = archive.entry(atPath: path) {
+            return try archive.contents(of: rootFile)
+        }
+        guard let file = archive.entries.first(where: { entry in
+            let path = entry.path.lowercased()
+            return !path.hasPrefix("meta-inf/") && (path.hasSuffix(".musicxml") || path.hasSuffix(".xml"))
+        }) else {
+            throw MusicXMLParserError.missingScoreFile
+        }
+        return try archive.contents(of: file)
+    }
+
     // MARK: - Internal Parsing
 
+    /// Reads plain MusicXML; the score keeps `data` as its file.
     private func parseData(_ data: Data) throws -> Score {
         let xmlParser = XMLParser(data: data)
         xmlParser.delegate = self
 
         guard xmlParser.parse() else {
-            throw xmlParser.parserError ?? MusicXMLParserError.parsingFailed("Unknown XML error")
+            throw MusicXMLParserError.dataCorrupted
         }
         guard !measures.isEmpty else {
             throw MusicXMLParserError.missingPart
@@ -132,17 +167,25 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
 
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         currentText = ""
-        if elementName == "part" {
-            partCount += 1
-        }
-        // Only the first part is read
-        guard partCount <= 1 else { return }
 
         switch elementName {
         case "creator":
             creatorType = attributeDict["type"]
 
+        case "score-part":
+            scorePartCount += 1
+
+        case "part":
+            // Divisions, staves, clefs and ties belong to the part
+            partMeasureCount = 0
+            divisions = 1
+            partStaves = 1
+            partClefSign = nil
+            openTies = [:]
+
         case "measure":
+            measureIndex = partMeasureCount
+            measureBase = measureIndex < measures.count ? measures[measureIndex].notes.count : 0
             currentMeasureNumber = Int(attributeDict["number"] ?? "") ?? (measures.count + 1)
             currentMeasureNotes = []
             position = 0
@@ -166,7 +209,7 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
             actualNotes = 1
             normalNotes = 1
             fingerNumber = nil
-            currentStaff = .treble
+            currentStaff = singleStaffHand ?? .treble
             currentVoice = 1
 
         case "rest":
@@ -210,7 +253,6 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
     }
 
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
-        guard partCount <= 1 else { return }
         let trimmed = currentText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         switch elementName {
@@ -241,6 +283,10 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
                 keySignatureValue = fifths
                 hasKeySignature = true
             }
+        case "staves":
+            partStaves = Int(trimmed) ?? 1
+        case "sign":
+            if partClefSign == nil { partClefSign = trimmed }
 
         // Note attributes
         case "step":
@@ -270,7 +316,7 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
         case "normal-notes":
             normalNotes = Int(trimmed) ?? 1
         case "staff":
-            if inNote { currentStaff = trimmed == "1" ? .treble : .bass }
+            if inNote, singleStaffHand == nil { currentStaff = trimmed == "1" ? .treble : .bass }
         case "voice":
             if inNote { currentVoice = Int(trimmed) ?? 1 }
         case "fingering":
@@ -281,18 +327,28 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
             buildAndAddNote()
 
         case "measure":
-            let length = beats(measureEnd)
-            let measure = Measure(
-                number: currentMeasureNumber,
-                notes: currentMeasureNotes,
-                timeSignatureNumerator: nil,
-                timeSignatureDenominator: nil,
-                keySignature: KeySignature(rawValue: keySignatureValue),
-                tempo: nil,
-                // A pickup or the half measure before a repeat lasts what it holds
-                length: measureEnd > 0 && abs(length - Double(timeSignatureTop)) > 0.001 ? length : nil
-            )
-            measures.append(measure)
+            let end = beats(measureEnd)
+            // A pickup or the half measure before a repeat lasts what it holds
+            let length: Double? = measureEnd > 0 && abs(end - Double(timeSignatureTop)) > 0.001 ? end : nil
+            if measureIndex < measures.count {
+                // A later part joins the first part's measure at the same place, which lasts as long as its longest part
+                measures[measureIndex].notes += currentMeasureNotes
+                if end > measures[measureIndex].beats(timeSignatureTop: timeSignatureTop) + 0.001 {
+                    measures[measureIndex].length = length
+                }
+            } else {
+                let measure = Measure(
+                    number: currentMeasureNumber,
+                    notes: currentMeasureNotes,
+                    timeSignatureNumerator: nil,
+                    timeSignatureDenominator: nil,
+                    keySignature: KeySignature(rawValue: keySignatureValue),
+                    tempo: nil,
+                    length: length
+                )
+                measures.append(measure)
+            }
+            partMeasureCount += 1
 
         default:
             break
@@ -300,6 +356,13 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
     }
 
     // MARK: - Helpers
+
+    /// The hand every note of the current part plays when it is a part on one staff in a score of several parts,
+    /// chosen by its first clef (its notes' `<staff>` is then ignored). A score of one part reads `<staff>`.
+    private var singleStaffHand: Staff? {
+        guard scorePartCount > 1, partStaves < 2 else { return nil }
+        return partClefSign == "F" ? .bass : .treble
+    }
 
     /// Divisions (quarter / `divisions`) in the time signature's beat.
     private func beats(_ divisionCount: Int) -> Double {
@@ -356,15 +419,17 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
         currentMeasureNotes.append(note)
 
         if tieStart, !isRest, !continuesTie {
-            openTies[tieKey] = (measures.count, currentMeasureNotes.count - 1)
+            openTies[tieKey] = (measureIndex, measureBase + currentMeasureNotes.count - 1)
         }
     }
 
-    /// Adds `beats` to how long the note at `location` is held (in this measure or an earlier one).
+    /// Adds `beats` to how long the note at `location` (its index once the measure is in `measures`) is held, in
+    /// this measure or an earlier one.
     private func extendNote(at location: (measure: Int, note: Int), by beats: Double) {
-        if location.measure == measures.count {
-            guard location.note < currentMeasureNotes.count else { return }
-            currentMeasureNotes[location.note].length = (currentMeasureNotes[location.note].length ?? 0) + beats
+        if location.measure == measureIndex {
+            let note = location.note - measureBase
+            guard note >= 0, note < currentMeasureNotes.count else { return }
+            currentMeasureNotes[note].length = (currentMeasureNotes[note].length ?? 0) + beats
         } else if location.measure < measures.count, location.note < measures[location.measure].notes.count {
             measures[location.measure].notes[location.note].length = (measures[location.measure].notes[location.note].length ?? 0) + beats
         }
@@ -397,5 +462,24 @@ final class MusicXMLParser: NSObject, XMLParserDelegate {
         } else {
             return .beginner
         }
+    }
+}
+
+/// Reads the path of an .mxl's score file from its META-INF/container.xml: the first `<rootfile>`.
+private final class MXLContainerReader: NSObject, XMLParserDelegate {
+    private var path: String?
+
+    static func rootFilePath(in data: Data) -> String? {
+        let reader = MXLContainerReader()
+        let xmlParser = XMLParser(data: data)
+        xmlParser.delegate = reader
+        _ = xmlParser.parse()
+        return reader.path
+    }
+
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
+        guard elementName == "rootfile", path == nil, let fullPath = attributeDict["full-path"] else { return }
+        path = fullPath
+        parser.abortParsing()
     }
 }

@@ -1,7 +1,7 @@
 // ImportScoreView.swift
 // luksMusic
 //
-// Sheet / modal for importing musical scores from MusicXML and MIDI files.
+// Sheet / modal for importing musical scores from MusicXML files, plain (.xml, .musicxml) or compressed (.mxl).
 
 import SwiftUI
 import SwiftData
@@ -49,6 +49,7 @@ struct ImportScoreView: View {
     private let allowedTypes: [UTType] = [
         .xml,
         .musicXML,
+        .mxl,
     ]
 
     // MARK: Body
@@ -130,7 +131,7 @@ struct ImportScoreView: View {
                 Text("Formatos aceitos:")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
-                Text(".xml  ·  .musicxml")
+                Text(".xml  ·  .musicxml  ·  .mxl")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -227,7 +228,7 @@ struct ImportScoreView: View {
             Text("Partitura importada!")
                 .font(.title3.weight(.semibold))
 
-            Text("\"\(title)\" has been added to your library.")
+            Text("\"\(title)\" foi adicionada à sua biblioteca.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -288,7 +289,7 @@ struct ImportScoreView: View {
         switch result {
         case .success(let urls):
             guard let url = urls.first else {
-                phase = .failure("No file was selected.")
+                phase = .failure("Nenhum arquivo foi escolhido.")
                 return
             }
 
@@ -304,7 +305,7 @@ struct ImportScoreView: View {
             phase = .previewing
 
         case .failure(let error):
-            phase = .failure("Could not open file: \(error.localizedDescription)")
+            phase = .failure("Não foi possível abrir o arquivo: \(error.localizedDescription)")
         }
     }
 
@@ -315,7 +316,7 @@ struct ImportScoreView: View {
         Task {
             guard let url = selectedURL else {
                 await MainActor.run {
-                    phase = .failure("No file selected.")
+                    phase = .failure("Nenhum arquivo foi escolhido.")
                 }
                 return
             }
@@ -361,10 +362,10 @@ struct ImportScoreView: View {
 
     /// Convert errors to user-friendly messages.
     private func importErrorMessage(for error: Error) -> String {
-        if let importError = error as? ImportError {
-            return importError.localizedDescription
+        if error is ImportError || error is MusicXMLParserError || error is ZipArchiveError {
+            return error.localizedDescription
         }
-        return "An unexpected error occurred: \(error.localizedDescription)"
+        return "Ocorreu um erro inesperado: \(error.localizedDescription)"
     }
 }
 
@@ -380,13 +381,13 @@ enum ImportError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileNotReadable:
-            return "The selected file could not be read. Please check permissions and try again."
+            return "Não foi possível ler o arquivo escolhido. Confira as permissões e tente de novo."
         case .unsupportedFormat:
-            return "This file format is not supported. Please use uncompressed MusicXML (.xml or .musicxml) files."
+            return "Este formato de arquivo não é aceito. Use MusicXML (.xml, .musicxml ou .mxl)."
         case .parsingFailed(let detail):
-            return "Failed to parse the file: \(detail)"
+            return "Não foi possível ler o arquivo: \(detail)"
         case .invalidData:
-            return "The file contains invalid or corrupted data."
+            return "O arquivo tem dados inválidos ou danificados."
         }
     }
 }

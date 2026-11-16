@@ -1,9 +1,9 @@
 // WebLibraryScreenshotTests.swift
 // luksMusicUITests
 //
-// Opens a public score of the online library (luksmusic.web.app) from the library's "luksMusic Online" row
-// as a guest, with its original pages, attaching screenshots for the "App Store Screenshots" workflow.
-// Runs after ScreenshotTests, so the guest session may already exist.
+// Downloads a public score of the luksmusic.web.app catalog from the library's catalog row as a guest and plays
+// it in the score viewer, attaching screenshots for the "App Store Screenshots" workflow. Runs after
+// ScreenshotTests, so the guest session may already exist.
 
 import XCTest
 
@@ -11,7 +11,7 @@ final class WebLibraryScreenshotTests: XCTestCase {
 
     private let app = XCUIApplication()
 
-    func testOnlineLibraryPages() {
+    func testCatalogDownload() {
         app.launch()
 
         let guestButton = app.buttons["Continuar como Convidado (Offline)"]
@@ -24,34 +24,36 @@ final class WebLibraryScreenshotTests: XCTestCase {
             playTab.tap()
         }
 
-        // A short public-domain score (two pages) from the site's catalog
-        let score = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS %@", "October (Autumn Song)")).firstMatch
-        if score.waitForExistence(timeout: 40) {
+        // A short public-domain piece (56 measures) from the site's catalog. Only its catalog card carries the
+        // sidebar title with the composer; the downloaded copy in "Minhas partituras" is titled without it.
+        let card = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label CONTAINS %@", "October (Autumn Song) – Tchaikovsky")).firstMatch
+        if card.waitForExistence(timeout: 40) {
             // The row scrolls sideways and the catalog grows, so the card may start off screen
             var swipes = 0
-            while score.frame.maxX > app.frame.maxX && swipes < 6 {
-                let row = score.frame.midY / app.frame.height
+            while card.frame.maxX > app.frame.maxX && swipes < 6 {
+                let row = card.frame.midY / app.frame.height
                 app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: row))
                     .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.25, dy: row)))
                 pause(0.7)
                 swipes += 1
             }
             pause(1)
-            capture("08-online-library")
-            score.tap()
+            capture("08-catalog")
+            card.tap()
 
-            // Pages come from the web, so give them time to download and draw
-            pause(10)
-            capture("09-online-score")
-
+            // Downloaded into the library, then opened in the score viewer
             let playButton = app.buttons["playPauseButton"]
-            if playButton.waitForExistence(timeout: 5) {
+            if playButton.waitForExistence(timeout: 60) {
+                // Let the engraved score render in the web view
+                pause(5)
+                capture("09-catalog-score")
+
                 playButton.tap()
                 pause(3)
                 playButton.tap()
                 pause(2)
-                capture("10-online-score-cursor")
+                capture("10-catalog-score-cursor")
 
                 for _ in 0..<2 {
                     let next = app.buttons["nextNoteButton"]
@@ -59,14 +61,24 @@ final class WebLibraryScreenshotTests: XCTestCase {
                     pause(0.5)
                 }
                 pause(1)
-                capture("12-online-score-steps")
+                capture("12-catalog-score-steps")
+
+                // Back in the library, the card says the score is on the phone
+                let back = app.buttons["Voltar"].firstMatch
+                if back.exists {
+                    back.tap()
+                    pause(2)
+                    capture("44-catalog-downloaded")
+                }
+            } else {
+                capture("09-catalog-download-failed")
             }
         } else {
-            capture("08-online-library")
+            capture("08-catalog")
         }
 
         let tree = XCTAttachment(string: app.debugDescription)
-        tree.name = "ui-tree-online"
+        tree.name = "ui-tree-catalog"
         tree.lifetime = .keepAlways
         add(tree)
     }

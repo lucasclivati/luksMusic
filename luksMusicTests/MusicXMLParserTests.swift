@@ -124,4 +124,102 @@ final class MusicXMLParserTests: XCTestCase {
         XCTAssertEqual(furElise.measures[0].length, 1)
         XCTAssertEqual(furElise.measures[0].notes.filter { !$0.isRest }.map(\.midiNote), [76, 75])
     }
+
+    // MARK: - Compressed MusicXML and scores of several parts
+
+    /// An .mxl in Fixtures (see ZipArchiveTests).
+    private func fixture(_ name: String) throws -> URL {
+        try XCTUnwrap(Bundle(for: MusicXMLParserTests.self).url(forResource: name, withExtension: "mxl"), name)
+    }
+
+    /// A piano duet in an .mxl: the second player's notes join the first player's measures, counted in its own
+    /// divisions (4 a quarter against 2) and with its tie held over the barline. Staff 1 of each part is the right hand.
+    func testDuetInAnMXLPlaysBothParts() throws {
+        let data = try Data(contentsOf: try fixture("duet"))
+        let parsed = try MusicXMLParser.parse(data: data)
+        XCTAssertEqual(parsed.title, "Duet")
+        XCTAssertEqual(parsed.tempo, 120)
+        XCTAssertEqual(parsed.measureCount, 2)
+        XCTAssertTrue(parsed.measures.allSatisfy { $0.length == nil })
+        // The viewer draws the MusicXML inside the archive
+        XCTAssertEqual(parsed.musicXMLData, try MusicXMLParser.scoreFile(inMXL: data))
+        XCTAssertEqual(parsed.originalMusicXML?.hasPrefix("<?xml"), true)
+
+        // Primo's C6 and D6, then Secondo's G3 after its quarter rest
+        let first = parsed.measures[0]
+        let treble = first.notes.filter { $0.staff == .treble && !$0.isRest }
+        XCTAssertEqual(treble.map(\.midiNote), [84, 86, 55])
+        XCTAssertEqual(treble.map(\.position.beat), [1, 3, 2])
+        // The dotted half G3 is held for the quarter tied to it in the next measure
+        XCTAssertEqual(treble.map(\.length), [2, 2, 4])
+        // Primo's C5 on its staff 2 (in G clef) and Secondo's C2
+        let bass = first.notes.filter { $0.staff == .bass && !$0.isRest }
+        XCTAssertEqual(bass.map(\.midiNote), [72, 36])
+        XCTAssertEqual(bass.map(\.position.beat), [1, 1])
+
+        let second = parsed.measures[1]
+        let upper = second.notes.filter { $0.staff == .treble && !$0.isRest }
+        XCTAssertEqual(upper.map(\.midiNote), [88, 55, 57])
+        XCTAssertEqual(upper.map(\.position.beat), [1, 1, 2])
+        XCTAssertEqual(upper.map { $0.isTieContinuation == true }, [false, true, false])
+        XCTAssertEqual(second.notes.filter { $0.staff == .bass && !$0.isRest }.map(\.position.beat), [1, 3])
+    }
+
+    /// An .mxl with its files stored and no META-INF/container.xml: its one .musicxml file is the score.
+    func testStoredMXLWithoutContainerOpens() throws {
+        let parsed = try MusicXMLParser.parse(url: try fixture("stored"))
+        XCTAssertEqual(parsed.title, "Stored")
+        XCTAssertEqual(parsed.timeSignatureTop, 3)
+        let notes = try XCTUnwrap(parsed.measures.first).notes
+        XCTAssertEqual(notes.map(\.midiNote), [60, 64, 67])
+        XCTAssertEqual(notes.map(\.position.beat), [1, 2, 3])
+        XCTAssertTrue(notes.allSatisfy { $0.staff == .treble })
+    }
+
+    /// Parts on one staff in a score of several parts: the flute (G clef) plays on the treble and the cello (F clef)
+    /// on the bass for the whole piece, whatever its notes' <staff> or its later G clef say. The cello counts 8 a quarter.
+    func testOneStaffPartsPlayOnTheHandOfTheirClef() throws {
+        let xml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <score-partwise version="3.1">
+          <part-list>
+            <score-part id="P1"><part-name>Flauta</part-name></score-part>
+            <score-part id="P2"><part-name>Violoncelo</part-name></score-part>
+          </part-list>
+          <part id="P1">
+            <measure number="1">
+              <attributes><divisions>1</divisions><key><fifths>0</fifths></key>
+                <time><beats>3</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+              <note><pitch><step>G</step><octave>5</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+            </measure>
+            <measure number="2">
+              <note><pitch><step>A</step><octave>5</octave></pitch><duration>3</duration><voice>1</voice><type>half</type><dot/></note>
+            </measure>
+          </part>
+          <part id="P2">
+            <measure number="1">
+              <attributes><divisions>8</divisions><key><fifths>0</fifths></key>
+                <time><beats>3</beats><beat-type>4</beat-type></time><clef><sign>F</sign><line>4</line></clef></attributes>
+              <note><pitch><step>C</step><octave>3</octave></pitch><duration>8</duration><voice>1</voice><type>quarter</type><staff>1</staff></note>
+              <note><pitch><step>E</step><octave>3</octave></pitch><duration>16</duration><voice>1</voice><type>half</type></note>
+            </measure>
+            <measure number="2">
+              <attributes><clef><sign>G</sign><line>2</line></clef></attributes>
+              <note><pitch><step>G</step><octave>4</octave></pitch><duration>24</duration><voice>1</voice><type>half</type><dot/></note>
+            </measure>
+          </part>
+        </score-partwise>
+        """
+        let parsed = try MusicXMLParser.parse(data: Data(xml.utf8))
+        XCTAssertEqual(parsed.measureCount, 2)
+        let first = parsed.measures[0]
+        XCTAssertEqual(first.trebleNotes.map(\.midiNote), [79])
+        XCTAssertEqual(first.bassNotes.map(\.midiNote), [48, 52])
+        XCTAssertEqual(first.bassNotes.map(\.position.beat), [1, 2])
+        XCTAssertEqual(first.bassNotes.map(\.length), [1, 2])
+        let second = parsed.measures[1]
+        XCTAssertNil(second.length)
+        XCTAssertEqual(second.trebleNotes.map(\.midiNote), [81])
+        XCTAssertEqual(second.bassNotes.map(\.midiNote), [67])
+    }
 }

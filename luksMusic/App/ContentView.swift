@@ -181,6 +181,8 @@ struct SettingsView: View {
     @State private var authService = AuthService.shared
     @State private var cloudSync = CloudSyncService.shared
     @State private var showDeleteAccount = false
+    @State private var language = AppLanguage.chosen
+    @State private var showLanguageNote = false
 
     private var appVersion: String {
         let info = Bundle.main.infoDictionary
@@ -275,6 +277,23 @@ struct SettingsView: View {
                     }
                 }
                 
+                Section {
+                    Picker("Idioma", selection: $language) {
+                        ForEach(AppLanguage.allCases) { option in
+                            Text(option.displayName).tag(option)
+                        }
+                    }
+                    .accessibilityIdentifier("languagePicker")
+                    .onChange(of: language) { _, newValue in
+                        AppLanguage.chosen = newValue
+                        showLanguageNote = true
+                    }
+                } header: {
+                    Text("Idioma")
+                } footer: {
+                    Text("O novo idioma aparece quando o app for aberto de novo.")
+                }
+
                 Section("Sobre") {
                     HStack {
                         Text("Versão do app")
@@ -287,6 +306,12 @@ struct SettingsView: View {
             .navigationTitle("Ajustes")
             .sheet(isPresented: $showDeleteAccount) {
                 DeleteAccountView()
+            }
+            // iOS reads the app's language when it starts
+            .alert("Idioma alterado", isPresented: $showLanguageNote) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Feche o luksMusic e abra de novo para ver o app no novo idioma.")
             }
         }
     }

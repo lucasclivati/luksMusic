@@ -1,178 +1,81 @@
 // OnlineScoreView.swift
 // luksMusic
 //
-// A score from the online library shown with its original engraved pages, exactly as on luksmusic.web.app,
-// in the shared player frame: title bar, the pages, and the dock with the timeline, transport and keyboard.
+// A catalog score opened from the full catalog list (OnlineLibraryView): its copy on the phone in the score
+// viewer, downloaded into the library first when it is not there yet.
 
 import SwiftUI
 
 struct OnlineScoreView: View {
     let score: OnlineScore
 
-    @State private var content: OnlineScoreContent?
-    @State private var viewModel: ScoreViewModel?
+    @State private var catalog = OnlineLibraryService.shared
+    @State private var local: Score?
     @State private var errorMessage: String?
-    @State private var showKeyboard: Bool = true
-    @State private var showMixer: Bool = false
-    @State private var showReadingTrainer: Bool = false
-    @State private var zoom: Double = 1.0
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    private static let zoomLevels: [Double] = [1.0, 1.25, 1.5, 2.0]
-
-    private static func zoomLabel(_ zoom: Double) -> String {
-        zoom == 1.0 ? "Ajustar à largura" : "\(Int(zoom * 100))%"
-    }
-
-    private var subtitle: String {
-        var parts = [score.credits]
-        parts.append("\(score.bpm) BPM")
-        if let count = viewModel?.score.measureCount, count > 0 {
-            parts.append("\(count) compassos")
-        }
-        return parts.filter { !$0.isEmpty }.joined(separator: " • ")
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
-            PlayerTopBar(title: score.title, subtitle: subtitle, onBack: close) {
-                if score.isPrivate {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(PlayerTheme.muted)
-                        .accessibilityLabel("Partitura privada")
-                }
-                if viewModel != nil {
-                    Button(action: openReadingTrainer) {
-                        PlayerMenuLabel(systemName: "music.quarternote.3")
-                    }
-                    .accessibilityLabel("Treino de leitura")
-                    .accessibilityIdentifier("readingTrainerButton")
-                }
-                menu
-            }
-
-            if let content, let viewModel {
-                PageScoreWebView(
-                    pageURLs: score.pageURLs,
-                    content: content,
-                    beatsPerMeasure: score.beatsPerMeasure,
-                    measureIndex: viewModel.currentMeasureIndex,
-                    cursorBeat: viewModel.cursorBeat,
-                    zoom: zoom
-                ) { measure, beat in
-                    viewModel.seek(toMeasure: measure, beat: beat)
+        if let local {
+            ScoreView(score: local)
+        } else {
+            VStack(spacing: 0) {
+                PlayerTopBar(title: score.pieceTitle, subtitle: score.composer, onBack: { dismiss() }) {
+                    EmptyView()
                 }
 
-                PlayerDock(viewModel: viewModel, showKeyboard: $showKeyboard) {
-                    showMixer = true
-                }
-            } else if let errorMessage {
-                VStack(spacing: 14) {
-                    Image(systemName: "wifi.exclamationmark")
-                        .font(.system(size: 36))
-                        .foregroundStyle(PlayerTheme.muted)
-                    Text(errorMessage)
-                        .font(.subheadline)
-                        .foregroundStyle(PlayerTheme.text)
-                        .multilineTextAlignment(.center)
-                    Button("Tentar de novo") {
-                        Task { await load() }
+                Group {
+                    if let errorMessage {
+                        VStack(spacing: 14) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .font(.system(size: 36))
+                                .foregroundStyle(PlayerTheme.muted)
+                            Text(errorMessage)
+                                .font(.subheadline)
+                                .foregroundStyle(PlayerTheme.text)
+                                .multilineTextAlignment(.center)
+                            Button("Tentar de novo") {
+                                Task { await load() }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(PlayerTheme.blue)
+                        }
+                        .padding(32)
+                    } else {
+                        VStack(spacing: 12) {
+                            if let fraction = catalog.downloads[score.id]?.fraction {
+                                ProgressView(value: fraction)
+                                    .tint(PlayerTheme.cyan)
+                                    .frame(width: 180)
+                            } else {
+                                ProgressView()
+                                    .tint(PlayerTheme.cyan)
+                            }
+                            Text("Baixando partitura…")
+                                .font(.subheadline)
+                                .foregroundStyle(PlayerTheme.muted)
+                        }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(PlayerTheme.blue)
                 }
-                .padding(32)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ProgressView("Carregando partitura…")
-                    .tint(PlayerTheme.cyan)
-                    .foregroundStyle(PlayerTheme.muted)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-        }
-        .background(PlayerTheme.background.ignoresSafeArea())
-        .navigationBarHidden(true)
-        .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
-        .toolbar(.hidden, for: .tabBar)
-        .task {
-            if content == nil {
+            .background(PlayerTheme.background.ignoresSafeArea())
+            .navigationBarHidden(true)
+            .navigationBarBackButtonHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
+            .toolbar(.hidden, for: .tabBar)
+            .task {
                 await load()
             }
         }
-        .onDisappear {
-            viewModel?.stop()
-        }
-        .sheet(isPresented: $showMixer) {
-            if let viewModel {
-                HandsMixerSheet(viewModel: viewModel)
-                    .presentationDetents([.fraction(0.42)])
-            }
-        }
-        .fullScreenCover(isPresented: $showReadingTrainer) {
-            if let viewModel {
-                // The site's data only has MIDI numbers, so the drill names the notes for the piece's likely key
-                ReadingTrainerView(score: viewModel.score, storageKey: "online-\(score.id)", spellsFromKey: true)
-            }
-        }
-    }
-
-    private func openReadingTrainer() {
-        viewModel?.pause()
-        showReadingTrainer = true
-    }
-
-    private var menu: some View {
-        Menu {
-            if viewModel != nil {
-                Button(action: openReadingTrainer) {
-                    Label("Treino de leitura", systemImage: "music.quarternote.3")
-                }
-            }
-            Picker("Zoom", selection: $zoom) {
-                ForEach(Self.zoomLevels, id: \.self) { level in
-                    Text(Self.zoomLabel(level)).tag(level)
-                }
-            }
-            Button {
-                showMixer = true
-            } label: {
-                Label("Mixer de mãos", systemImage: "slider.vertical.3")
-            }
-            ShareLink(item: score.webURL) {
-                Label("Compartilhar link", systemImage: "square.and.arrow.up")
-            }
-        } label: {
-            PlayerMenuLabel()
-        }
-        .accessibilityLabel("Opções da partitura")
-        .accessibilityIdentifier("scoreMenuButton")
-    }
-
-    private func close() {
-        viewModel?.stop()
-        dismiss()
     }
 
     private func load() async {
         errorMessage = nil
         do {
-            let loaded = try await OnlineLibraryService.shared.loadContent(for: score)
-            let playable = Score(
-                title: score.title,
-                composer: score.credits,
-                difficulty: .advanced,
-                source: .imported,
-                tempo: score.bpm,
-                timeSignatureTop: score.beatsPerMeasure,
-                timeSignatureBottom: 4,
-                measures: loaded.measures
-            )
-            viewModel = ScoreViewModel(score: playable)
-            content = loaded
+            local = try await catalog.download(score, into: modelContext)
         } catch {
-            errorMessage = "Não foi possível abrir a partitura: \(error.localizedDescription)"
+            errorMessage = "Não foi possível baixar a partitura: \(error.localizedDescription)"
         }
     }
 }

@@ -97,13 +97,13 @@ final class ScoreStorageService {
         UserDefaults.standard.set(true, forKey: key)
     }
 
-    /// Builds before 1.0 seeded a hand-made transcription of Dark Dream; the song now lives in the online library
-    /// with its original MuseScore pages (private to its author), so the old copy is removed once.
+    /// Builds before 1.0 seeded a hand-made transcription of Dark Dream; the song is now downloaded from the
+    /// luksMusic catalog (private to its author), so the old copy is removed once. A downloaded copy is kept.
     private func removeLegacyDarkDream(modelContext: ModelContext) {
         let key = "luksMusic_removedLegacyDarkDream"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
         let scores = (try? modelContext.fetch(FetchDescriptor<Score>())) ?? []
-        for score in scores where score.title.contains("Dark Dream") && score.composer.contains("Curley Gao") {
+        for score in scores where score.catalogId == nil && score.title.contains("Dark Dream") && score.composer.contains("Curley Gao") {
             modelContext.delete(score)
         }
         try? modelContext.save()
@@ -112,14 +112,14 @@ final class ScoreStorageService {
 
     // MARK: - File Import
 
-    /// Imports a score from a MusicXML file (.musicxml, .xml).
+    /// Imports a score from a MusicXML file, plain (.musicxml, .xml) or compressed (.mxl).
     func importScore(from url: URL, modelContext: ModelContext) async throws -> Score {
         isLoading = true
         defer { isLoading = false }
 
         let fileExtension = url.pathExtension.lowercased()
-        guard fileExtension == "musicxml" || fileExtension == "xml" else {
-            throw MusicXMLParserError.parsingFailed("Unsupported file format: .\(fileExtension)")
+        guard ["musicxml", "xml", "mxl"].contains(fileExtension) else {
+            throw ImportError.unsupportedFormat
         }
         let data = try Data(contentsOf: url)
         let score = try MusicXMLParser.parse(data: data)
@@ -131,8 +131,8 @@ final class ScoreStorageService {
 
     // MARK: - File Export
 
-    /// Exports a score as MusicXML file in temporary directory: the file it was read from when its notes were not
-    /// edited, else the edited measures.
+    /// Exports a score as MusicXML file in temporary directory: the file it was read from (the MusicXML inside an
+    /// .mxl) when its notes were not edited, else the edited measures.
     func exportScoreAsMusicXML(_ score: Score) throws -> URL {
         let sanitizedTitle = score.title.replacingOccurrences(of: " ", with: "_")
         let tempURL = FileManager.default.temporaryDirectory

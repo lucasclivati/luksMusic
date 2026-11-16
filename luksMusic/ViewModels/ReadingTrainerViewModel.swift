@@ -76,18 +76,10 @@ final class ReadingTrainerViewModel {
 
     // MARK: - Setup
 
-    /// - Parameters:
-    ///   - storageKey: identifies the score for the remembered position
-    ///   - spellsFromKey: the score's notes only carry MIDI numbers (online scores), so they are renamed for the
-    ///     key their notes suggest
-    init(score: Score, storageKey: String, spellsFromKey: Bool = false) {
-        var measures = score.measures
-        var keySignature = score.keySignatureValue
-        if spellsFromKey {
-            let respelled = ReadingDrill.respelled(measures)
-            measures = respelled.measures
-            keySignature = respelled.keySignature
-        }
+    /// - Parameter storageKey: identifies the score for the remembered position
+    init(score: Score, storageKey: String) {
+        let measures = score.measures
+        let keySignature = score.keySignatureValue
         self.title = score.title
         self.measures = measures
         self.keySignature = keySignature

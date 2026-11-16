@@ -1,44 +1,63 @@
 // OnlineLibraryService.swift
 // luksMusic
 //
-// Scores published on the luksMusic web player (luksmusic.web.app). Reads its catalog, keeps the scores this
-// account may open (the web's rules: public, the author, or an e-mail invite) and loads a score's engraved
-// pages and note data on demand. Nothing from the catalog is bundled in the app.
+// The catalog of the luksMusic web player (luksmusic.web.app). Reads it, keeps the scores this account may open
+// (the web's rules: public, the author, or an e-mail invite) and downloads a score on request into the library,
+// where it is a score like any imported one: engraved, played and practiced on the phone, offline from then on.
+// Nothing from the catalog is bundled in the app.
 
 import Foundation
 import JavaScriptCore
 import Observation
+import SwiftData
 
 /// One score of the web catalog.
 struct OnlineScore: Identifiable, Hashable {
     let id: String
-    /// The score's `?partitura=` link name on the site
-    let slug: String
+    /// The site's sidebar title: "Dark Dream – Curley Gao"
     let title: String
     let credits: String
     let bpm: Int
     let beatsPerMeasure: Int
-    let pageURLs: [URL]
-    let dataURL: URL
+    /// The MusicXML (.mxl) among the score's downloads, when the catalog lists one
+    let musicXMLURL: URL?
+    /// The web player's note data (SCORE_DATA), read when there is no MusicXML
+    let dataURL: URL?
+    /// The difficulty named in the catalog's tags ("Advanced"), when there is one
+    let difficulty: Difficulty?
     let defaultPrivacy: String
     var isPrivate: Bool = false
 
-    /// The score on the web player, as its Share button links to it
-    var webURL: URL {
-        var components = URLComponents(url: OnlineLibraryService.siteURL, resolvingAgainstBaseURL: false)
-        components?.queryItems = [URLQueryItem(name: "partitura", value: slug)]
-        return components?.url ?? OnlineLibraryService.siteURL
+    /// The title without the composer: "Dark Dream"
+    var pieceTitle: String {
+        title.components(separatedBy: " – ")[0]
+    }
+
+    /// The composer after the title, or "" when the title names none: "Curley Gao"
+    var composer: String {
+        title.components(separatedBy: " – ").dropFirst().joined(separator: " – ")
     }
 }
 
-/// What the page viewer and the player need for one score.
-struct OnlineScoreContent {
-    /// MEASURE_LAYOUT: where each played measure sits on the pages
-    let layout: [[String: Any]]
-    /// NOTE_COLUMNS: notehead x (percent of the page) of every onset, by measure number
-    let columns: [String: Any]
-    /// SCORE_DATA converted to the app's model, for playback and the keyboard
-    let measures: [Measure]
+/// A catalog score being downloaded.
+struct CatalogDownload: Equatable {
+    /// Part of the file received, nil while its size is unknown
+    var fraction: Double?
+}
+
+/// What went wrong reading the site.
+enum OnlineLibraryError: LocalizedError {
+    case connection
+    case notFound
+    case unreadable
+
+    var errorDescription: String? {
+        switch self {
+        case .connection: return "Não foi possível conectar ao luksmusic.web.app. Verifique a internet e tente de novo."
+        case .notFound: return "O arquivo não foi encontrado no site."
+        case .unreadable: return "O arquivo da partitura não pôde ser lido."
+        }
+    }
 }
 
 @MainActor
@@ -55,10 +74,16 @@ final class OnlineLibraryService {
     var isLoading: Bool = false
     var errorMessage: String? = nil
 
+    /// Catalog scores being downloaded, by catalog id
+    private(set) var downloads: [String: CatalogDownload] = [:]
+
     private let authService = AuthService.shared
 
     /// The account `scores` was checked for, so another account never sees the previous one's private scores
     private var loadedAccount: String?
+
+    /// The download of each catalog score in progress, so a second request waits for it instead of saving a copy
+    @ObservationIgnored private var downloadTasks: [String: Task<Void, Error>] = [:]
 
     private init() {}
 
@@ -85,7 +110,8 @@ final class OnlineLibraryService {
         defer { isLoading = false }
 
         do {
-            let globals = try await Self.evaluate(scriptAt: URL(string: "scores/catalog.js", relativeTo: Self.siteURL)!, names: ["SCORE_CATALOG"])
+            let script = try await Self.fetch(URL(string: "scores/catalog.js", relativeTo: Self.siteURL)!)
+            let globals = try Self.evaluate(script, names: ["SCORE_CATALOG"])
             let entries = globals["SCORE_CATALOG"] as? [[String: Any]] ?? []
             let candidates = entries.compactMap(Self.score(from:))
             // Check every score at once, keeping the catalog's order
@@ -103,23 +129,75 @@ final class OnlineLibraryService {
             scores = allowed.keys.sorted().compactMap { allowed[$0] }
             loadedAccount = account
         } catch {
-            errorMessage = "Não foi possível carregar a biblioteca online: \(error.localizedDescription)"
+            errorMessage = "Não foi possível carregar o catálogo: \(error.localizedDescription)"
         }
     }
 
-    /// Downloads a score's layout, note columns and notes.
-    func loadContent(for score: OnlineScore) async throws -> OnlineScoreContent {
-        let globals = try await Self.evaluate(scriptAt: score.dataURL, names: ["SCORE_DATA", "MEASURE_LAYOUT", "NOTE_COLUMNS"])
-        guard let data = globals["SCORE_DATA"] as? [[String: Any]],
-              let layout = globals["MEASURE_LAYOUT"] as? [[String: Any]],
-              let columns = globals["NOTE_COLUMNS"] as? [String: Any] else {
-            throw NSError(domain: "luksMusic", code: 422, userInfo: [NSLocalizedDescriptionKey: "Os dados desta partitura estão incompletos."])
+    // MARK: - Downloading
+
+    /// The phone's copy of a catalog score, or nil when it was not downloaded yet.
+    func localCopy(of entry: OnlineScore, in context: ModelContext) -> Score? {
+        let scores = (try? context.fetch(FetchDescriptor<Score>())) ?? []
+        return scores.first { $0.catalogId == entry.id }
+    }
+
+    /// The phone's copy of a catalog score, downloaded and saved in the library first when it is not there yet.
+    func download(_ entry: OnlineScore, into context: ModelContext) async throws -> Score {
+        if let local = localCopy(of: entry, in: context) {
+            return local
         }
-        return OnlineScoreContent(layout: layout, columns: columns, measures: data.map(Self.measure(from:)))
+        if let running = downloadTasks[entry.id] {
+            try await running.value
+        } else {
+            let task = Task { try await self.save(entry, into: context) }
+            downloadTasks[entry.id] = task
+            downloads[entry.id] = CatalogDownload()
+            defer {
+                downloadTasks[entry.id] = nil
+                downloads[entry.id] = nil
+            }
+            try await task.value
+        }
+        guard let local = localCopy(of: entry, in: context) else { throw OnlineLibraryError.unreadable }
+        return local
+    }
+
+    /// Downloads a catalog score and saves it in the library: read from its MusicXML when the catalog lists one,
+    /// else built from the web player's note data.
+    private func save(_ entry: OnlineScore, into context: ModelContext) async throws {
+        let id = entry.id
+        let progress: @MainActor @Sendable (Double) -> Void = { self.downloads[id]?.fraction = $0 }
+        let score: Score
+        if let url = entry.musicXMLURL {
+            let data = try await Self.fetch(url, progress: progress)
+            do {
+                score = try MusicXMLParser.parse(data: data)
+            } catch {
+                throw OnlineLibraryError.unreadable
+            }
+        } else if let url = entry.dataURL {
+            let script = try await Self.fetch(url, progress: progress)
+            guard let data = try Self.evaluate(script, names: ["SCORE_DATA"])["SCORE_DATA"] as? [[String: Any]],
+                  !data.isEmpty else {
+                throw OnlineLibraryError.unreadable
+            }
+            score = Self.playableScore(from: data.map(Self.measure(from:)), of: entry)
+        } else {
+            throw OnlineLibraryError.notFound
+        }
+        // The catalog's names, as on its card, over whatever the file calls itself
+        score.title = entry.pieceTitle
+        score.composer = entry.composer
+        if let difficulty = entry.difficulty {
+            score.difficulty = difficulty
+        }
+        score.catalogId = entry.id
+        context.insert(score)
+        try context.save()
     }
 
     // MARK: - Access
-    
+
     /// The score with its current visibility, or nil when this account may not open it.
     private func checked(_ candidate: OnlineScore) async -> OnlineScore? {
         var score = candidate
@@ -158,19 +236,42 @@ final class OnlineLibraryService {
         return (result.1 as? HTTPURLResponse)?.statusCode == 200
     }
 
-    // MARK: - Site Data Scripts
+    // MARK: - Site Files
+
+    /// Downloads a file of the site off the main thread, reporting the part received when the server gives its size.
+    nonisolated private static func fetch(_ url: URL, progress: @escaping @MainActor @Sendable (Double) -> Void = { _ in }) async throws -> Data {
+        do {
+            let (bytes, response) = try await URLSession.shared.bytes(from: url)
+            guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw OnlineLibraryError.notFound }
+            let expected = response.expectedContentLength
+            var data = Data()
+            if expected > 0 {
+                data.reserveCapacity(Int(expected))
+            }
+            for try await byte in bytes {
+                data.append(byte)
+                if expected > 0, data.count % 8192 == 0 {
+                    // A compressed transfer can count fewer bytes than arrive
+                    await progress(min(1, Double(data.count) / Double(expected)))
+                }
+            }
+            return data
+        } catch let error as OnlineLibraryError {
+            throw error
+        } catch {
+            throw OnlineLibraryError.connection
+        }
+    }
 
     /// Runs one of the site's data scripts (they assign `window.NAME = ...`) and returns those globals as JSON values.
-    private static func evaluate(scriptAt url: URL, names: [String]) async throws -> [String: Any] {
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard (response as? HTTPURLResponse)?.statusCode == 200, let source = String(data: data, encoding: .utf8),
-              let context = JSContext() else {
-            throw NSError(domain: "luksMusic", code: 404, userInfo: [NSLocalizedDescriptionKey: "Arquivo não encontrado no site."])
+    private static func evaluate(_ script: Data, names: [String]) throws -> [String: Any] {
+        guard let source = String(data: script, encoding: .utf8), let context = JSContext() else {
+            throw OnlineLibraryError.unreadable
         }
         context.evaluateScript("var window = this;")
         context.evaluateScript(source)
-        if let exception = context.exception {
-            throw NSError(domain: "luksMusic", code: 422, userInfo: [NSLocalizedDescriptionKey: exception.toString() ?? "Erro no script"])
+        if context.exception != nil {
+            throw OnlineLibraryError.unreadable
         }
         var globals: [String: Any] = [:]
         for name in names {
@@ -182,24 +283,50 @@ final class OnlineLibraryService {
     }
 
     private static func score(from entry: [String: Any]) -> OnlineScore? {
-        guard let id = entry["id"] as? String,
-              let pages = entry["pages"] as? [String],
-              let data = entry["data"] as? String,
-              let dataURL = URL(string: data, relativeTo: siteURL) else { return nil }
+        guard let id = entry["id"] as? String else { return nil }
+        let files = (entry["downloads"] as? [[String: Any]] ?? []).compactMap { $0["href"] as? String }
+        let musicXML = files.first { href in
+            [".mxl", ".musicxml", ".xml"].contains { href.lowercased().hasSuffix($0) }
+        }
+        let musicXMLURL = musicXML.flatMap { URL(string: $0, relativeTo: siteURL)?.absoluteURL }
+        let dataURL = (entry["data"] as? String).flatMap { URL(string: $0, relativeTo: siteURL)?.absoluteURL }
+        guard musicXMLURL != nil || dataURL != nil else { return nil }
         return OnlineScore(
             id: id,
-            slug: entry["slug"] as? String ?? id,
             title: entry["sidebarTitle"] as? String ?? entry["title"] as? String ?? id,
             credits: entry["credits"] as? String ?? "",
             bpm: entry["bpm"] as? Int ?? 80,
             beatsPerMeasure: entry["beatsPerMeasure"] as? Int ?? 4,
-            pageURLs: pages.compactMap { URL(string: $0, relativeTo: siteURL)?.absoluteURL },
-            dataURL: dataURL.absoluteURL,
+            musicXMLURL: musicXMLURL,
+            dataURL: dataURL,
+            difficulty: (entry["tags"] as? [String] ?? []).compactMap(Difficulty.init(rawValue:)).first,
             defaultPrivacy: entry["defaultPrivacy"] as? String ?? "public"
         )
     }
 
     // MARK: - SCORE_DATA → Model
+
+    /// A score from note data, which only has MIDI numbers: the notes are spelled for the piece's likely key, so the
+    /// engraving and the reading drill show the accidentals a printed edition would. The catalog gives the tempo and
+    /// the beats of a measure, counted in quarters.
+    private static func playableScore(from measures: [Measure], of entry: OnlineScore) -> Score {
+        let spelled = ReadingDrill.respelled(measures)
+        let tempo = max(20, entry.bpm)
+        let beatsPerMeasure = max(1, entry.beatsPerMeasure)
+        let totalBeats = measures.reduce(0.0) { $0 + $1.beats(timeSignatureTop: beatsPerMeasure) }
+        return Score(
+            title: entry.pieceTitle,
+            composer: entry.composer,
+            difficulty: entry.difficulty ?? .advanced,
+            source: .imported,
+            tempo: tempo,
+            keySignatureValue: spelled.keySignature,
+            timeSignatureTop: beatsPerMeasure,
+            timeSignatureBottom: 4,
+            estimatedDuration: totalBeats * 60.0 / Double(tempo),
+            measures: spelled.measures
+        )
+    }
 
     /// One measure of SCORE_DATA: `{number, treble: [...], bass: [...]}`, each event a chord of MIDI notes at a beat.
     private static func measure(from entry: [String: Any]) -> Measure {
@@ -211,7 +338,7 @@ final class OnlineLibraryService {
                 let lyric = event["lyric"] as? String
                 for (i, midi) in (event["chord"] as? [Int] ?? []).enumerated() {
                     notes.append(Note(
-                        pitch: pitch(midi: midi),
+                        pitch: ReadingDrill.spelledPitch(midi: midi, keySignature: 0),
                         duration: duration,
                         staff: staff,
                         lyric: i == 0 ? lyric : nil,
@@ -252,14 +379,5 @@ final class OnlineLibraryService {
             }
         }
         return best
-    }
-
-    private static func pitch(midi: Int) -> Pitch {
-        let names: [(NoteName, Accidental)] = [
-            (.C, .natural), (.C, .sharp), (.D, .natural), (.E, .flat), (.E, .natural), (.F, .natural),
-            (.F, .sharp), (.G, .natural), (.A, .flat), (.A, .natural), (.B, .flat), (.B, .natural)
-        ]
-        let (name, accidental) = names[((midi % 12) + 12) % 12]
-        return Pitch(noteName: name, octave: midi / 12 - 1, accidental: accidental)
     }
 }

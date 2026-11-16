@@ -45,6 +45,8 @@ struct ScoreWebView: UIViewRepresentable {
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.showsHorizontalScrollIndicator = false
         webView.navigationDelegate = context.coordinator
+        // The engraving is thousands of unlabelled shapes: nothing for VoiceOver, and slow for UI tests to walk
+        webView.accessibilityElementsHidden = true
         context.coordinator.webView = webView
 
         if let url = Bundle.main.url(forResource: "score-viewer", withExtension: "html") {

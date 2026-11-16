@@ -1,0 +1,7 @@
+/* What iOS shows when luksMusic asks for a permission (English) */
+
+"NSMicrophoneUsageDescription" = "luksMusic listens to your piano through the microphone to check the notes you play in lessons and practice.";
+"NSDocumentsFolderUsageDescription" = "luksMusic opens your MusicXML files to import scores and saves the scores you export.";
+"NSCameraUsageDescription" = "luksMusic uses the camera to photograph printed sheet music and turn it into a score you can play.";
+"NSPhotoLibraryUsageDescription" = "luksMusic opens photos of printed sheet music to turn them into scores you can play.";
+"NSPhotoLibraryAddUsageDescription" = "luksMusic saves images of your scores to your photo library.";

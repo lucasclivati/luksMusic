@@ -44,6 +44,14 @@ final class PracticeViewModel {
     var isMicrophoneEnabled: Bool = false
     var microphoneService = MicrophonePitchService.shared
     
+    // Metronome at the slider's tempo, apart from the practice cursor (guided mode waits for notes, so it is no clock)
+    private(set) var isMetronomeOn: Bool = false
+    /// Beats so far, so the view can flash on each; `metronomeAccent` tells whether the last was a first beat
+    private(set) var metronomeClicks: Int = 0
+    private(set) var metronomeAccent: Bool = false
+    /// The microphone is on without headphones, so the metronome only shows the beat
+    private(set) var isMetronomeSilent: Bool = false
+    
     // Looping / Section Practice
     var practiceStartMeasure: Int = 1
     var practiceEndMeasure: Int = 1
@@ -51,6 +59,8 @@ final class PracticeViewModel {
     // Dependencies
     private let audioEngine = AudioEngineService.shared
     private let midiInput = MIDIKeyInput()
+    private let metronome = MetronomeService()
+    private static let metronomeKey = "practice.metronome"
     private var practiceTimer: Timer?
     // Keys of the expected chord already played (guided mode waits for all of them)
     private var playedTargetNotes: Set<Int> = []
@@ -70,6 +80,10 @@ final class PracticeViewModel {
         self.practiceEndMeasure = max(1, score.measureCount)
         fallingNotes.notes = Self.makeFallingNotes(in: measures, score: score)
         fallingNotes.beatsPerMeasure = max(1, score.timeSignatureTop)
+        self.isMetronomeOn = UserDefaults.standard.bool(forKey: Self.metronomeKey)
+        metronome.onBeat = { [weak self] beat in
+            self?.metronomeBeat(beat)
+        }
         updateExpectedNotes()
         setupMicrophoneListener()
     }
@@ -119,6 +133,50 @@ final class PracticeViewModel {
         } else {
             microphoneService.stopListening()
         }
+        updateMetronomeSilence()
+    }
+    
+    // MARK: - Metronome
+    
+    func toggleMetronome() {
+        isMetronomeOn.toggle()
+        UserDefaults.standard.set(isMetronomeOn, forKey: Self.metronomeKey)
+        if isMetronomeOn {
+            startMetronomeIfOn()
+        } else {
+            metronome.stop()
+            updateMetronomeSilence()
+        }
+    }
+    
+    /// Starts the metronome when the screen shows, if it was left on. Not in `init`: SwiftUI may build extra copies
+    /// of a screen's model and throw them away.
+    func startMetronomeIfOn() {
+        guard isMetronomeOn else { return }
+        updateMetronomeSilence()
+        metronome.start(bpm: tempoBPM, beatsPerMeasure: score.timeSignatureTop)
+    }
+    
+    /// Silences the metronome when the screen closes; it stays on for the next time.
+    func stopMetronome() {
+        metronome.stop()
+    }
+    
+    private func metronomeBeat(_ beat: MetronomeService.Beat) {
+        if beat.isSilent != isMetronomeSilent {
+            isMetronomeSilent = beat.isSilent
+        }
+        metronomeAccent = beat.number == 1
+        metronomeClicks += 1
+    }
+    
+    /// Shows at once whether the metronome must stay silent; the metronome checks the headphones again at every beat.
+    private func updateMetronomeSilence() {
+        metronome.setSilentWithoutHeadphones(isMicrophoneEnabled)
+        let silent = isMetronomeOn && isMicrophoneEnabled && !AudioEngineService.hasHeadphones
+        if silent != isMetronomeSilent {
+            isMetronomeSilent = silent
+        }
     }
     
     // MARK: - Practice Lifecycle
@@ -166,6 +224,9 @@ final class PracticeViewModel {
         syncFallingNotes()
         if isMicrophoneEnabled {
             microphoneService.stopListening()
+            // So the microphone button, and the metronome's silence, don't show a microphone that stopped listening
+            isMicrophoneEnabled = false
+            updateMetronomeSilence()
         }
         
         // Save session stats if notes were played
@@ -285,13 +346,15 @@ final class PracticeViewModel {
         updateExpectedNotes()
     }
     
-    /// Re-targets the expected notes (hand filter, guided stepping) and restarts the timer after the mode or tempo changes.
+    /// Re-targets the expected notes (hand filter, guided stepping) and restarts the timer after the mode or tempo
+    /// changes; the metronome takes the new tempo at once.
     func practiceSettingsChanged() {
         practiceTimer?.invalidate()
         practiceTimer = nil
         if isRunning && !isPaused {
             startPracticeTimer()
         }
+        metronome.setTempo(bpm: tempoBPM)
         updateExpectedNotes()
     }
     

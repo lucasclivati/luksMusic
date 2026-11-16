@@ -1,22 +1,26 @@
 // OnlineLibraryView.swift
 // luksMusic
 //
-// Scores published on luksmusic.web.app that this account can open: public-domain editions for everyone,
-// plus private scores for their author and the people the author invited by e-mail.
+// The whole luksMusic catalog ("Ver todas"): the scores of luksmusic.web.app this account can download, public-domain
+// editions for everyone plus private scores for their author and the people the author invited by e-mail. Opening
+// one downloads it to the phone (OnlineScoreView) and plays it like the user's own scores.
 
+import SwiftData
 import SwiftUI
 
 struct OnlineLibraryView: View {
     @State private var library = OnlineLibraryService.shared
+    @Query private var localScores: [Score]
 
     var body: some View {
-        List {
+        let downloaded = Set(localScores.compactMap(\.catalogId))
+        return List {
             if library.scores.isEmpty && !library.isLoading {
                 VStack(spacing: 10) {
-                    Image(systemName: "globe")
+                    Image(systemName: "music.note.list")
                         .font(.system(size: 36))
                         .foregroundColor(.secondary)
-                    Text(library.errorMessage ?? "Nenhuma partitura online disponível para esta conta.")
+                    Text(library.errorMessage ?? String(localized: "Nenhuma partitura do catálogo disponível para esta conta."))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -42,6 +46,11 @@ struct OnlineLibraryView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(2)
                         }
+                        Spacer(minLength: 4)
+                        Label(downloaded.contains(score.id) ? "Baixada" : "Baixar",
+                              systemImage: downloaded.contains(score.id) ? "checkmark.circle.fill" : "arrow.down.circle")
+                            .labelStyle(.iconOnly)
+                            .foregroundColor(downloaded.contains(score.id) ? .green : .accentColor)
                     }
                     .padding(.vertical, 4)
                 }
@@ -50,7 +59,7 @@ struct OnlineLibraryView: View {
             Section {
                 EmptyView()
             } footer: {
-                Text("Partituras do luksmusic.web.app, com as páginas originais. As privadas aparecem só para o autor e para quem ele convidou.")
+                Text("Toque em uma partitura para baixá-la e tocar no celular, mesmo sem internet. As privadas aparecem só para o autor e para quem ele convidou.")
             }
         }
         .overlay {
@@ -58,7 +67,7 @@ struct OnlineLibraryView: View {
                 ProgressView()
             }
         }
-        .navigationTitle("Biblioteca online")
+        .navigationTitle("Catálogo luksMusic")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable {
             await library.refresh()

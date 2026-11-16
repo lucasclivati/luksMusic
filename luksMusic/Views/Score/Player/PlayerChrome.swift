@@ -1,9 +1,9 @@
 // PlayerChrome.swift
 // luksMusic
 //
-// The score player's frame, shared by local scores and the online library, drawn like the luksmusic.web.app
-// player: a dark title bar above the paper and a docked control panel below it (timeline, transport, the notes
-// under the cursor by hand and the keyboard), so no control ever covers the music.
+// The score player's frame, drawn like the luksmusic.web.app player: a dark title bar above the paper and a docked
+// control panel below it (timeline, transport, the notes under the cursor by hand and the keyboard), so no control
+// ever covers the music.
 
 import SwiftUI
 
@@ -184,11 +184,11 @@ struct PlayerDock: View {
 
     private var transport: some View {
         HStack(spacing: 0) {
-            controlButton("repeat", label: "Repetir", isOn: viewModel.isLooping) {
-                viewModel.isLooping.toggle()
-            }
+            repeatButton
             Spacer(minLength: 4)
-            controlButton("backward.end.fill", label: "Voltar ao início") {
+            controlButton("backward.end.fill",
+                          label: viewModel.loopMode == .measure ? "Voltar ao início do compasso" : "Voltar ao início",
+                          identifier: "Voltar ao início") {
                 viewModel.restart()
             }
             Spacer(minLength: 4)
@@ -250,6 +250,21 @@ struct PlayerDock: View {
         // Nine controls fit a 375-point-wide phone
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
+    }
+
+    /// Switches between no repeat, the measure under the cursor and the whole piece, like the web player's loop button.
+    private var repeatButton: some View {
+        let mode = viewModel.loopMode
+        let label: String
+        switch mode {
+        case .off: label = "Repetir: desligado"
+        case .measure: label = "Repetir: compasso"
+        case .piece: label = "Repetir: música"
+        }
+        return controlButton(mode == .measure ? "repeat.1" : "repeat", label: label, isOn: mode != .off,
+                             identifier: "repeatButton") {
+            viewModel.loopMode = viewModel.loopMode.next
+        }
     }
 
     /// Clicks on every beat while the piece plays, like the web player's metronome; its light flashes red on the

@@ -14,7 +14,7 @@ struct PracticeView: View {
     @State private var viewModel: PracticeViewModel
     @State private var keyboardVM = PianoKeyboardViewModel()
     @State private var showStats: Bool = false
-    
+
     // Engraved score source for the staff strip, in each hand's clef from the score player's settings
     @State private var musicXML: String = ""
     @AppStorage(ClefChoice.rightHandKey) private var rightClef: ClefChoice = .score
@@ -99,6 +99,11 @@ struct PracticeView: View {
             }
             .onAppear {
                 musicXML = MusicXMLExporter.export(viewModel.score)
+                viewModel.startMetronomeIfOn()
+            }
+            // Closing with "Concluir" or by swiping the sheet down
+            .onDisappear {
+                viewModel.stopMetronome()
             }
             .onChange(of: viewModel.practiceMode) { _, _ in
                 viewModel.practiceSettingsChanged()
@@ -178,7 +183,7 @@ struct PracticeView: View {
     @ViewBuilder
     private var modeMenu: some View {
         Menu {
-            Picker("Practice Mode", selection: $viewModel.practiceMode) {
+            Picker("Modo de estudo", selection: $viewModel.practiceMode) {
                 ForEach(PracticeMode.allCases, id: \.self) { mode in
                     Label(mode.displayName, systemImage: mode.iconName)
                         .tag(mode)
@@ -191,8 +196,8 @@ struct PracticeView: View {
                 viewModel.toggleMicrophoneListening()
             } label: {
                 Label(
-                    viewModel.isMicrophoneEnabled ? "Acoustic Mic Input: Active" : "Enable Acoustic Mic Input",
-                    systemImage: viewModel.isMicrophoneEnabled ? "mic.fill" : "mic"
+                    viewModel.isMicrophoneEnabled ? "Desligar o microfone" : "Ouvir o piano pelo microfone",
+                    systemImage: viewModel.isMicrophoneEnabled ? "mic.slash" : "mic"
                 )
             }
             
@@ -296,7 +301,23 @@ struct PracticeView: View {
     
     @ViewBuilder
     private func practiceToolbar() -> some View {
-        HStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 6) {
+            if viewModel.isMetronomeSilent {
+                Label("Com o microfone sem fone de ouvido, o metrônomo fica em silêncio e marca o pulso na tela",
+                      systemImage: "headphones")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(.orange)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .accessibilityIdentifier("practiceMetronomeSilent")
+            }
+            practiceControls()
+        }
+    }
+    
+    @ViewBuilder
+    private func practiceControls() -> some View {
+        HStack(spacing: 12) {
             Button {
                 if viewModel.isRunning {
                     if viewModel.isPaused {
@@ -339,6 +360,8 @@ struct PracticeView: View {
                     .clipShape(Circle())
             }
             
+            PracticeMetronomeButton(viewModel: viewModel)
+            
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text("Andamento:")
@@ -358,10 +381,56 @@ struct PracticeView: View {
                 )
             }
             
-            Text("Compasso \(viewModel.currentMeasureIndex + 1)/\(max(1, viewModel.score.measureCount))")
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundColor(.secondary)
+            // Label over value, so the row leaves the slider room beside the metronome
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Compasso")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text("\(viewModel.currentMeasureIndex + 1)/\(max(1, viewModel.score.measureCount))")
+                    .font(.caption)
+                    .fontWeight(.bold)
+            }
+        }
+    }
+}
+
+// MARK: - Metronome
+
+/// Clicks at the tempo of the slider, apart from the practice cursor; its light flashes red on the first beat of the
+/// measure and yellow on the others, like the score player's metronome. A view of its own, so each beat redraws only
+/// the button, not the score, the falling notes and the keyboard.
+private struct PracticeMetronomeButton: View {
+    @Bindable var viewModel: PracticeViewModel
+    // On for a moment at each beat
+    @State private var light: Color?
+    
+    var body: some View {
+        Button {
+            viewModel.toggleMetronome()
+        } label: {
+            Image(systemName: viewModel.isMetronomeOn ? "metronome.fill" : "metronome")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(viewModel.isMetronomeOn ? .white : .primary)
+                .frame(width: 36, height: 36)
+                .background(viewModel.isMetronomeOn ? Color.accentColor : Color(.tertiarySystemFill))
+                .clipShape(Circle())
+        }
+        .accessibilityLabel("Metrônomo")
+        .accessibilityIdentifier("practiceMetronomeButton")
+        .overlay(alignment: .topTrailing) {
+            Circle()
+                .fill(light ?? Color.clear)
+                .frame(width: 9, height: 9)
+                .shadow(color: light ?? Color.clear, radius: 4)
+                .allowsHitTesting(false)
+        }
+        .onChange(of: viewModel.metronomeClicks) { _, clicks in
+            light = viewModel.metronomeAccent ? PlayerTheme.downbeat : PlayerTheme.beat
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                if viewModel.metronomeClicks == clicks {
+                    light = nil
+                }
+            }
         }
     }
 }

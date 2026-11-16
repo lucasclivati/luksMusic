@@ -17,7 +17,6 @@ final class ScoreViewModel {
     var currentBeat: Double = 1.0
     var isPlaying: Bool = false
     var playbackSpeed: Double = 1.0
-    var zoomScale: CGFloat = 1.0
     
     // Transposition in semitones (0 = original key)
     var transpositionSemitones: Int = 0
@@ -46,11 +45,23 @@ final class ScoreViewModel {
     private(set) var metronomeClicks: Int = 0
     private(set) var metronomeAccent: Bool = false
 
-    // Looping
-    var isLooping: Bool = false
-    var loopStartMeasure: Int = 1
-    var loopEndMeasure: Int = 1
-    
+    /// What the player repeats at a barline: nothing, the measure the cursor is in (so moving the cursor moves the
+    /// loop, like the web player), or the whole piece.
+    enum LoopMode {
+        case off, measure, piece
+
+        /// The mode the dock's button switches to.
+        var next: LoopMode {
+            switch self {
+            case .off: return .measure
+            case .measure: return .piece
+            case .piece: return .off
+            }
+        }
+    }
+
+    var loopMode: LoopMode = .off
+
     // Audio engine connection
     private let audioEngine = AudioEngineService.shared
     private var playbackTimer: Timer?
@@ -114,7 +125,6 @@ final class ScoreViewModel {
 
     init(score: Score) {
         self.score = score
-        self.loopEndMeasure = max(1, score.measureCount)
         refreshActiveNotes()
     }
     
@@ -157,7 +167,10 @@ final class ScoreViewModel {
 
     func stop() {
         pause()
-        currentMeasureIndex = isLooping ? (loopStartMeasure - 1) : 0
+        // A repeated measure is where the loop starts; otherwise the piece starts over
+        if loopMode != .measure {
+            currentMeasureIndex = 0
+        }
         currentBeat = 1.0
         playedNoteIds.removeAll()
         refreshActiveNotes()
@@ -253,9 +266,9 @@ final class ScoreViewModel {
         }
     }
 
-    /// Back to the first note of the piece.
+    /// Back to the first note of the piece, or of the measure being repeated.
     func restart() {
-        seek(toMeasure: 0, beat: 1.0)
+        seek(toMeasure: loopMode == .measure ? currentMeasureIndex : 0, beat: 1.0)
     }
 
     private static func onsets(of measure: Measure) -> [Double] {
@@ -279,44 +292,73 @@ final class ScoreViewModel {
     private func tickPlayback() {
         guard isPlaying else { return }
         let now = CACurrentMediaTime()
-        let dt = now - lastPlaybackTime
+        // The timer stalls while a drag holds the main run loop (scrolling the score); playback resumes where it
+        // stopped, since a jump past barlines would strike every skipped measure's notes at once
+        let dt = min(now - lastPlaybackTime, 0.25)
         lastPlaybackTime = now
-        
+
         let bpm = Double(score.tempo) * playbackSpeed
-        let beatsDelta = dt * (bpm / 60.0)
-        
-        let prevBeat = currentBeat
-        let newBeat = currentBeat + beatsDelta
         let measures = self.measures
-        let measureBeats = currentMeasureIndex < measures.count
+        let measureLength = currentMeasureIndex < measures.count
             ? measures[currentMeasureIndex].beats(timeSignatureTop: score.timeSignatureTop)
             : beatsPerMeasure
-        let maxBeats = measureBeats + 1.0
-        
-        if newBeat >= maxBeats {
-            // Reached barline: advance to next measure
-            currentBeat = 1.0 + (newBeat - maxBeats)
+        guard let step = Self.clockStep(measure: currentMeasureIndex, beat: currentBeat, advancingBy: dt * bpm / 60,
+                                        measureLength: measureLength, measureCount: measures.count,
+                                        loopMode: loopMode) else {
+            stop()
+            return
+        }
+
+        let prevBeat = currentBeat
+        if step.measure != currentMeasureIndex {
+            currentMeasureIndex = step.measure
+        }
+        currentBeat = step.beat
+        if step.crossedBarline {
+            // A new measure, or the repeated one again: its notes sound afresh from the first beat to the clock
             playedNoteIds.removeAll()
-            
-            if isLooping && (currentMeasureIndex + 1 >= loopEndMeasure) {
-                currentMeasureIndex = max(0, loopStartMeasure - 1)
-            } else if currentMeasureIndex + 1 < score.measureCount {
-                currentMeasureIndex += 1
-            } else {
-                stop()
-                return
-            }
-            triggerNotes(around: currentBeat)
-            clickMetronome(onBeat: 1)
+            triggerNotesBetween(startBeat: 0.95, endBeat: currentBeat)
         } else {
-            currentBeat = newBeat
-            triggerNotesBetween(startBeat: prevBeat, endBeat: newBeat)
-            let beat = Int(newBeat.rounded(.down))
-            if beat > Int(prevBeat.rounded(.down)) {
-                clickMetronome(onBeat: beat)
-            }
+            triggerNotesBetween(startBeat: prevBeat, endBeat: currentBeat)
+        }
+        if let beat = step.clickBeat {
+            clickMetronome(onBeat: beat)
         }
         refreshActiveNotes()
+    }
+
+    /// Where the playback clock stands after one tick, and the beat whose metronome click fell due in it.
+    struct ClockStep: Equatable {
+        var measure: Int
+        var beat: Double
+        /// The tick passed the barline, into the next measure or back to the start of a repeated one
+        var crossedBarline: Bool
+        var clickBeat: Int?
+    }
+
+    /// Moves the clock `beats` on from `beat` in measure `measure`, which lasts `measureLength` beats. Past the barline
+    /// the remainder carries into the next measure, into the same one when repeating it, or into the first when
+    /// repeating the piece; `nil` when the piece ends. Kept apart from the timer so it can be tested.
+    static func clockStep(measure: Int, beat: Double, advancingBy beats: Double, measureLength: Double,
+                          measureCount: Int, loopMode: LoopMode) -> ClockStep? {
+        let newBeat = beat + beats
+        let barline = measureLength + 1
+        guard newBeat >= barline else {
+            let crossed = Int(newBeat.rounded(.down))
+            return ClockStep(measure: measure, beat: newBeat, crossedBarline: false,
+                             clickBeat: crossed > Int(beat.rounded(.down)) ? crossed : nil)
+        }
+        let next: Int
+        switch loopMode {
+        case .measure:
+            next = measure
+        case .piece:
+            next = measure + 1 < measureCount ? measure + 1 : 0
+        case .off:
+            guard measure + 1 < measureCount else { return nil }
+            next = measure + 1
+        }
+        return ClockStep(measure: next, beat: 1 + (newBeat - barline), crossedBarline: true, clickBeat: 1)
     }
 
     /// Beat 1 is the first of the measure and gets the accented click.
