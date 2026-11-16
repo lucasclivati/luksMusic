@@ -8,13 +8,39 @@
 import SwiftUI
 
 struct ReadingTrainerView: View {
-    @State private var viewModel: ReadingTrainerViewModel
-    @Environment(\.dismiss) private var dismiss
+    let score: Score
+    /// Identifies the score for the remembered position
+    let storageKey: String
 
-    /// - Parameter storageKey: identifies the score for the remembered position
+    /// Built once, when the screen appears. The player re-creates this view every time it redraws, and building
+    /// the drill each time (it reads the score and saves the position, which redraws the player) never let the app
+    /// settle.
+    @State private var viewModel: ReadingTrainerViewModel?
+
     init(score: Score, storageKey: String) {
-        _viewModel = State(initialValue: ReadingTrainerViewModel(score: score, storageKey: storageKey))
+        self.score = score
+        self.storageKey = storageKey
     }
+
+    var body: some View {
+        Group {
+            if let viewModel {
+                ReadingTrainerScreen(viewModel: viewModel)
+            } else {
+                PlayerTheme.background.ignoresSafeArea()
+            }
+        }
+        .onAppear {
+            if viewModel == nil {
+                viewModel = ReadingTrainerViewModel(score: score, storageKey: storageKey)
+            }
+        }
+    }
+}
+
+private struct ReadingTrainerScreen: View {
+    @Bindable var viewModel: ReadingTrainerViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         GeometryReader { geo in

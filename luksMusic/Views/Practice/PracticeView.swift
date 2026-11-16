@@ -8,11 +8,50 @@ import SwiftUI
 import SwiftData
 
 struct PracticeView: View {
+    let score: Score
+
+    /// Built once, when the screen appears. The player re-creates this view every time it redraws, and building
+    /// the practice session each time (it reads every note of the score) kept the app busy.
+    @State private var viewModel: PracticeViewModel?
+    @State private var keyboardVM: PianoKeyboardViewModel?
+
+    init(score: Score) {
+        self.score = score
+    }
+
+    var body: some View {
+        Group {
+            if let viewModel, let keyboardVM {
+                PracticeScreen(viewModel: viewModel, keyboardVM: keyboardVM)
+            } else {
+                Color(.systemBackground).ignoresSafeArea()
+            }
+        }
+        .onAppear {
+            guard viewModel == nil else { return }
+            let midiPitches = score.measures
+                .flatMap { $0.notes }
+                .filter { !$0.isRest }
+                .map { Int($0.midiNote) }
+            let minPitch = midiPitches.min() ?? 48
+            let maxPitch = midiPitches.max() ?? 84
+            let startOctaveC = max(24, min(48, (minPitch / 12) * 12))
+            let endOctaveC = min(108, max(84, Int(ceil(Double(maxPitch + 1) / 12.0)) * 12))
+            let practice = PracticeViewModel(score: score)
+            practice.fallingNotes.keyboardRangeStart = startOctaveC
+            practice.fallingNotes.keyboardRangeEnd = endOctaveC
+            keyboardVM = PianoKeyboardViewModel(rangeStart: startOctaveC, rangeEnd: endOctaveC)
+            viewModel = practice
+        }
+    }
+}
+
+private struct PracticeScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
-    @State private var viewModel: PracticeViewModel
-    @State private var keyboardVM = PianoKeyboardViewModel()
+
+    @Bindable var viewModel: PracticeViewModel
+    @Bindable var keyboardVM: PianoKeyboardViewModel
     @State private var showStats: Bool = false
 
     // Engraved score source for the staff strip, in each hand's clef from the score player's settings
@@ -20,24 +59,7 @@ struct PracticeView: View {
     @AppStorage(ClefChoice.rightHandKey) private var rightClef: ClefChoice = .score
     @AppStorage(ClefChoice.leftHandKey) private var leftClef: ClefChoice = .score
     @AppStorage(ClefChoice.automaticUsesAltoKey) private var automaticUsesAlto: Bool = true
-    
-    init(score: Score) {
-        let vm = PracticeViewModel(score: score)
-        _viewModel = State(initialValue: vm)
-        
-        let midiPitches = score.measures
-            .flatMap { $0.notes }
-            .filter { !$0.isRest }
-            .map { Int($0.midiNote) }
-        let minPitch = midiPitches.min() ?? 48
-        let maxPitch = midiPitches.max() ?? 84
-        let startOctaveC = max(24, min(48, (minPitch / 12) * 12))
-        let endOctaveC = min(108, max(84, Int(ceil(Double(maxPitch + 1) / 12.0)) * 12))
-        _keyboardVM = State(initialValue: PianoKeyboardViewModel(rangeStart: startOctaveC, rangeEnd: endOctaveC))
-        vm.fallingNotes.keyboardRangeStart = startOctaveC
-        vm.fallingNotes.keyboardRangeEnd = endOctaveC
-    }
-    
+
     var body: some View {
         NavigationStack {
             GeometryReader { geo in

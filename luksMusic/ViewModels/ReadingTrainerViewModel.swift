@@ -358,7 +358,8 @@ final class ReadingTrainerViewModel {
         keyboard.correctKeys = []
         keyboard.incorrectKeys = []
         setFeedback(shown.isEmpty ? .noNotes : .prompt(chord: shown[0].midiNotes.count))
-        if order == .sequential {
+        // Saved only when it moves: every write to the defaults makes the screens that read settings redraw
+        if order == .sequential && Self.defaults.object(forKey: positionKey) as? Int != segmentStart {
             Self.defaults.set(segmentStart, forKey: positionKey)
         }
         updateKeyboardRange()
