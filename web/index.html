@@ -194,6 +194,29 @@
             flex-shrink: 0;
         }
 
+        /* "Baixar na App Store" link in the headers */
+        .app-store-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #000;
+            color: #fff;
+            border: 1px solid #64748b;
+            border-radius: 8px;
+            padding: 4px 11px 4px 9px;
+            text-decoration: none;
+            line-height: 1;
+            white-space: nowrap;
+            transition: border-color 0.15s, transform 0.15s;
+        }
+        .app-store-badge:hover { border-color: #e2e8f0; transform: translateY(-1px); }
+        .app-store-logo { width: 17px; height: 20px; flex-shrink: 0; }
+        .app-store-badge.compact { padding: 6px 8px; }
+        .app-store-badge.compact .app-store-text { display: none; }
+        .app-store-text { display: flex; flex-direction: column; gap: 2px; }
+        .app-store-text small { font-size: 8.5px; font-weight: 500; letter-spacing: 0.02em; }
+        .app-store-text strong { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
+
         .user-profile-badge {
             display: flex;
             align-items: center;
@@ -2759,6 +2782,12 @@
            RESPONSIVE MOBILE STYLES (Celulares e Telas Pequenas)
            ========================================================= */
         @media (max-width: 768px) {
+            /* App Store link: logo only on small screens */
+            .library-header { padding: 10px 14px; gap: 8px; }
+            .app-store-badge { padding: 6px 8px; }
+            .app-store-text { display: none; }
+            .user-email-text { display: none; }
+            .library-header .user-profile-badge { padding: 3px; }
             /* Header Compacto no Celular */
             header.player-header {
                 height: 50px;
@@ -2946,6 +2975,7 @@
             </div>
 
             <div style="display: flex; align-items: center; gap: 12px;">
+                <a class="app-store-badge" href="https://apps.apple.com/br/app/luksmusic/id6826902830" target="_blank" rel="noopener" title="Ver o luksMusic na App Store" aria-label="Baixar o luksMusic na App Store"><svg class="app-store-logo" viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span class="app-store-text"><small>Baixar na</small><strong>App Store</strong></span></a>
                 <div class="user-profile-badge">
                     <img id="userAvatarImg" class="user-avatar" src="" alt="Avatar" style="display: none;">
                     <div id="userAvatarFallback" class="user-avatar">L</div>
@@ -3028,6 +3058,7 @@
                     <button class="speed-btn" data-speed="1.25">1.25x</button>
                 </div>
 
+                <a class="app-store-badge compact" href="https://apps.apple.com/br/app/luksmusic/id6826902830" target="_blank" rel="noopener" title="Ver o luksMusic na App Store" aria-label="Baixar o luksMusic na App Store"><svg class="app-store-logo" viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span class="app-store-text"><small>Baixar na</small><strong>App Store</strong></span></a>
                 <div class="user-profile-badge" style="padding: 2px 10px 2px 4px;">
                     <span id="playerUserEmail" style="font-size: 11px; color: #94a3b8;">lukscli@gmail.com</span>
                 </div>
