@@ -25,6 +25,8 @@ final class MicrophonePitchService: @unchecked Sendable {
     var detectedFrequency: Double = 0.0
     var inputLevel: Float = 0.0
     var errorMessage: String? = nil
+    /// The steady pitch the tuner hears, in hertz; nil in silence or when the tuner isn't on
+    var tunerFrequency: Double? = nil
     
     // Callback when a new distinct piano note is identified
     var onNoteDetected: ((Int) -> Void)?
@@ -40,11 +42,15 @@ final class MicrophonePitchService: @unchecked Sendable {
     
     // Only touched on the audio tap's queue, or before the tap is installed
     private var reader = MicrophoneNoteReader(sampleRate: 44100)
+    @ObservationIgnored private var inputSampleRate = 44100.0
+    @ObservationIgnored private var tunerTracker: TunerPitchTracker?
     
     // Time until which the microphone is deaf, while the app itself is making sound
     private let deafLock = NSLock()
     private var deafUntil: Date = .distantPast
     private var expectedNotes: Set<Int>?
+    // What the tuner listens for; nil reads struck notes for the practice screens
+    @ObservationIgnored private var tunerSettings: TunerPitchTracker.Settings?
     
     // The heard note is named in solfège, or with letters when the app is in English
     private let solfegeNames = ["Dó", "Dó♯", "Ré", "Ré♯", "Mi", "Fá", "Fá♯", "Sol", "Sol♯", "Lá", "Lá♯", "Si"]
@@ -95,7 +101,9 @@ final class MicrophonePitchService: @unchecked Sendable {
             
             let inputNode = audioEngine.inputNode
             let inputFormat = inputNode.outputFormat(forBus: 0)
-            reader = MicrophoneNoteReader(sampleRate: inputFormat.sampleRate > 0 ? inputFormat.sampleRate : 44100.0)
+            inputSampleRate = inputFormat.sampleRate > 0 ? inputFormat.sampleRate : 44100.0
+            reader = MicrophoneNoteReader(sampleRate: inputSampleRate)
+            tunerTracker = nil
             
             inputNode.removeTap(onBus: 0)
             inputNode.installTap(onBus: 0, bufferSize: bufferSize, format: inputFormat) { [weak self] buffer, time in
@@ -135,6 +143,7 @@ final class MicrophonePitchService: @unchecked Sendable {
             self.detectedNoteName = "--"
             self.detectedFrequency = 0.0
             self.inputLevel = 0.0
+            self.tunerFrequency = nil
         }
         logger.info("Microphone pitch detection stopped.")
     }
@@ -154,6 +163,19 @@ final class MicrophonePitchService: @unchecked Sendable {
         deafLock.unlock()
     }
 
+    /// Turns the tuner on (a steady pitch in `tunerFrequency`, from `settings.lowest` to `settings.highest`) or,
+    /// with nil, back to reading struck notes.
+    func setTuner(_ settings: TunerPitchTracker.Settings?) {
+        deafLock.lock()
+        tunerSettings = settings
+        deafLock.unlock()
+        if settings == nil {
+            DispatchQueue.main.async { [weak self] in
+                self?.tunerFrequency = nil
+            }
+        }
+    }
+
     // MARK: - Audio Processing
     
     private func processAudioBuffer(_ buffer: AVAudioPCMBuffer) {
@@ -163,11 +185,18 @@ final class MicrophonePitchService: @unchecked Sendable {
         deafLock.lock()
         let isDeaf = Date() < deafUntil
         let expected = expectedNotes
+        let tuner = tunerSettings
         deafLock.unlock()
         if isDeaf {
             reader.reset()
+            tunerTracker?.reset()
             return
         }
+        if let tuner {
+            processForTuner(samples, settings: tuner)
+            return
+        }
+        tunerTracker = nil
         
         reader.expectedNotes = expected
         let missedBefore = reader.missedChords
@@ -191,6 +220,24 @@ final class MicrophonePitchService: @unchecked Sendable {
             }
             if missedChord {
                 self.onChordMissed?()
+            }
+        }
+    }
+
+    /// The tuner's reading of one hop: the pitch while a note rings, nil in silence.
+    private func processForTuner(_ samples: UnsafeBufferPointer<Float>, settings: TunerPitchTracker.Settings) {
+        if tunerTracker?.settings != settings || tunerTracker?.sampleRate != inputSampleRate {
+            tunerTracker = TunerPitchTracker(sampleRate: inputSampleRate, settings: settings)
+        }
+        // Mutated in place, so its sample window isn't copied every hop
+        let frequency = tunerTracker?.process(samples) ?? nil
+        let rms = tunerTracker?.level ?? 0
+        let level = min(1.0, max(0.0, (20 * log10(max(rms, 0.000_001)) + 60) / 50))
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.inputLevel = level
+            if self.tunerFrequency != frequency {
+                self.tunerFrequency = frequency
             }
         }
     }

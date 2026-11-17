@@ -102,6 +102,9 @@ final class AudioEngineService {
     /// Tracks the number of active notes for `isPlaying` state.
     private var activeNoteCount: Int = 0
     
+    /// Counts the tuner's reference tones, so only the last one sets the sampler's tuning back.
+    @ObservationIgnored private var referenceToneID = 0
+
     /// Whether the SoundFont has been loaded.
     private var isSoundFontLoaded: Bool = false
     
@@ -235,6 +238,20 @@ final class AudioEngineService {
         }
     }
     
+    /// Plays a note tuned to `a4` (the tuner's reference A) instead of 440 Hz: the sampler is retuned while the note
+    /// sounds and set back to 440 afterwards, so the score player keeps its pitch.
+    func playReferenceTone(midiNote: UInt8, a4: Double, duration: Double) {
+        referenceToneID += 1
+        let toneID = referenceToneID
+        sampler.globalTuning = Float(1200 * log2(a4 / 440))
+        playNote(midiNote: midiNote, velocity: 90, duration: duration)
+        // After the note's release has faded, unless another reference tone started meanwhile
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration + 1.5) { [weak self] in
+            guard let self, self.referenceToneID == toneID else { return }
+            self.sampler.globalTuning = 0
+        }
+    }
+
     /// Stops a currently playing MIDI note.
     ///
     /// - Parameter midiNote: The MIDI note number to stop (0–127).

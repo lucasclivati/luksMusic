@@ -26,9 +26,11 @@ enum PitchDetector {
     private static let dipThreshold: Float = 0.15
 
     /// The window should hold at least two periods of the lowest note: 4096 samples at 44.1 or 48 kHz.
-    static func estimate(samples: [Float], sampleRate: Double) -> Estimate? {
-        let maxLag = min(samples.count / 2, Int(sampleRate / lowestFrequency))
-        let minLag = max(2, Int(sampleRate / highestFrequency))
+    /// `lowest` and `highest` narrow the pitches looked for (the tuner goes down to the piano's A0).
+    static func estimate(samples: [Float], sampleRate: Double,
+                         lowest: Double = lowestFrequency, highest: Double = highestFrequency) -> Estimate? {
+        let maxLag = min(samples.count / 2, Int(sampleRate / lowest))
+        let minLag = max(2, Int(sampleRate / highest))
         guard maxLag > minLag + 2 else { return nil }
         let window = samples.count - maxLag
 
@@ -78,13 +80,16 @@ enum PitchDetector {
         }
         guard let best = found, best > 0, best < maxLag else { return nil }
 
-        let before = Double(normalized[best - 1])
-        let center = Double(normalized[best])
-        let after = Double(normalized[best + 1])
+        // The dip's exact place between two lags, from a parabola through the raw difference: the normalized one
+        // leans with its running mean, which pulled high notes a few cents sharp
+        let before = Double(difference[best - 1])
+        let center = Double(difference[best])
+        let after = Double(difference[best + 1])
         let curvature = before - 2 * center + after
-        let refined = Double(best) + (curvature != 0 ? (before - after) / (2 * curvature) : 0)
+        let shift = curvature > 0 ? (before - after) / (2 * curvature) : 0
+        let refined = Double(best) + max(-1, min(1, shift))
         guard refined > 0 else { return nil }
-        let clarity = max(0, min(1, 1 - center))
+        let clarity = max(0, min(1, 1 - Double(normalized[best])))
         return Estimate(frequency: sampleRate / refined, clarity: clarity)
     }
 }

@@ -730,3 +730,26 @@
 "%lld de %lld notas certas de primeira" = "%lld of %lld notes correct on the first try";
 "Próxima aula: %@" = "Next lesson: %@";
 "Refazer a aula" = "Restart the lesson";
+
+/* luksMusic/Views/Tuner/TunerView.swift, luksMusic/Models/Tuning.swift */
+"Afinador" = "Tuner";
+"Violão" = "Guitar";
+"Piano" = "Piano";
+"Toque uma corda" = "Play a string";
+"Toque uma nota" = "Play a note";
+"Afinado" = "In tune";
+"Aperte a corda" = "Tighten the string";
+"Afrouxe a corda" = "Loosen the string";
+"Abaixo da nota" = "Flat";
+"Acima da nota" = "Sharp";
+"Ouvido" = "Heard";
+"Alvo" = "Target";
+"Corda" = "String";
+"Auto" = "Auto";
+"Lá de referência" = "Reference A";
+"Diminuir o lá de referência" = "Lower the reference A";
+"Aumentar o lá de referência" = "Raise the reference A";
+"Voltar para 440 Hz" = "Reset to 440 Hz";
+"Tocar referência" = "Play reference tone";
+"Ouvindo" = "Listening";
+"Microfone desligado" = "Microphone off";

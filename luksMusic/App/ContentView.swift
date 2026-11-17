@@ -46,7 +46,14 @@ struct ContentView: View {
                     Label("Tocar", systemImage: "pianokeys")
                 }
                 .tag(0)
-            
+
+            // Tuner for the piano and the guitar
+            TunerView()
+                .tabItem {
+                    Label("Afinador", systemImage: "tuningfork")
+                }
+                .tag(4)
+
             // Tab 3: History & Stats
             PracticeHistoryView()
                 .tabItem {

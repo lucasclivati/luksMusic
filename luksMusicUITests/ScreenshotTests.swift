@@ -14,6 +14,8 @@ final class ScreenshotTests: XCTestCase {
     func testAppStoreScreenshots() {
         // Opens every lesson, so the walkthrough can visit the later ones
         app.launchArguments += ["-lessons.unlockAll", "YES"]
+        // The simulator has no instrument to hear: the tuner shows a fixed pitch per mode instead of the microphone's
+        app.launchArguments += ["-tuner.demo", "YES"]
         // The walkthrough finds controls by their Portuguese names, whatever the simulator's language
         app.launchArguments += ["-AppleLanguages", "(pt-BR)", "-AppleLocale", "pt_BR"]
         app.launch()
@@ -24,6 +26,7 @@ final class ScreenshotTests: XCTestCase {
             guestButton.tap()
         }
 
+        visitTheTuner()
         walkThroughALesson()
         tapIfExists(app.tabBars.buttons["Tocar"])
 
@@ -153,6 +156,27 @@ final class ScreenshotTests: XCTestCase {
         tree.name = "ui-tree"
         tree.lifetime = .keepAlways
         add(tree)
+    }
+
+    /// The tuner tab: a guitar string a little flat (tighten it), then a piano key in tune; back to the guitar after,
+    /// since the mode is remembered.
+    private func visitTheTuner() {
+        guard tapIfExists(app.tabBars.buttons["Afinador"]) else { return }
+        pause(1.5)
+        capture("47-tuner-guitar")
+        if tapIfExists(app.buttons["tunerMode.piano"]) {
+            pause(1)
+            capture("48-tuner-piano")
+            tapIfExists(app.buttons["tunerMode.guitar"])
+        }
+        // A string picked by hand
+        if tapIfExists(app.buttons["tunerString.0"]) {
+            pause(1)
+            capture("49-tuner-string")
+            tapIfExists(app.buttons["tunerString.auto"])
+        }
+        tapIfExists(app.tabBars.buttons["Aprender"])
+        pause(1)
     }
 
     /// Lesson 2 (Dó, Ré, Mi): two new notes learned by playing them, a drill with a wrong key, and a short piece.
