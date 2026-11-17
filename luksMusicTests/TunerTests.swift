@@ -137,7 +137,8 @@ final class TunerTests: XCTestCase {
         ]
         for midi in Tuning.guitarStrings {
             for profile in profiles {
-                let window = Array(tone(frequency: Tuning.frequency(ofMidi: midi), seconds: 0.2, harmonics: profile).prefix(4096))
+                // Past the 4 ms attack, which isn't periodic yet
+                let window = Array(tone(frequency: Tuning.frequency(ofMidi: midi), seconds: 0.2, harmonics: profile)[2400..<6496])
                 let estimate = try XCTUnwrap(PitchDetector.estimate(samples: window, sampleRate: sampleRate, lowest: 60, highest: 1400),
                                              "MIDI \(midi), \(profile.count) harmonics")
                 XCTAssertEqual(Tuning.cents(from: Tuning.frequency(ofMidi: midi), to: estimate.frequency), 0, accuracy: 1,
@@ -151,7 +152,7 @@ final class TunerTests: XCTestCase {
         // The low keys' fundamental is weak (most of their sound is in the harmonics); the top keys are nearly sines
         for midi in [21, 24, 28, 33, 40, 48, 60, 69, 84, 96, 108] {
             let profile: [Float] = midi < 45 ? [0.1, 0.5, 1, 0.8, 0.6, 0.5, 0.4, 0.3, 0.25, 0.2] : [1, 0.3, 0.1]
-            let window = Array(tone(frequency: Tuning.frequency(ofMidi: midi), seconds: 0.25, harmonics: profile).prefix(8192))
+            let window = Array(tone(frequency: Tuning.frequency(ofMidi: midi), seconds: 0.25, harmonics: profile)[2400..<10592])
             let estimate = try XCTUnwrap(PitchDetector.estimate(samples: window, sampleRate: sampleRate, lowest: 26, highest: 4300),
                                          "MIDI \(midi)")
             XCTAssertEqual(Tuning.nearestNote(to: estimate.frequency)?.midi, midi)
