@@ -459,6 +459,10 @@ final class LessonPlayerViewModel {
 
         timedPhase = current.isTimed ? .ready : .notTimed
         switch current.kind {
+        case .intro:
+            feedback = .none
+            keyboard.targetNoteKeys = []
+            microphone.expect(nil)
         case .learn, .read:
             feedback = .prompt
             lightCurrentKeys()

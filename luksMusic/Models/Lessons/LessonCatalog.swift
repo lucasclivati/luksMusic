@@ -34,8 +34,13 @@ enum LessonCatalog {
     private static let atYourPace = String(localized: "Toque em Ouvir para escutar, depois leia e toque no seu ritmo.")
 
     // Pieces used in more than one lesson
+    private static let auClairSnippet = "C4 C4 C4 D4 E4:h D4:h"
+    private static let auClairFull = "C4 C4 C4 D4 E4:h D4:h C4 E4 D4 D4 C4:w"
     private static let hotCrossBuns = "E4 D4 C4:h E4 D4 C4:h C4:e C4:e C4:e C4:e D4:e D4:e D4:e D4:e E4 D4 C4:h"
+    private static let odeToJoySnippet = "E4 E4 F4 G4 G4 F4 E4 D4"
     private static let odeToJoy = "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:q. D4:e D4:h"
+    private static let odeToJoyFull = "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:q. D4:e D4:h E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:q. C4:e C4:h"
+    private static let twinkleSnippet = "C4 C4 G4 G4 A4 A4 G4:h"
     private static let twinkle = "C4 C4 G4 G4 A4 A4 G4:h F4 F4 E4 E4 D4 D4 C4:h"
     private static let maryHalf = "E4 D4 C4 D4 E4 E4 E4:h D4 D4 D4:h E4 G4 G4:h"
 
@@ -46,33 +51,42 @@ enum LessonCatalog {
         title: String(localized: "Clave de sol"),
         summary: String(localized: "Mão direita, do Dó central para cima"),
         lessons: [
-            Lesson(id: "treble-1", title: String(localized: "O Dó central"), summary: String(localized: "Como achar o Dó no piano e na pauta"), steps: [
-                LessonStep(.learn, String(localized: "Ache o Dó"),
-                           String(localized: "As teclas pretas vêm em grupos de 2 e de 3. O Dó é a tecla branca logo à esquerda de cada grupo de 2. Toque os dois Dós acesos."),
-                           notes: "C4 C5"),
-                LessonStep(.learn, String(localized: "Nota nova: Dó central"),
-                           String(localized: "É o Dó mais perto do meio do piano. Na clave de sol, ele fica numa linha curta, logo abaixo das cinco linhas. Toque com o polegar direito."),
-                           notes: "C4"),
-                LessonStep(.read, String(localized: "Sua vez"), String(localized: "Toque o Dó central três vezes. Cada toque vale uma nota."), notes: "C4 C4 C4"),
+            Lesson(id: "treble-1", title: String(localized: "Como ler a partitura"), summary: String(localized: "Vídeo de introdução, suas primeiras notas e sua primeira música"), steps: [
+                LessonStep(.intro(.trebleOctave), String(localized: "Como a partitura começa"),
+                           String(localized: "Veja como as linhas funcionam e como cada tecla sobe meia linha até completar uma oitava.")),
+                LessonStep(.learn, String(localized: "Ache o Dó, o Ré e o Mi"),
+                           String(localized: "O Dó fica à esquerda das 2 teclas pretas, na linha curta abaixo da pauta. Cada tecla para a direita sobe meia linha. Toque Dó, Ré e Mi."),
+                           notes: "C4 D4 E4"),
+                LessonStep(.learn, String(localized: "Subindo uma oitava"),
+                           String(localized: "Agora suba uma tecla por nota até o próximo Dó, exatamente como você viu no vídeo."),
+                           notes: "C4 D4 E4 F4 G4 A4 B4 C5"),
+                LessonStep(.read, String(localized: "Música: Au Clair de la Lune (trecho)"),
+                           String(localized: "Hora da música! Toque a primeira frase desta melodia tradicional francesa usando só Dó, Ré e Mi. \(atYourPace)"),
+                           notes: auClairSnippet, meter: 4),
+                LessonStep(.read, String(localized: "Desafio: Au Clair de la Lune completa"),
+                           String(localized: "Para fechar a aula, toque a melodia completa sozinho do começo ao fim."),
+                           notes: auClairFull, meter: 4, challenge: true),
             ]),
             Lesson(id: "treble-2", title: String(localized: "Dó, Ré, Mi"), summary: String(localized: "As três primeiras notas"), steps: [
                 LessonStep(.learn, String(localized: "Nota nova: Ré"), String(localized: "É a tecla branca logo à direita do Dó. Na pauta, fica logo abaixo da primeira linha. Toque o Ré."), notes: "D4"),
                 LessonStep(.learn, String(localized: "Nota nova: Mi"), String(localized: "É a tecla branca seguinte. Na pauta, fica em cima da primeira linha. Toque o Mi."), notes: "E4"),
                 LessonStep(.read, String(localized: "Treino"), String(localized: "Dez notas sorteadas entre Dó, Ré e Mi. \(drill)"), pool: "C4 D4 E4", focus: "D4 E4"),
-                LessonStep(.read, String(localized: "Música: Hot Cross Buns"), String(localized: "Uma canção infantil inglesa só com Mi, Ré e Dó. \(atYourPace)"), notes: hotCrossBuns, meter: 4),
+                LessonStep(.read, String(localized: "Música: Hot Cross Buns"), String(localized: "Uma canção infantil inglesa só com Mi, Ré e Dó. \(atYourPace)"), notes: hotCrossBuns, meter: 4, challenge: true),
             ]),
             Lesson(id: "treble-3", title: String(localized: "Fá e Sol"), summary: String(localized: "A clave de sol marca a linha do Sol"), steps: [
                 LessonStep(.learn, String(localized: "Nota nova: Fá"), String(localized: "É a tecla branca logo à esquerda do grupo de 3 teclas pretas. Na pauta, fica no primeiro espaço. Toque o Fá."), notes: "F4"),
                 LessonStep(.learn, String(localized: "Nota nova: Sol"), String(localized: "Fica na segunda linha, a que a curva da clave de sol envolve. É daí que vem o nome da clave. Toque o Sol."), notes: "G4"),
                 LessonStep(.read, String(localized: "Treino"), String(localized: "Dez notas sorteadas do Dó ao Sol. \(drill)"), pool: "C4 D4 E4 F4 G4", focus: "F4 G4"),
-                LessonStep(.read, String(localized: "Música: Ode à Alegria"), String(localized: "O tema de Beethoven usa só as notas do Dó ao Sol. \(atYourPace)"), notes: odeToJoy, meter: 4),
+                LessonStep(.read, String(localized: "Música: Ode à Alegria (trecho)"), String(localized: "Experimente o início do tema de Beethoven usando do Ré ao Sol. \(atYourPace)"), notes: odeToJoySnippet, meter: 4),
+                LessonStep(.read, String(localized: "Desafio: Ode à Alegria"), String(localized: "Agora toque a frase completa de Beethoven sozinho. \(drill)"), notes: odeToJoy, meter: 4, challenge: true),
             ]),
             Lesson(id: "treble-4", title: String(localized: "Lá, Si e o outro Dó"), summary: String(localized: "Até o Dó de cima"), steps: [
                 LessonStep(.learn, String(localized: "Nota nova: Lá"), String(localized: "Vem depois do Sol. Na pauta, fica no segundo espaço. Toque o Lá."), notes: "A4"),
                 LessonStep(.learn, String(localized: "Nota nova: Si"), String(localized: "Fica na terceira linha, bem no meio da pauta. Toque o Si."), notes: "B4"),
                 LessonStep(.learn, String(localized: "Nota nova: o Dó de cima"), String(localized: "Depois do Si, os nomes recomeçam. Este Dó é o oitavo som a partir do Dó central e fica no terceiro espaço. Toque-o."), notes: "C5"),
                 LessonStep(.read, String(localized: "Treino"), String(localized: "Dez notas sorteadas do Dó central ao Dó de cima. \(drill)"), pool: "C4 D4 E4 F4 G4 A4 B4 C5", focus: "A4 B4 C5"),
-                LessonStep(.read, String(localized: "Música: Brilha, Brilha, Estrelinha"), String(localized: "Melodia tradicional que sobe até o Lá. \(atYourPace)"), notes: twinkle, meter: 4),
+                LessonStep(.read, String(localized: "Música: Brilha, Brilha, Estrelinha (trecho)"), String(localized: "Toque a abertura desta melodia tradicional subindo até o Lá. \(atYourPace)"), notes: twinkleSnippet, meter: 4),
+                LessonStep(.read, String(localized: "Desafio: Brilha, Brilha, Estrelinha"), String(localized: "Agora toque o trecho completo sozinho até voltar ao Dó. \(drill)"), notes: twinkle, meter: 4, challenge: true),
             ]),
             Lesson(id: "treble-5", title: String(localized: "A escala subindo"), summary: String(localized: "Do Dó central ao Dó de cima"), steps: [
                 LessonStep(.learn, String(localized: "A escala de Dó"), String(localized: "São oito notas vizinhas, todas em teclas brancas. Na pauta, cada nota sobe um degrau: linha, espaço, linha, espaço. Suba pelas teclas acesas."), notes: "C4 D4 E4 F4 G4 A4 B4 C5"),
@@ -89,17 +103,20 @@ enum LessonCatalog {
                 LessonStep(.learn, String(localized: "Notas novas: Fá e Sol"), String(localized: "O Fá fica na quinta linha, a última. O Sol fica logo acima dela. Toque os dois."), notes: "F5 G5"),
                 LessonStep(.read, String(localized: "Treino"), String(localized: "Dez notas sorteadas do Sol ao Sol de cima. \(drill)"), pool: "G4 A4 B4 C5 D5 E5 F5 G5", focus: "D5 E5 F5 G5"),
                 LessonStep(.read, String(localized: "Música: Ode à Alegria, uma oitava acima"), String(localized: "A mesma melodia da aula Fá e Sol, oito notas mais aguda: mesmas teclas, mais à direita. \(atYourPace)"),
-                           notes: "E5 E5 F5 G5 G5 F5 E5 D5 C5 C5 D5 E5 E5:q. D5:e D5:h", meter: 4),
+                           notes: "E5 E5 F5 G5 G5 F5 E5 D5 C5 C5 D5 E5 E5:q. D5:e D5:h", meter: 4, challenge: true),
             ]),
             Lesson(id: "treble-8", title: String(localized: "Linhas extras em cima"), summary: String(localized: "Lá, Si e Dó acima da pauta"), steps: [
                 LessonStep(.learn, String(localized: "Nota nova: Lá agudo"), String(localized: "Quando a nota passa das cinco linhas, a pauta ganha linhas curtas. O Lá fica na primeira linha curta acima da pauta. Toque o Lá."), notes: "A5"),
                 LessonStep(.learn, String(localized: "Notas novas: Si e Dó agudos"), String(localized: "O Si fica logo acima dessa linha. O Dó fica na segunda linha curta. Toque os dois."), notes: "B5 C6"),
                 LessonStep(.read, String(localized: "Treino"), String(localized: "Dez notas sorteadas no alto da pauta. \(drill)"), pool: "E5 F5 G5 A5 B5 C6", focus: "A5 B5 C6"),
             ]),
-            Lesson(id: "treble-9", title: String(localized: "Desafio da clave de sol"), summary: String(localized: "Notas sorteadas, sem ajuda"), steps: [
+            Lesson(id: "treble-9", title: String(localized: "Desafio da clave de sol"), summary: String(localized: "Leitura da pauta inteira e música completa"), steps: [
                 LessonStep(.read, String(localized: "Até o Dó de cima"), String(localized: "Dez notas sorteadas. \(drill)"), pool: "C4 D4 E4 F4 G4 A4 B4 C5"),
                 LessonStep(.read, String(localized: "Pauta inteira"), String(localized: "Dez notas sorteadas, do Dó central ao Dó mais alto. \(drill)"),
                            pool: "C4 D4 E4 F4 G4 A4 B4 C5 D5 E5 F5 G5 A5 B5 C6"),
+                LessonStep(.read, String(localized: "Desafio: Ode à Alegria completa"),
+                           String(localized: "Toque as duas partes completas do tema de Beethoven sozinho para concluir o módulo."),
+                           notes: odeToJoyFull, meter: 4, challenge: true),
             ]),
         ]
     )

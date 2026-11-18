@@ -86,10 +86,21 @@ struct LearnHomeView: View {
                 .background(isOpen ? PlayerTheme.cyan : PlayerTheme.border, in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(lesson.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(isOpen ? PlayerTheme.text : PlayerTheme.muted)
-                    .multilineTextAlignment(.leading)
+                HStack(spacing: 6) {
+                    Text(lesson.title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(isOpen ? PlayerTheme.text : PlayerTheme.muted)
+                        .multilineTextAlignment(.leading)
+
+                    if lesson.hasIntro {
+                        Label("Vídeo", systemImage: "play.rectangle.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(PlayerTheme.cyan)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(PlayerTheme.cyan.opacity(0.16), in: Capsule())
+                    }
+                }
                 Text(lesson.summary)
                     .font(.system(size: 12))
                     .foregroundStyle(PlayerTheme.muted)

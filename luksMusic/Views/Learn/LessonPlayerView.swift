@@ -19,7 +19,9 @@ struct LessonPlayerView: View {
         GeometryReader { geo in
             VStack(spacing: 0) {
                 PlayerTopBar(title: viewModel.lesson.title, subtitle: subtitle, onBack: close) {
-                    microphoneButton
+                    if !viewModel.step.isIntro {
+                        microphoneButton
+                    }
                 }
 
                 ProgressView(value: viewModel.progress)
@@ -27,6 +29,11 @@ struct LessonPlayerView: View {
 
                 if viewModel.isFinished {
                     finishedView
+                } else if case .intro(let intro) = viewModel.step.kind {
+                    LessonIntroView(intro: intro) {
+                        viewModel.continueLesson()
+                    }
+                    .frame(maxHeight: .infinity)
                 } else {
                     lessonContent
                         .frame(maxHeight: .infinity)
@@ -115,9 +122,12 @@ struct LessonPlayerView: View {
     private var stepBadge: (text: String, symbol: String, color: Color) {
         let step = viewModel.step
         switch step.kind {
+        case .intro:
+            return (String(localized: "VÍDEO"), "play.rectangle.fill", PlayerTheme.cyan)
         case .learn:
             return (String(localized: "APRENDA"), "lightbulb.fill", PlayerTheme.cyan)
         case .read:
+            if step.isChallenge { return (String(localized: "DESAFIO"), "trophy.fill", Self.amber) }
             if step.isDrill { return (String(localized: "TREINO"), "target", PlayerTheme.green) }
             if step.isPiece { return (String(localized: "MÚSICA"), "music.note", Self.amber) }
             return (String(localized: "LEITURA"), "eye.fill", PlayerTheme.green)
@@ -421,8 +431,9 @@ struct LessonPlayerView: View {
         .accessibilityIdentifier("lessonKeyboard")
     }
 
+    /// Two octaves (15 white keys, C to C) by default so the keyboard stays clean and readable.
     private static func whiteKeyCount(for width: CGFloat) -> Int {
-        max(10, min(36, Int(width / 26)))
+        max(10, min(15, Int(width / 25)))
     }
 
     // MARK: - End of the Lesson

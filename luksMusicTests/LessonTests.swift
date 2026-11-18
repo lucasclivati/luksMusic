@@ -216,13 +216,18 @@ final class LessonTests: XCTestCase {
             XCTAssertNotNil(lesson.midiRange, lesson.id)
             XCTAssertTrue(lesson.steps.last?.isScored == true, "\(lesson.id) ends with practice")
             for step in lesson.steps {
+                XCTAssertFalse(step.text.isEmpty)
+                if step.isIntro {
+                    XCTAssertTrue(step.notes.isEmpty && step.pool == nil, "\(lesson.id): intro step shouldn't require notes")
+                    XCTAssertFalse(step.isScored)
+                    continue
+                }
                 XCTAssertEqual(step.readingSteps.count, step.notes.count, "\(lesson.id): \(step.title) has a bad note")
                 XCTAssertFalse(step.notes.isEmpty && step.pool == nil, "\(lesson.id): \(step.title) has nothing to play")
                 XCTAssertFalse(step.kind == .learn && step.pool != nil, "\(lesson.id): \(step.title) learns from a draw")
                 XCTAssertEqual((step.pool ?? []).compactMap(LessonNotation.pitch(from:)).count, step.pool?.count ?? 0, "\(lesson.id): bad note in the pool")
                 XCTAssertTrue(Set(step.focus).isSubset(of: Set(step.pool ?? [])), "\(lesson.id): \(step.title) favors a note it can't draw")
                 XCTAssertLessThanOrEqual(step.pool == nil ? 0 : step.drawCount, 16, "\(lesson.id): \(step.title) is too long")
-                XCTAssertFalse(step.text.isEmpty)
                 if step.isTimed {
                     XCTAssertNotNil(step.meter, "\(lesson.id): \(step.title) needs a meter")
                 }
@@ -237,6 +242,27 @@ final class LessonTests: XCTestCase {
                 }
             }
         }
+    }
+
+    func testIntroScriptClimbsOneOctaveFromMiddleCWithTwoOctaveKeyboard() {
+        XCTAssertEqual(LessonIntroScript.keyboardRange, 60...84)
+        XCTAssertEqual(ReadingDrill.whiteCount(60, 84), 15, "two octaves from C4 to C6")
+
+        let spawned = LessonIntroScript.presses(for: .trebleOctave).filter(\.spawnsNote)
+        XCTAssertEqual(spawned.map(\.midi), [60, 62, 64, 65, 67, 69, 71, 72])
+        XCTAssertEqual(spawned.map(\.staffPosition), [-6, -5, -4, -3, -2, -1, 0, 1])
+
+        let ptNames = spawned.map { LessonIntroScript.shortNoteName(token: $0.token, usesLetters: false) }
+        let enNames = spawned.map { LessonIntroScript.shortNoteName(token: $0.token, usesLetters: true) }
+        XCTAssertEqual(ptNames, ["Dó", "Ré", "Mi", "Fá", "Sol", "Lá", "Si", "Dó"])
+        XCTAssertEqual(enNames, ["C", "D", "E", "F", "G", "A", "B", "C"])
+
+        let startSnap = LessonIntroScript.snapshot(for: .trebleOctave, at: 0)
+        XCTAssertTrue(startSnap.notes.isEmpty)
+        let linesSnap = LessonIntroScript.snapshot(for: .trebleOctave, at: 4.0)
+        XCTAssertEqual(linesSnap.lineProgress, [1, 1, 1, 1, 1])
+        let octaveSnap = LessonIntroScript.snapshot(for: .trebleOctave, at: 36.0)
+        XCTAssertEqual(octaveSnap.notes.count, 8)
     }
 
     func testTheScalesGoUpAndDownBetweenTheTwoCs() {
@@ -314,8 +340,15 @@ final class LessonTests: XCTestCase {
         let lessons = LessonCatalog.allLessons
         let viewModel = LessonPlayerViewModel(lesson: lessons[0])
         defer { viewModel.stop() }
+        XCTAssertTrue(lessons[0].hasIntro)
+        XCTAssertTrue(lessons[0].steps.last?.isChallenge == true)
         var steps = 0
         while !viewModel.isFinished && steps < 20 {
+            if viewModel.step.isIntro {
+                viewModel.continueLesson()
+                steps += 1
+                continue
+            }
             for step in viewModel.segment.steps where !step.isRest {
                 for note in step.midiNotes {
                     viewModel.notePlayed(note)
@@ -327,7 +360,7 @@ final class LessonTests: XCTestCase {
         }
         XCTAssertTrue(viewModel.isFinished)
         XCTAssertEqual(viewModel.stars, 3)
-        XCTAssertEqual(viewModel.totalNotes, 3, "the three Dós of the last step")
+        XCTAssertEqual(viewModel.totalNotes, 17, "the 6-note song opening plus the 11-note full song challenge")
         XCTAssertEqual(viewModel.nextLesson?.id, lessons[1].id)
         viewModel.open(lessons[1])
         XCTAssertFalse(viewModel.isFinished)

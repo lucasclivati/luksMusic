@@ -131,7 +131,9 @@ enum LessonNotation {
 }
 
 struct LessonStep: Identifiable {
-    enum Kind {
+    enum Kind: Equatable {
+        /// Animated vertical introduction explaining a concept before the player touches the keys.
+        case intro(LessonIntro)
         /// Something new: its notes are named on the staff and their keys lit. Playing them goes on; they don't
         /// count toward the stars.
         case learn
@@ -166,10 +168,12 @@ struct LessonStep: Identifiable {
     /// The notes of the pool just learned, drawn more often
     let focus: [String]
     let drawCount: Int
+    /// Lesson finale step where the student plays a longer song passage on their own
+    let isChallenge: Bool
 
     init(_ kind: Kind, _ title: String, _ text: String, notes: String = "", litKeys: String? = nil,
          staff: Staff = .treble, grand: Bool = false, key: Int = 0, meter: Int? = nil, tempo: Int = 72,
-         pool: String? = nil, focus: String = "", draw: Int = 10) {
+         pool: String? = nil, focus: String = "", draw: Int = 10, challenge: Bool = false) {
         self.kind = kind
         self.title = title
         self.text = text
@@ -183,11 +187,16 @@ struct LessonStep: Identifiable {
         self.pool = pool?.split(separator: " ").map(String.init)
         self.focus = focus.split(separator: " ").map(String.init)
         self.drawCount = draw
+        self.isChallenge = challenge
     }
 
+    var isIntro: Bool {
+        if case .intro = kind { return true }
+        return false
+    }
     var isTimed: Bool { kind == .rhythm || kind == .playAlong }
-    /// Learning a note isn't scored; everything else counts toward the lesson's stars
-    var isScored: Bool { kind != .learn }
+    /// Introductions and learning a note aren't scored; everything else counts toward the lesson's stars
+    var isScored: Bool { !isIntro && kind != .learn }
     var isDrill: Bool { pool != nil }
     /// A written piece, read at one's own pace: it can be heard first
     var isPiece: Bool { kind == .read && meter != nil }
@@ -238,6 +247,10 @@ struct Lesson: Identifiable {
     let title: String
     let summary: String
     let steps: [LessonStep]
+
+    var hasIntro: Bool {
+        steps.contains(where: \.isIntro)
+    }
 
     /// Every note the lesson writes or lights, for choosing the keyboard's keys.
     var midiRange: ClosedRange<Int>? {

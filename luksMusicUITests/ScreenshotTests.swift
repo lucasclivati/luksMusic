@@ -183,6 +183,12 @@ final class ScreenshotTests: XCTestCase {
     private func walkThroughALesson() {
         guard app.buttons["treble-2"].waitForExistence(timeout: 15) else { return }
         capture("18-learn")
+        if tapIfExists(app.buttons["treble-1"]) {
+            pause(2.5)
+            capture("18b-lesson-intro")
+            tapIfExists(app.buttons["Voltar"])
+            pause(0.8)
+        }
         app.buttons["treble-2"].tap()
         pause(1)
         capture("19-lesson-new-note")
