@@ -1,7 +1,7 @@
 // ReadingTrainerViewModel.swift
 // luksMusic
 //
-// The sight-reading drill: shows a few notes of one hand at a time, checks the keys pressed on the screen's
+// The sight-reading drill: shows a few notes of one hand (or both) at a time, checks the keys pressed on the screen's
 // keyboard, marks each note right or wrong, and moves through the piece in order or at random. The position in
 // the piece is remembered per score and hand, so learning a piece can continue on another day.
 
@@ -32,7 +32,11 @@ final class ReadingTrainerViewModel {
     let keySignature: Int
 
     private(set) var hand: ReadingHand
+    /// How many of the notes struck together are asked for: the melody, melody and bass, or every note
+    private(set) var notes: ReadingNotes
     private(set) var order: ReadingOrder
+    /// Whether the screen shows its keyboard (hidden when playing on a real piano or a MIDI keyboard)
+    private(set) var showsKeyboard: Bool
     private(set) var segmentSize: Int
     /// Goes to the next segment by itself when every note was right on the first try
     private(set) var advancesAutomatically: Bool
@@ -91,6 +95,8 @@ final class ReadingTrainerViewModel {
         let defaults = Self.defaults
         let hand = ReadingHand(rawValue: defaults.string(forKey: Self.handKey) ?? "") ?? .right
         self.hand = hand
+        self.notes = ReadingNotes(rawValue: defaults.string(forKey: Self.notesKey) ?? "") ?? .all
+        self.showsKeyboard = defaults.object(forKey: Self.showsKeyboardKey) as? Bool ?? true
         self.clefChoice = Self.storedClefChoice(for: hand)
         self.automaticUsesAlto = defaults.object(forKey: ClefChoice.automaticUsesAltoKey) as? Bool ?? true
         self.order = ReadingOrder(rawValue: defaults.string(forKey: Self.orderKey) ?? "") ?? .sequential
@@ -122,6 +128,18 @@ final class ReadingTrainerViewModel {
         Self.defaults.set(newHand.rawValue, forKey: Self.handKey)
         clefChoice = Self.storedClefChoice(for: newHand)
         loadSteps(resume: true)
+    }
+
+    func setNotes(_ newNotes: ReadingNotes) {
+        guard newNotes != notes else { return }
+        notes = newNotes
+        Self.defaults.set(newNotes.rawValue, forKey: Self.notesKey)
+        loadSteps(resume: true)
+    }
+
+    func setShowsKeyboard(_ value: Bool) {
+        showsKeyboard = value
+        Self.defaults.set(value, forKey: Self.showsKeyboardKey)
     }
 
     func setClefChoice(_ choice: ClefChoice) {
@@ -324,7 +342,7 @@ final class ReadingTrainerViewModel {
 
     private func loadSteps(resume: Bool) {
         stop()
-        steps = ReadingDrill.steps(in: measures, hand: hand, timeSignatureTop: timeSignatureTop, beatUnit: beatUnit)
+        steps = ReadingDrill.steps(in: measures, hand: hand, notes: notes, timeSignatureTop: timeSignatureTop, beatUnit: beatUnit)
         let midiNotes = steps.flatMap(\.midiNotes)
         handRange = midiNotes.min().flatMap { low in midiNotes.max().map { low...$0 } }
         keyboard.rangeStart = 0
@@ -465,8 +483,15 @@ final class ReadingTrainerViewModel {
     private static let sizeKey = "readingTrainer.segmentSize"
     private static let autoAdvanceKey = "readingTrainer.autoAdvance"
     private static let keyLabelsKey = "readingTrainer.keyLabels"
+    private static let notesKey = "readingTrainer.notes"
+    private static let showsKeyboardKey = "readingTrainer.showsKeyboard"
 
-    private var positionKey: String { "readingTrainer.position.\(storageKey).\(hand.rawValue)" }
+    /// Remembered per score, hand and notes kept (every note keeps the key it always had), since each choice reads
+    /// a different number of steps.
+    private var positionKey: String {
+        let base = "readingTrainer.position.\(storageKey).\(hand.rawValue)"
+        return notes == .all ? base : "\(base).\(notes.rawValue)"
+    }
 }
 
 /// What the drill's keyboard writes on its keys.

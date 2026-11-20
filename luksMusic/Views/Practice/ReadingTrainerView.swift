@@ -1,7 +1,7 @@
 // ReadingTrainerView.swift
 // luksMusic
 //
-// "Treino de leitura": a few notes of one hand on a staff, to be found on the keyboard. Each note turns green
+// "Treino de leitura": a few notes of one hand (or both, on a grand staff) to be found on the keyboard. Each note turns green
 // when found on the first try, orange when found after a mistake or a hint; a wrong key flashes red and shows
 // where it would be written. The piece is read in order (remembering where it stopped) or in random segments.
 
@@ -41,6 +41,7 @@ struct ReadingTrainerView: View {
 private struct ReadingTrainerScreen: View {
     @Bindable var viewModel: ReadingTrainerViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var midi = MIDIService.shared
 
     var body: some View {
         GeometryReader { geo in
@@ -49,7 +50,7 @@ private struct ReadingTrainerScreen: View {
                     settingsMenu
                 }
 
-                handBar
+                setupBar
 
                 staffCard
                     .frame(maxHeight: .infinity)
@@ -59,8 +60,11 @@ private struct ReadingTrainerScreen: View {
                 controls
                 statsLine
 
-                keyboard
-                    .frame(height: min(230, max(130, geo.size.height * 0.27)))
+                if viewModel.showsKeyboard {
+                    keyboard
+                        .frame(height: min(230, max(130, geo.size.height * 0.27)))
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
         }
         .background(PlayerTheme.background.ignoresSafeArea())
@@ -74,63 +78,51 @@ private struct ReadingTrainerScreen: View {
         dismiss()
     }
 
-    // MARK: - Hand and Order
+    // MARK: - Current Setup
 
-    private var handBar: some View {
+    /// What is being read (hand, notes, order), changed in the settings menu, and the MIDI keyboard when one is
+    /// plugged in.
+    private var setupBar: some View {
         HStack(spacing: 8) {
-            ForEach(ReadingHand.allCases) { hand in
-                let selected = viewModel.hand == hand
-                let tint = hand == .right ? PlayerTheme.cyan : PlayerTheme.green
-                Button {
-                    viewModel.setHand(hand)
-                } label: {
-                    HStack(spacing: 5) {
-                        Text(hand == .right ? "𝄞" : "𝄢")
-                            .font(.system(size: 16, weight: .bold))
-                        Text(hand.displayName)
-                            .font(.system(size: 13, weight: .semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    }
-                    .foregroundStyle(selected ? PlayerTheme.background : PlayerTheme.text)
-                    .padding(.horizontal, 10)
-                    .frame(height: 34)
-                    .background(selected ? tint : PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(selected ? tint : PlayerTheme.border, lineWidth: 1))
-                }
-                .accessibilityIdentifier(hand == .right ? "readingRightHand" : "readingLeftHand")
-                .accessibilityAddTraits(selected ? .isSelected : [])
+            HStack(spacing: 5) {
+                Text(viewModel.hand == .left ? "𝄢" : "𝄞")
+                    .font(.system(size: 15, weight: .bold))
+                Text("\(viewModel.hand.displayName) · \(viewModel.notes.displayName) · \(viewModel.order.displayName)")
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
+            .foregroundStyle(PlayerTheme.text)
+            .padding(.horizontal, 10)
+            .frame(height: 30)
+            .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("readingSetup")
 
             Spacer(minLength: 4)
 
-            Menu {
-                Picker("Ordem", selection: Binding(get: { viewModel.order }, set: { viewModel.setOrder($0) })) {
-                    ForEach(ReadingOrder.allCases) { order in
-                        Label(order.displayName, systemImage: order == .sequential ? "arrow.right" : "shuffle")
-                            .tag(order)
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: viewModel.order == .sequential ? "arrow.right" : "shuffle")
-                    Text(viewModel.order.displayName)
+            if let device = midi.connectedDevices.first {
+                HStack(spacing: 5) {
+                    Image(systemName: "pianokeys")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("Teclado conectado")
+                        .font(.system(size: 12, weight: .semibold))
                         .lineLimit(1)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 9, weight: .bold))
                 }
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(PlayerTheme.text)
+                .foregroundStyle(PlayerTheme.green)
                 .padding(.horizontal, 10)
-                .frame(height: 34)
-                .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
+                .frame(height: 30)
+                .background(PlayerTheme.green.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.green.opacity(0.5), lineWidth: 1))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(String(localized: "Teclado conectado: \(device.name)"))
+                .accessibilityIdentifier("readingConnectedKeyboard")
             }
-            .accessibilityLabel("Ordem dos trechos")
-            .accessibilityIdentifier("readingOrderMenu")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
+        .animation(.easeOut(duration: 0.2), value: midi.connectedDevices.count)
     }
 
     // MARK: - Staff
@@ -142,13 +134,28 @@ private struct ReadingTrainerScreen: View {
                     Image(systemName: "music.note")
                         .font(.system(size: 30))
                         .foregroundStyle(.gray)
-                    Text("A \(viewModel.hand.displayName.lowercased()) não tem notas nesta partitura.")
+                    Text(viewModel.hand == .both
+                         ? String(localized: "Esta partitura não tem notas.")
+                         : String(localized: "A \(viewModel.hand.displayName.lowercased()) não tem notas nesta partitura."))
                         .font(.subheadline)
                         .foregroundStyle(ReadingStaffView.ink)
                         .multilineTextAlignment(.center)
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.hand == .both {
+                // Both hands: each note on its own staff, sol and fá, with the columns lined up
+                GrandStaffView(
+                    steps: viewModel.segment.steps,
+                    accidentals: viewModel.accidentals,
+                    results: viewModel.segment.results,
+                    current: viewModel.segment.current,
+                    keySignature: viewModel.keySignature,
+                    wrongPitch: viewModel.wrongPitch,
+                    listeningStep: viewModel.listeningStep
+                )
+                .padding(.horizontal, 4)
+                .padding(.vertical, 8)
             } else {
                 ReadingStaffView(
                     steps: viewModel.segment.steps,
@@ -375,6 +382,26 @@ private struct ReadingTrainerScreen: View {
 
     private var settingsMenu: some View {
         Menu {
+            Picker(selection: Binding(get: { viewModel.hand }, set: { viewModel.setHand($0) })) {
+                ForEach(ReadingHand.allCases) { hand in
+                    Text(hand.displayName).tag(hand)
+                }
+            } label: {
+                Label("Mão", systemImage: "hand.raised")
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("readingHandPicker")
+
+            Picker(selection: Binding(get: { viewModel.notes }, set: { viewModel.setNotes($0) })) {
+                ForEach(ReadingNotes.allCases) { notes in
+                    Text(notes.displayName).tag(notes)
+                }
+            } label: {
+                Label("Notas", systemImage: "music.quarternote.3")
+            }
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("readingNotesPicker")
+
             Picker(selection: Binding(get: { viewModel.order }, set: { viewModel.setOrder($0) })) {
                 ForEach(ReadingOrder.allCases) { order in
                     Text(order.displayName).tag(order)
@@ -393,17 +420,20 @@ private struct ReadingTrainerScreen: View {
             }
             .pickerStyle(.menu)
 
-            Picker(selection: Binding(get: { viewModel.clefChoice }, set: { viewModel.setClefChoice($0) })) {
-                ForEach(ClefChoice.allCases) { choice in
-                    Text(choice.displayName).tag(choice)
+            // Both hands read sol and fá, as the piece is written
+            if viewModel.hand != .both {
+                Picker(selection: Binding(get: { viewModel.clefChoice }, set: { viewModel.setClefChoice($0) })) {
+                    ForEach(ClefChoice.allCases) { choice in
+                        Text(choice.displayName).tag(choice)
+                    }
+                } label: {
+                    Label("Clave da \(viewModel.hand.displayName.lowercased())", systemImage: "music.note")
                 }
-            } label: {
-                Label("Clave da \(viewModel.hand.displayName.lowercased())", systemImage: "music.note")
+                .pickerStyle(.menu)
+                .accessibilityIdentifier("readingClefPicker")
             }
-            .pickerStyle(.menu)
-            .accessibilityIdentifier("readingClefPicker")
 
-            if viewModel.clefChoice == .automatic {
+            if viewModel.hand != .both && viewModel.clefChoice == .automatic {
                 Toggle(isOn: Binding(get: { viewModel.automaticUsesAlto }, set: { viewModel.setAutomaticUsesAlto($0) })) {
                     Label("Clave de dó na automática", systemImage: "music.note.list")
                 }
@@ -417,6 +447,13 @@ private struct ReadingTrainerScreen: View {
                 Label("Nomes nas teclas", systemImage: "pianokeys")
             }
             .pickerStyle(.menu)
+
+            Toggle(isOn: Binding(get: { viewModel.showsKeyboard }, set: { value in
+                withAnimation(.easeInOut(duration: 0.25)) { viewModel.setShowsKeyboard(value) }
+            })) {
+                Label("Mostrar teclado na tela", systemImage: "pianokeys")
+            }
+            .accessibilityIdentifier("readingShowKeyboardToggle")
 
             Toggle(isOn: Binding(get: { viewModel.advancesAutomatically }, set: { viewModel.setAdvancesAutomatically($0) })) {
                 Label("Avançar sozinho ao acertar tudo", systemImage: "forward.end")

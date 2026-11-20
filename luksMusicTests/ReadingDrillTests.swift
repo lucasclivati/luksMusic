@@ -48,6 +48,31 @@ final class ReadingDrillTests: XCTestCase {
         XCTAssertEqual(left.map(\.midiNotes), [[48]])
     }
 
+    func testNotesKeptPerHandAndBothHandsReadTheWholePiece() {
+        // Right hand: a chord G4 C5 E5 then a lone D5; left hand: C3 G3 with the chord, then F2 on beat 2 alone
+        let measures = [Measure(number: 1, notes: [
+            note(.G, 4, beat: 1), note(.C, 5, beat: 1), note(.E, 5, beat: 1),
+            note(.C, 3, beat: 1, staff: .bass), note(.G, 3, beat: 1, staff: .bass),
+            note(.F, 2, beat: 2, staff: .bass),
+            note(.D, 5, beat: 3),
+        ])]
+        func steps(_ hand: ReadingHand, _ kept: ReadingNotes) -> [Set<Int>] {
+            ReadingDrill.steps(in: measures, hand: hand, notes: kept, timeSignatureTop: 4, beatUnit: 4).map(\.midiNotes)
+        }
+        // The right hand keeps its top notes, the left hand its bottom notes
+        XCTAssertEqual(steps(.right, .one), [[76], [74]])
+        XCTAssertEqual(steps(.right, .two), [[72, 76], [74]])
+        XCTAssertEqual(steps(.right, .all), [[67, 72, 76], [74]])
+        XCTAssertEqual(steps(.left, .one), [[48], [41]])
+        XCTAssertEqual(steps(.left, .two), [[48, 55], [41]])
+        // Both hands: the melody alone (a bass note on its own is left out), melody and bass, or everything
+        XCTAssertEqual(steps(.both, .one), [[76], [74]])
+        XCTAssertEqual(steps(.both, .two), [[48, 76], [41], [74]])
+        XCTAssertEqual(steps(.both, .all), [[48, 55, 67, 72, 76], [41], [74]])
+        // "Completo" is what one hand always read
+        XCTAssertEqual(steps(.right, .all), ReadingDrill.steps(in: measures, hand: .right, timeSignatureTop: 4, beatUnit: 4).map(\.midiNotes))
+    }
+
     func testFurEliseRightHandOpensWithEDSharpE() throws {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "fur-elise", withExtension: "musicxml"))
         let score = try MusicXMLParser.parse(url: url)

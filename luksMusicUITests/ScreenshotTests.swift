@@ -145,9 +145,15 @@ final class ScreenshotTests: XCTestCase {
                 }
                 pause(0.5)
                 capture("16-reading-done")
-                tapIfExists(app.buttons["readingLeftHand"])
-                pause(1.5)
-                capture("17-reading-left")
+                // The hand is chosen in the drill's settings menu
+                if tapIfExists(app.buttons["readingSettingsMenu"]) {
+                    pause(0.5)
+                    tapIfExists(app.buttons["Mão"])
+                    pause(0.5)
+                    tapIfExists(app.buttons["Mão esquerda"])
+                    pause(1.5)
+                    capture("17-reading-left")
+                }
             }
         }
 

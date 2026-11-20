@@ -7,16 +7,46 @@
 
 import Foundation
 
-/// The hand being read: the right hand reads the treble staff, the left hand the bass staff.
+/// The hand being read: the right hand reads the treble staff, the left hand the bass staff, both hands the two
+/// staves together (the whole piece, on a grand staff).
 enum ReadingHand: String, CaseIterable, Identifiable {
     case right
     case left
+    case both
 
     var id: String { rawValue }
 
-    var staff: Staff { self == .right ? .treble : .bass }
+    /// The staff a single hand reads (both hands: the treble staff, the one the melody is on).
+    var staff: Staff { self == .left ? .bass : .treble }
 
-    var displayName: String { self == .right ? String(localized: "Mão direita") : String(localized: "Mão esquerda") }
+    var displayName: String {
+        switch self {
+        case .right: return String(localized: "Mão direita")
+        case .left: return String(localized: "Mão esquerda")
+        case .both: return String(localized: "As duas mãos")
+        }
+    }
+}
+
+/// How many of the notes struck together the drill asks for at each step.
+enum ReadingNotes: String, CaseIterable, Identifiable {
+    /// One: the melody (the highest note; the lowest for the left hand alone)
+    case one
+    /// Two: the two highest notes of the right hand, the two lowest of the left, or with both hands the melody
+    /// and the bass
+    case two
+    /// Every note, as the piece is written
+    case all
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .one: return String(localized: "Uma nota")
+        case .two: return String(localized: "Duas notas")
+        case .all: return String(localized: "Completo")
+        }
+    }
 }
 
 /// How one segment follows another.
@@ -150,22 +180,28 @@ enum ReadingDrill {
 
     // MARK: - Steps and Segments
 
-    /// The hand's notes grouped by onset, in playing order. Rests and the held ends of ties are left out, since
-    /// no key is struck for them.
-    static func steps(in measures: [Measure], hand: ReadingHand, timeSignatureTop: Int, beatUnit: Int) -> [ReadingStep] {
+    /// The hand's notes grouped by onset, in playing order, keeping `notes` of each group (see `ReadingNotes`).
+    /// Rests and the held ends of ties are left out, since no key is struck for them; with both hands and one note,
+    /// moments when only the left hand strikes are left out too (the melody goes on sounding).
+    static func steps(in measures: [Measure], hand: ReadingHand, notes kept: ReadingNotes = .all,
+                      timeSignatureTop: Int, beatUnit: Int) -> [ReadingStep] {
         var steps: [ReadingStep] = []
         var measureStart = 0.0
         for (index, measure) in measures.enumerated() {
             // A short first measure numbered 0 is a pickup; other unnumbered measures count from their position
             let number = measure.number > 0 ? measure.number : (index == 0 && measure.length != nil ? 0 : index + 1)
-            let struck = measure.notes.filter { $0.staff == hand.staff && !$0.isRest && $0.isTieContinuation != true }
+            let struck = measure.notes.filter {
+                (hand == .both || $0.staff == hand.staff) && !$0.isRest && $0.isTieContinuation != true
+            }
             // Onsets a rounding error apart (triplets) are one moment
             let byOnset = Dictionary(grouping: struck) { ($0.position.beat * 1000).rounded() / 1000 }
             for beat in byOnset.keys.sorted() {
                 var seen = Set<Int>()
-                let notes = (byOnset[beat] ?? [])
+                let all = (byOnset[beat] ?? [])
                     .sorted { $0.midiNote < $1.midiNote }
                     .filter { seen.insert(Int($0.midiNote)).inserted }
+                let notes = selected(all, hand: hand, kept: kept)
+                guard !notes.isEmpty else { continue }
                 steps.append(ReadingStep(
                     measureIndex: index,
                     measureNumber: number,
@@ -178,6 +214,29 @@ enum ReadingDrill {
             measureStart += measure.beats(timeSignatureTop: timeSignatureTop)
         }
         return steps
+    }
+
+    /// The notes asked for at one moment, from its notes lowest first.
+    static func selected(_ notes: [Note], hand: ReadingHand, kept: ReadingNotes) -> [Note] {
+        switch (hand, kept) {
+        case (_, .all):
+            return notes
+        case (.right, .one):
+            return Array(notes.suffix(1))
+        case (.right, .two):
+            return Array(notes.suffix(2))
+        case (.left, .one):
+            return Array(notes.prefix(1))
+        case (.left, .two):
+            return Array(notes.prefix(2))
+        case (.both, .one):
+            return Array(notes.filter { $0.staff == .treble }.suffix(1))
+        case (.both, .two):
+            // The melody on top and the bass below, each when its hand strikes
+            let melody = notes.filter { $0.staff == .treble }.suffix(1)
+            let bass = notes.filter { $0.staff == .bass }.prefix(1)
+            return Array(bass) + Array(melody)
+        }
     }
 
     /// Number of segments when the piece is read in order, `size` steps at a time (the last one may be shorter).

@@ -321,6 +321,15 @@
 "Sem nomes" = "No names";
 
 /* luksMusic/Views/Practice/ReadingTrainerView.swift */
+"As duas mãos" = "Both hands";
+"Uma nota" = "One note";
+"Duas notas" = "Two notes";
+"Completo" = "Full";
+"Mão" = "Hand";
+"Notas" = "Notes";
+"Mostrar teclado na tela" = "Show on-screen keyboard";
+"Teclado conectado" = "Keyboard connected";
+"Esta partitura não tem notas." = "This score has no notes.";
 "Ordem" = "Order";
 "Ordem dos trechos" = "Passage order";
 "A %@ não tem notas nesta partitura." = "The %@ has no notes in this score.";
