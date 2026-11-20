@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Player de partituras (feature/player). -->
+<resources>
+    <string name="player_back">Voltar</string>
+    <string name="player_options">Opções da partitura</string>
+    <string name="player_add_favorite">Adicionar aos favoritos</string>
+    <string name="player_remove_favorite">Remover dos favoritos</string>
+    <string name="player_practice_mode">Modo Estudo</string>
+    <string name="player_mixer">Mixer de mãos</string>
+    <string name="player_settings">Configurações</string>
+    <string name="player_zoom">Zoom</string>
+    <string name="player_edit">Editar partitura</string>
+    <string name="player_export">Exportar MusicXML</string>
+    <plurals name="player_measures">
+        <item quantity="one">%d compasso</item>
+        <item quantity="other">%d compassos</item>
+    </plurals>
+
+    <!-- Painel -->
+    <string name="player_position">Posição na música</string>
+    <string name="player_measure_badge">Compasso %1$d/%2$d</string>
+    <string name="player_repeat_off">Repetir: desligado</string>
+    <string name="player_repeat_measure">Repetir: compasso</string>
+    <string name="player_repeat_piece">Repetir: música</string>
+    <string name="player_restart">Voltar ao início</string>
+    <string name="player_restart_measure">Voltar ao início do compasso</string>
+    <string name="player_previous_note">Nota anterior</string>
+    <string name="player_next_note">Próxima nota</string>
+    <string name="player_play">Tocar</string>
+    <string name="player_pause">Pausar</string>
+    <string name="player_speed">Velocidade</string>
+    <string name="player_speed_half">0,5×</string>
+    <string name="player_speed_three_quarters">0,75×</string>
+    <string name="player_speed_one_and_quarter">1,25×</string>
+    <string name="player_metronome">Metrônomo</string>
+    <string name="player_keyboard">Teclado</string>
+    <string name="player_right_hand_short">Mão dir.</string>
+    <string name="player_left_hand_short">Mão esq.</string>
+    <string name="player_rest">pausa</string>
+
+    <!-- Mixer de mãos -->
+    <string name="player_right_hand">Mão direita</string>
+    <string name="player_left_hand">Mão esquerda</string>
+    <string name="player_mute">Silenciar</string>
+    <string name="player_muted">Mudo</string>
+    <string name="player_both_hands">Duas mãos</string>
+    <string name="player_right_only">Só direita</string>
+    <string name="player_left_only">Só esquerda</string>
+
+    <!-- Configurações -->
+    <string name="player_section_display">EXIBIÇÃO</string>
+    <string name="player_mode_page">Página</string>
+    <string name="player_mode_page_detail">Dois compassos por linha</string>
+    <string name="player_mode_large">Ampliada</string>
+    <string name="player_mode_large_detail">Um compasso por linha, notas maiores</string>
+    <string name="player_mode_single_line">Linha única</string>
+    <string name="player_mode_single_line_detail">A partitura corre para o lado</string>
+    <string name="player_section_clefs">CLAVES</string>
+    <string name="player_automatic_alto">Clave de dó na automática</string>
+    <string name="player_automatic_alto_detail">A troca automática também usa a clave de dó</string>
+    <string name="player_section_sound">SOM</string>
+    <string name="player_concert_hall">Sala de concerto</string>
+    <string name="player_concert_hall_detail">Reverberação no som do piano</string>
+    <string name="player_section_keyboard">TECLADO</string>
+    <string name="player_show_keyboard">Mostrar teclado</string>
+    <string name="player_show_keyboard_detail">As teclas sob o cursor acendem</string>
+    <string name="player_section_transposition">TRANSPOSIÇÃO</string>
+    <string name="player_half_step_down">Meio tom abaixo</string>
+    <string name="player_half_step_up">Meio tom acima</string>
+    <string name="player_original">Original</string>
+    <string name="player_original_key">Tom original</string>
+    <plurals name="player_semitones_up">
+        <item quantity="one">%d semitom acima</item>
+        <item quantity="other">%d semitons acima</item>
+    </plurals>
+    <plurals name="player_semitones_down">
+        <item quantity="one">%d semitom abaixo</item>
+        <item quantity="other">%d semitons abaixo</item>
+    </plurals>
+
+    <!-- Claves -->
+    <string name="player_clef_treble">Clave de sol</string>
+    <string name="player_clef_bass">Clave de fá</string>
+    <string name="player_clef_alto">Clave de dó</string>
+    <string name="player_clef_choice_automatic">Automática</string>
+    <string name="player_clef_choice_treble">Sol</string>
+    <string name="player_clef_choice_bass">Fá</string>
+    <string name="player_clef_choice_alto">Dó</string>
+    <string name="player_clef_detail_score">Como a partitura escreve</string>
+    <string name="player_clef_detail_automatic">Muda conforme as notas</string>
+    <string name="player_clef_detail_treble">Clave de sol em tudo</string>
+    <string name="player_clef_detail_bass">Clave de fá em tudo</string>
+    <string name="player_clef_detail_alto">Clave de dó em tudo</string>
+    <string name="player_reading_drill">Treino de leitura</string>
+</resources>

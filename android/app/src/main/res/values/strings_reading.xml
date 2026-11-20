@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sight-reading drill: hands, notes per step, keyboard. Portuguese in values-pt/. -->
+<resources>
+    <string name="reading_hand">Hand</string>
+    <string name="reading_hand_both">Both hands</string>
+    <string name="reading_notes">Notes</string>
+    <string name="reading_notes_one">One note</string>
+    <string name="reading_notes_two">Two notes</string>
+    <string name="reading_notes_all">Full</string>
+    <string name="reading_show_keyboard">Show on-screen keyboard</string>
+    <string name="reading_keyboard_connected">Keyboard connected</string>
+    <string name="reading_keyboard_connected_named">Keyboard connected: %s</string>
+    <string name="reading_score_has_no_notes">This score has no notes.</string>
+</resources>

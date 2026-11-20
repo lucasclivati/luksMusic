@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The animated introduction of a lesson (feature/learn/LessonIntroScreen.kt), in English. The intro_phase_*,
+     intro_callout_* and intro_treble_* texts are looked up by name from core's LessonIntroScript, so keep their
+     names in step with it. -->
+<resources>
+    <string name="intro_phase_of">%1$d/%2$d · %3$s</string>
+    <string name="intro_play">Play</string>
+    <string name="intro_pause">Pause</string>
+    <string name="intro_replay">Replay</string>
+    <string name="intro_start_playing">Start playing</string>
+    <string name="intro_skip">Skip</string>
+    <string name="intro_octave_badge">1 octave (8 notes)</string>
+    <string name="intro_keyboard">Two-octave keyboard</string>
+
+    <string name="intro_callout_c4">Ledger line (2 below)</string>
+    <string name="intro_callout_d4">Below the 1st line</string>
+    <string name="intro_callout_e4">1st line</string>
+    <string name="intro_callout_f4">1st space</string>
+    <string name="intro_callout_g4">2nd line (G)</string>
+    <string name="intro_callout_a4">2nd space</string>
+    <string name="intro_callout_b4">3rd line (middle)</string>
+    <string name="intro_callout_c5">3rd space (1 octave)</string>
+
+    <string name="intro_phase_staff">THE STAFF</string>
+    <string name="intro_phase_middle_c">MIDDLE C</string>
+    <string name="intro_phase_ladder">UP THE LADDER</string>
+    <string name="intro_phase_octave">ONE OCTAVE</string>
+
+    <string name="intro_treble_lines_title">How sheet music begins</string>
+    <string name="intro_treble_lines_text">Sheet music starts with 5 horizontal lines, always counted from the bottom up.</string>
+    <string name="intro_treble_spaces_title">Lines and spaces are steps</string>
+    <string name="intro_treble_spaces_text">Between the lines sit 4 spaces. Every line and every space acts as one step in pitch.</string>
+    <string name="intro_treble_middle_c_title">Where middle C lives</string>
+    <string name="intro_treble_middle_c_text">Just left of the 2 black keys sits C. On the staff, it starts 2 steps below the 1st line, on a short extra line.</string>
+    <string name="intro_treble_d_title">D: climbing half a line</string>
+    <string name="intro_treble_d_text">Pressing the next white key moves the note up one step, right below the 1st line.</string>
+    <string name="intro_treble_e_title">E: on the 1st line</string>
+    <string name="intro_treble_e_text">One more key to the right and the note climbs another step, landing on the 1st line.</string>
+    <string name="intro_treble_f_title">F: in the 1st space</string>
+    <string name="intro_treble_f_text">The next key brings the note into the 1st space between the lines.</string>
+    <string name="intro_treble_g_title">G: on the 2nd line</string>
+    <string name="intro_treble_g_text">That\'s the line the curl of the treble clef wraps around — which is why it\'s also called the G clef.</string>
+    <string name="intro_treble_a_b_title">A and B: space and line</string>
+    <string name="intro_treble_a_b_text">Going one key at a time, A lands in the 2nd space and B sits on the 3rd line, right in the middle of the staff.</string>
+    <string name="intro_treble_octave_title">C again: 1 octave!</string>
+    <string name="intro_treble_octave_text">In the 3rd space we reach another C! From one C to the next is 8 white keys: one octave.</string>
+    <string name="intro_treble_one_per_key_title">One note per key</string>
+    <string name="intro_treble_one_per_key_text">See how clear it is? Each neighboring white key climbs one step on the staff. Now it\'s your turn!</string>
+</resources>

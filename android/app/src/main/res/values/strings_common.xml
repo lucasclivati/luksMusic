@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English (the default for any device language other than Portuguese, as on iOS).
+     Portuguese is in values-pt/. Each feature keeps its texts in its own strings_<feature>.xml. -->
+<resources>
+    <string name="app_name" translatable="false">luksMusic</string>
+    <string name="tab_learn">Learn</string>
+    <string name="tab_play">Play</string>
+    <string name="tab_tuner">Tuner</string>
+    <string name="tab_progress">Progress</string>
+    <string name="tab_settings">Settings</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_back">Back</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_save">Save</string>
+    <string name="action_done">Done</string>
+    <string name="action_retry">Try again</string>
+    <string name="difficulty_beginner">Beginner</string>
+    <string name="difficulty_intermediate">Intermediate</string>
+    <string name="difficulty_advanced">Advanced</string>
+    <string name="difficulty_expert">Virtuoso</string>
+    <string name="source_manual">Created in the app</string>
+    <string name="source_imported">Imported</string>
+    <string name="source_scanned">Scanned</string>
+    <string name="loading">Loading…</string>
+</resources>

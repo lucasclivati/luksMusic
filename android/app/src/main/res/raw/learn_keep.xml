@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The course's texts are looked up by name (feature/learn/LessonTexts.kt), so the resource shrinker can't see
+     them used: keep them in release builds. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/learn_m_*,@string/learn_l_*,@string/learn_c_*,@string/intro_phase_*,@string/intro_callout_*,@string/intro_treble_*" />

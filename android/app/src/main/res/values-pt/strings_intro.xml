@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A introdução animada de uma aula (feature/learn/LessonIntroScreen.kt), em português. Os textos intro_phase_*,
+     intro_callout_* e intro_treble_* são procurados pelo nome a partir do LessonIntroScript do core, então mantenha
+     os nomes iguais aos de lá. -->
+<resources>
+    <string name="intro_phase_of">%1$d/%2$d · %3$s</string>
+    <string name="intro_play">Tocar</string>
+    <string name="intro_pause">Pausar</string>
+    <string name="intro_replay">Rever</string>
+    <string name="intro_start_playing">Começar a tocar</string>
+    <string name="intro_skip">Pular</string>
+    <string name="intro_octave_badge">1 oitava (8 notas)</string>
+    <string name="intro_keyboard">Teclado de duas oitavas</string>
+
+    <string name="intro_callout_c4">Linha curta (2 abaixo)</string>
+    <string name="intro_callout_d4">Embaixo da 1ª linha</string>
+    <string name="intro_callout_e4">1ª linha</string>
+    <string name="intro_callout_f4">1º espaço</string>
+    <string name="intro_callout_g4">2ª linha (Sol)</string>
+    <string name="intro_callout_a4">2º espaço</string>
+    <string name="intro_callout_b4">3ª linha (meio)</string>
+    <string name="intro_callout_c5">3º espaço (1 oitava)</string>
+
+    <string name="intro_phase_staff">A PAUTA</string>
+    <string name="intro_phase_middle_c">O DÓ CENTRAL</string>
+    <string name="intro_phase_ladder">SUBINDO A ESCADA</string>
+    <string name="intro_phase_octave">UMA OITAVA</string>
+
+    <string name="intro_treble_lines_title">Como começa a partitura</string>
+    <string name="intro_treble_lines_text">A partitura começa com 5 linhas horizontais, sempre contadas de baixo para cima.</string>
+    <string name="intro_treble_spaces_title">Linhas e espaços são degraus</string>
+    <string name="intro_treble_spaces_text">Entre as linhas ficam 4 espaços. Cada linha e cada espaço funciona como meio degrau de altura.</string>
+    <string name="intro_treble_middle_c_title">Onde nasce o Dó</string>
+    <string name="intro_treble_middle_c_text">À esquerda das 2 teclas pretas fica o Dó. Na pauta, ele começa 2 degraus abaixo da 1ª linha, numa linha curta.</string>
+    <string name="intro_treble_d_title">Ré: subindo meia linha</string>
+    <string name="intro_treble_d_text">Apertando a próxima tecla branca, a nota sobe meio degrau e encosta logo abaixo da 1ª linha.</string>
+    <string name="intro_treble_e_title">Mi: em cima da 1ª linha</string>
+    <string name="intro_treble_e_text">Mais uma tecla para a direita e a nota sobe mais meia linha, pousando na 1ª linha.</string>
+    <string name="intro_treble_f_title">Fá: no 1º espaço</string>
+    <string name="intro_treble_f_text">A próxima tecla leva a nota para dentro do 1º espaço entre as linhas.</string>
+    <string name="intro_treble_g_title">Sol: na 2ª linha</string>
+    <string name="intro_treble_g_text">É a linha que a curva da Clave de Sol abraça — por isso ela tem esse nome.</string>
+    <string name="intro_treble_a_b_title">Lá e Si: linha e espaço</string>
+    <string name="intro_treble_a_b_text">Seguindo uma tecla por vez, o Lá entra no 2º espaço e o Si pousa na 3ª linha, bem no meio da pauta.</string>
+    <string name="intro_treble_octave_title">Dó de novo: 1 oitava!</string>
+    <string name="intro_treble_octave_text">No 3º espaço chegamos a outro Dó! De um Dó até o próximo são 8 teclas brancas: uma oitava.</string>
+    <string name="intro_treble_one_per_key_title">Uma nota por tecla</string>
+    <string name="intro_treble_one_per_key_text">Viu como é simples? Cada tecla branca vizinha sobe meio degrau na pauta. Agora é a sua vez!</string>
+</resources>

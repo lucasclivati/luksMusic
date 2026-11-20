@@ -2,6 +2,9 @@
 
 A SwiftUI-based iOS application for reading, practicing, scanning, and editing sheet music. Built with AudioKit for audio synthesis and MIDI playback, with OCR capabilities for digitizing printed scores.
 
+> **Android:** the native Android app (Kotlin + Jetpack Compose) is in [`android/`](android/README.md). It shares
+> `luksMusic/ScoreViewer`, `luksMusic/SampleScores` and the Firebase backend with this app.
+
 ## Requirements
 
 - **Xcode 16.0+**

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Login -->
+    <string name="account_tagline">Partituras interativas e prática de piano</string>
+    <string name="account_feature_cloud_title">Biblioteca na nuvem</string>
+    <string name="account_feature_cloud_subtitle">Entre com sua conta para guardar suas partituras</string>
+    <string name="account_feature_piano_title">Piano Interativo e Prática</string>
+    <string name="account_feature_piano_subtitle">Teclado interativo, metrônomo e partitura conectada</string>
+    <string name="account_sign_in_google">Entrar com Google</string>
+    <string name="account_sign_in_email">Entrar com E-mail</string>
+    <string name="account_email">E-mail</string>
+    <string name="account_password">Senha</string>
+    <string name="account_show_password">Mostrar senha</string>
+    <string name="account_hide_password">Ocultar senha</string>
+    <string name="account_sign_in_or_create">Entrar / Criar Conta</string>
+    <string name="account_continue_guest">Continuar como Convidado (Offline)</string>
+    <string name="account_apple_note">Criou sua conta com a Apple no iPhone ou iPad? O Sign in with Apple não existe no Android, mas você pode continuar como convidado neste aparelho.</string>
+
+    <!-- Profile -->
+    <string name="account_provider_email">E-mail</string>
+    <string name="account_provider_guest">Convidado</string>
+    <string name="account_guest_name">Convidado Local</string>
+    <string name="account_default_name">Pianista</string>
+    <string name="account_email_and_provider">%1$s (%2$s)</string>
+
+    <!-- Errors -->
+    <string name="account_error_google">Falha no login com Google: %1$s</string>
+    <string name="account_error_auth">Erro de autenticação: %1$s</string>
+    <string name="account_error_delete">Não foi possível excluir a conta: %1$s</string>
+    <string name="account_error_same_account">Confirme com a mesma conta que está conectada.</string>
+    <string name="account_error_sign_in_to_continue">Entre com sua conta para continuar.</string>
+    <string name="account_error_session_expired">Sua sessão expirou. Entre novamente.</string>
+    <string name="account_error_invalid_credentials">Credenciais inválidas</string>
+    <string name="account_error_invalid_response">Resposta inválida do Firebase</string>
+    <string name="account_error_unknown">Erro desconhecido</string>
+    <string name="account_error_network">Sem conexão com a internet. Confira sua conexão e tente de novo.</string>
+    <string name="account_google_not_configured">O login com Google ainda não está configurado nesta versão do app. Use seu e-mail ou continue como convidado.</string>
+    <string name="account_google_no_account">Nenhuma conta Google foi encontrada neste aparelho. Adicione uma nas configurações do aparelho e tente de novo.</string>
+    <string name="account_fb_invalid_login">E-mail ou senha incorretos.</string>
+    <string name="account_fb_invalid_email">Esse endereço de e-mail não é válido.</string>
+    <string name="account_fb_weak_password">A senha precisa ter pelo menos 6 caracteres.</string>
+    <string name="account_fb_email_exists">Este e-mail já está em uso.</string>
+    <string name="account_fb_user_disabled">Esta conta foi desativada.</string>
+    <string name="account_fb_too_many">Muitas tentativas. Tente de novo em alguns minutos.</string>
+
+    <!-- Cloud sync -->
+    <string name="account_sync_error_sign_in">Entre com sua conta para sincronizar as partituras.</string>
+    <string name="account_sync_error">Não foi possível sincronizar: %1$s</string>
+    <string name="account_delete_cloud_error">Falha ao apagar dados na nuvem: %1$s</string>
+
+    <!-- Settings -->
+    <string name="account_section_account">Conta e nuvem</string>
+    <string name="account_sync_button">Sincronizar partituras na nuvem</string>
+    <string name="account_sign_out">Sair da conta</string>
+    <string name="account_delete_account">Excluir conta</string>
+    <string name="account_section_midi">Teclado MIDI externo</string>
+    <string name="account_midi_connection">Conexão MIDI</string>
+    <string name="account_midi_connected">Conectado</string>
+    <string name="account_midi_connected_by">Conectado · %1$s</string>
+    <string name="account_midi_none">Nenhum teclado MIDI conectado</string>
+    <string name="account_section_language">Idioma</string>
+    <string name="account_language_system">Idioma do aparelho</string>
+    <string name="account_section_about">Sobre</string>
+    <string name="account_app_version">Versão do app</string>
+
+    <!-- Delete account -->
+    <string name="account_delete_title">Excluir Conta</string>
+    <string name="account_delete_explanation">Sua conta e as partituras sincronizadas na nuvem serão apagadas permanentemente. As partituras salvas neste aparelho continuam disponíveis no modo convidado.</string>
+    <string name="account_delete_confirm_identity">Confirme sua identidade</string>
+    <string name="account_delete_password_for">Senha de %1$s</string>
+    <string name="account_delete_permanently">Excluir Conta Permanentemente</string>
+    <string name="account_delete_with_google">Confirmar com Google e Excluir</string>
+    <string name="account_delete_apple_unavailable">Esta conta usa o Sign in with Apple, que não existe no Android. Exclua a conta pelo luksMusic num iPhone ou iPad.</string>
+
+    <!-- Progress -->
+    <string name="account_progress_empty_title">Nenhum estudo registrado ainda</string>
+    <string name="account_progress_empty_message">Abra uma partitura e toque em Modo Estudo para começar a treinar.</string>
+    <string name="account_progress_recent">Estudos recentes</string>
+    <plurals name="account_progress_session_detail">
+        <item quantity="one">%1$s • %2$d nota</item>
+        <item quantity="other">%1$s • %2$d notas</item>
+    </plurals>
+    <string name="account_progress_sessions">Estudos</string>
+    <string name="account_progress_average_accuracy">Precisão média</string>
+    <string name="account_progress_longest_streak">Maior sequência</string>
+    <string name="account_mode_free_play">Livre</string>
+    <string name="account_mode_guided">Guiado</string>
+    <string name="account_mode_right_hand">Mão direita</string>
+    <string name="account_mode_left_hand">Mão esquerda</string>
+    <string name="account_mode_slow">Lento</string>
+</resources>

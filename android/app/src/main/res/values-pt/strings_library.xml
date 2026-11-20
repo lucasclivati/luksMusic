@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Biblioteca -->
+    <string name="library_title">Biblioteca</string>
+    <string name="library_search_prompt">Buscar partituras</string>
+    <string name="library_clear_search">Limpar busca</string>
+    <string name="library_add_score">Adicionar partitura</string>
+    <string name="library_show_list">Mostrar em lista</string>
+    <string name="library_show_grid">Mostrar em grade</string>
+    <string name="library_sort">Ordenar</string>
+    <string name="library_sort_date_added">Data de inclusão</string>
+    <string name="library_sort_title">Título</string>
+    <string name="library_sort_difficulty">Dificuldade</string>
+    <string name="library_sort_last_practiced">Último estudo</string>
+    <string name="library_filter">Filtrar</string>
+    <string name="library_filter_difficulty">Dificuldade</string>
+    <string name="library_filter_source">Origem</string>
+    <string name="library_favorites_only">Só favoritas</string>
+    <string name="library_clear_filters">Limpar filtros</string>
+    <string name="library_my_scores">Minhas partituras</string>
+    <string name="library_empty_title">Nenhuma partitura sua ainda</string>
+    <string name="library_empty_message">Importe um arquivo MusicXML ou crie uma partitura nova.</string>
+    <string name="library_no_results_title">Nenhum resultado para “%1$s”</string>
+    <string name="library_no_results_message">Confira a ortografia ou tente outra busca.</string>
+    <string name="library_no_filter_results">Nenhuma partitura com estes filtros.</string>
+    <string name="library_create_new">Criar nova</string>
+    <string name="library_create_new_detail">Comece com uma partitura em branco</string>
+    <string name="library_import_file">Importar arquivo</string>
+    <string name="library_import_file_detail">Arquivos MusicXML (.musicxml, .xml, .mxl)</string>
+    <string name="library_untitled_score">Partitura sem título</string>
+    <string name="library_favorite">Favoritar</string>
+    <string name="library_unfavorite">Remover dos favoritos</string>
+    <string name="library_edit">Editar partitura</string>
+    <string name="library_export">Exportar MusicXML</string>
+    <string name="library_share">Compartilhar MusicXML</string>
+    <string name="library_delete">Apagar</string>
+    <string name="library_deleted">“%1$s” apagada</string>
+    <string name="library_undo">Desfazer</string>
+    <string name="library_favorite_badge">Favorita</string>
+    <string name="library_exported">MusicXML salvo</string>
+    <string name="library_export_failed">Não foi possível salvar o arquivo MusicXML.</string>
+
+    <!-- Catálogo -->
+    <string name="library_catalog_title">Catálogo luksMusic</string>
+    <string name="library_catalog_subtitle">Baixe para tocar no app, mesmo sem internet</string>
+    <string name="library_catalog_see_all">Ver todas</string>
+    <string name="library_catalog_private">Privada</string>
+    <string name="library_catalog_downloaded">Baixada</string>
+    <string name="library_catalog_download">Baixar</string>
+    <string name="library_catalog_downloading">Baixando…</string>
+    <string name="library_catalog_download_failed">Não foi possível baixar</string>
+    <string name="library_catalog_empty">Nenhuma partitura do catálogo disponível para esta conta.</string>
+    <string name="library_catalog_footer">Toque em uma partitura para baixá-la e tocar no celular, mesmo sem internet. As privadas aparecem só para o autor e para quem ele convidou.</string>
+    <string name="library_catalog_load_failed">Não foi possível carregar o catálogo: %1$s</string>
+    <string name="library_catalog_downloading_score">Baixando partitura…</string>
+    <string name="library_catalog_score_download_failed">Não foi possível baixar a partitura: %1$s</string>
+    <string name="library_catalog_error_connection">Não foi possível conectar ao luksmusic.web.app. Verifique a internet e tente de novo.</string>
+    <string name="library_catalog_error_not_found">O arquivo não foi encontrado no site.</string>
+    <string name="library_catalog_error_unreadable">O arquivo da partitura não pôde ser lido.</string>
+
+    <!-- Importar -->
+    <string name="library_import_title">Importar partitura</string>
+    <string name="library_import_choose_prompt">Escolha um arquivo para importar</string>
+    <string name="library_import_choose_file">Escolher arquivo</string>
+    <string name="library_import_formats">Formatos aceitos:</string>
+    <string name="library_import_formats_list">.xml  ·  .musicxml  ·  .mxl</string>
+    <string name="library_import_reading">Lendo o arquivo…</string>
+    <string name="library_import_selected_file">Arquivo escolhido</string>
+    <string name="library_import_field_title">Título</string>
+    <string name="library_import_field_composer">Compositor</string>
+    <string name="library_import_field_difficulty">Dificuldade</string>
+    <string name="library_import_details">Dados da partitura</string>
+    <string name="library_import_details_footer">Você pode mudar estes dados depois.</string>
+    <string name="library_import_button">Importar partitura</string>
+    <string name="library_import_importing">Importando…</string>
+    <string name="library_import_success">Partitura importada!</string>
+    <string name="library_import_success_detail">“%1$s” foi adicionada à sua biblioteca.</string>
+    <string name="library_import_open">Abrir partitura</string>
+    <string name="library_import_failed">Não foi possível importar</string>
+    <string name="library_import_error_no_file">Nenhum arquivo foi escolhido.</string>
+    <string name="library_import_error_open">Não foi possível abrir o arquivo: %1$s</string>
+    <string name="library_import_error_unexpected">Ocorreu um erro inesperado: %1$s</string>
+    <string name="library_import_error_not_readable">Não foi possível ler o arquivo escolhido. Confira as permissões e tente de novo.</string>
+    <string name="library_import_error_unsupported">Este formato de arquivo não é aceito. Use MusicXML (.xml, .musicxml ou .mxl).</string>
+    <string name="library_import_error_too_large">O arquivo é grande demais para ser uma partitura.</string>
+    <string name="library_musicxml_error_corrupted">O arquivo MusicXML está danificado ou não é válido.</string>
+    <string name="library_musicxml_error_missing_part">A partitura MusicXML não tem nenhuma parte.</string>
+    <string name="library_musicxml_error_missing_score_file">O arquivo .mxl não contém uma partitura MusicXML.</string>
+    <string name="library_zip_error_corrupted">O arquivo compactado está danificado.</string>
+    <string name="library_zip_error_unsupported">O arquivo compactado usa criptografia ou uma compressão que o app não lê.</string>
+</resources>

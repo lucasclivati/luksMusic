@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Library (Tocar tab), import, luksMusic catalog. Portuguese in values-pt/strings_library.xml. -->
+<resources>
+    <!-- Library -->
+    <string name="library_title">Library</string>
+    <string name="library_search_prompt">Search scores</string>
+    <string name="library_clear_search">Clear search</string>
+    <string name="library_add_score">Add score</string>
+    <string name="library_show_list">Show as list</string>
+    <string name="library_show_grid">Show as grid</string>
+    <string name="library_sort">Sort</string>
+    <string name="library_sort_date_added">Date added</string>
+    <string name="library_sort_title">Title</string>
+    <string name="library_sort_difficulty">Difficulty</string>
+    <string name="library_sort_last_practiced">Last practiced</string>
+    <string name="library_filter">Filter</string>
+    <string name="library_filter_difficulty">Difficulty</string>
+    <string name="library_filter_source">Source</string>
+    <string name="library_favorites_only">Favorites only</string>
+    <string name="library_clear_filters">Clear filters</string>
+    <string name="library_my_scores">My scores</string>
+    <string name="library_empty_title">You don\'t have any scores yet</string>
+    <string name="library_empty_message">Import a MusicXML file or create a new score.</string>
+    <string name="library_no_results_title">No results for “%1$s”</string>
+    <string name="library_no_results_message">Check the spelling or try a new search.</string>
+    <string name="library_no_filter_results">No scores match these filters.</string>
+    <string name="library_create_new">Create new</string>
+    <string name="library_create_new_detail">Start with a blank score</string>
+    <string name="library_import_file">Import file</string>
+    <string name="library_import_file_detail">MusicXML files (.musicxml, .xml, .mxl)</string>
+    <string name="library_untitled_score">Untitled score</string>
+    <string name="library_favorite">Add to favorites</string>
+    <string name="library_unfavorite">Remove from favorites</string>
+    <string name="library_edit">Edit Score</string>
+    <string name="library_export">Export MusicXML</string>
+    <string name="library_share">Share MusicXML</string>
+    <string name="library_delete">Delete</string>
+    <string name="library_deleted">“%1$s” deleted</string>
+    <string name="library_undo">Undo</string>
+    <string name="library_favorite_badge">Favorite</string>
+    <string name="library_exported">MusicXML saved</string>
+    <string name="library_export_failed">Couldn\'t save the MusicXML file.</string>
+
+    <!-- Catalog -->
+    <string name="library_catalog_title">luksMusic Catalog</string>
+    <string name="library_catalog_subtitle">Download to play in the app, even offline</string>
+    <string name="library_catalog_see_all">See all</string>
+    <string name="library_catalog_private">Private</string>
+    <string name="library_catalog_downloaded">Downloaded</string>
+    <string name="library_catalog_download">Download</string>
+    <string name="library_catalog_downloading">Downloading…</string>
+    <string name="library_catalog_download_failed">Download failed</string>
+    <string name="library_catalog_empty">No catalog scores are available for this account.</string>
+    <string name="library_catalog_footer">Tap a score to download it and play it on your phone, even offline. Private scores appear only to their author and the people they invited.</string>
+    <string name="library_catalog_load_failed">Couldn\'t load the catalog: %1$s</string>
+    <string name="library_catalog_downloading_score">Downloading score…</string>
+    <string name="library_catalog_score_download_failed">Couldn\'t download the score: %1$s</string>
+    <string name="library_catalog_error_connection">Couldn\'t connect to luksmusic.web.app. Check your internet connection and try again.</string>
+    <string name="library_catalog_error_not_found">The file wasn\'t found on the site.</string>
+    <string name="library_catalog_error_unreadable">The score file couldn\'t be read.</string>
+
+    <!-- Import -->
+    <string name="library_import_title">Import score</string>
+    <string name="library_import_choose_prompt">Choose a file to import</string>
+    <string name="library_import_choose_file">Choose file</string>
+    <string name="library_import_formats">Supported formats:</string>
+    <string name="library_import_formats_list">.xml  ·  .musicxml  ·  .mxl</string>
+    <string name="library_import_reading">Reading the file…</string>
+    <string name="library_import_selected_file">Selected file</string>
+    <string name="library_import_field_title">Title</string>
+    <string name="library_import_field_composer">Composer</string>
+    <string name="library_import_field_difficulty">Difficulty</string>
+    <string name="library_import_details">Score details</string>
+    <string name="library_import_details_footer">You can change these details later.</string>
+    <string name="library_import_button">Import score</string>
+    <string name="library_import_importing">Importing…</string>
+    <string name="library_import_success">Score imported!</string>
+    <string name="library_import_success_detail">“%1$s” was added to your library.</string>
+    <string name="library_import_open">Open score</string>
+    <string name="library_import_failed">Import failed</string>
+    <string name="library_import_error_no_file">No file was selected.</string>
+    <string name="library_import_error_open">Couldn\'t open the file: %1$s</string>
+    <string name="library_import_error_unexpected">An unexpected error occurred: %1$s</string>
+    <string name="library_import_error_not_readable">Couldn\'t read the selected file. Check its permissions and try again.</string>
+    <string name="library_import_error_unsupported">This file format isn\'t supported. Use MusicXML (.xml, .musicxml, or .mxl).</string>
+    <string name="library_import_error_too_large">The file is too large to be a score.</string>
+    <string name="library_musicxml_error_corrupted">The MusicXML file is damaged or invalid.</string>
+    <string name="library_musicxml_error_missing_part">The MusicXML score has no parts.</string>
+    <string name="library_musicxml_error_missing_score_file">The .mxl file doesn\'t contain a MusicXML score.</string>
+    <string name="library_zip_error_corrupted">The compressed file is damaged.</string>
+    <string name="library_zip_error_unsupported">The compressed file uses encryption or a compression method the app can\'t read.</string>
+</resources>

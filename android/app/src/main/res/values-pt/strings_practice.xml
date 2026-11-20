@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modo Estudo, o teclado de piano na tela e os teclados MIDI. -->
+<resources>
+    <string name="practice_title">Modo Estudo</string>
+    <string name="practice_done">Concluir</string>
+    <string name="practice_close">Fechar</string>
+    <string name="practice_mode_menu">Modo de estudo</string>
+    <string name="practice_mic_turn_off">Desligar o microfone</string>
+    <string name="practice_mic_turn_on">Ouvir o piano pelo microfone</string>
+    <string name="practice_mic_needed">O app precisa do microfone para ouvir o seu piano.</string>
+    <string name="practice_summary">Resumo do estudo</string>
+    <string name="practice_accuracy">Precisão</string>
+    <string name="practice_percent">%1$d%%</string>
+    <string name="practice_microphone_note">Microfone: %1$s</string>
+    <string name="practice_streak">Sequência</string>
+    <string name="practice_mode">Modo</string>
+    <string name="practice_metronome_silent">Com o microfone sem fone de ouvido, o metrônomo fica em silêncio e marca o pulso na tela</string>
+    <string name="practice_tempo_label">Andamento:</string>
+    <string name="practice_bpm">%1$d BPM</string>
+    <string name="practice_measure">Compasso</string>
+    <string name="practice_measure_progress">%1$d/%2$d</string>
+    <string name="practice_metronome">Metrônomo</string>
+    <string name="practice_start">Começar</string>
+    <string name="practice_pause">Pausar</string>
+    <string name="practice_resume">Continuar</string>
+    <string name="practice_stop">Parar</string>
+    <string name="practice_chord_missed">Não ouvi todas as notas. Toque juntas de novo.</string>
+    <string name="practice_score_missing">Esta partitura não está mais na biblioteca.</string>
+    <string name="practice_keyboard">Teclado de piano</string>
+
+    <string name="practice_mode_free">Livre</string>
+    <string name="practice_mode_guided">Guiado</string>
+    <string name="practice_mode_right_hand">Mão direita</string>
+    <string name="practice_mode_left_hand">Mão esquerda</string>
+    <string name="practice_mode_slow">Lento</string>
+
+    <string name="practice_stats_correct">Notas certas</string>
+    <string name="practice_stats_wrong">Erradas</string>
+    <string name="practice_stats_longest_streak">Maior sequência</string>
+    <string name="practice_stats_played">Notas tocadas</string>
+    <string name="practice_stats_tempo">Andamento</string>
+    <string name="practice_stats_sections">Trechos concluídos</string>
+    <string name="practice_stats_duration">Duração</string>
+    <string name="practice_stats_duration_value">%1$02dm %2$02ds</string>
+    <string name="practice_stats_rating">Como foi este estudo?</string>
+    <plurals name="practice_stats_stars">
+        <item quantity="one">%1$d estrela</item>
+        <item quantity="other">%1$d estrelas</item>
+    </plurals>
+
+    <string name="practice_midi_unknown_device">Dispositivo desconhecido</string>
+    <string name="practice_midi_unknown_manufacturer">Desconhecido</string>
+</resources>

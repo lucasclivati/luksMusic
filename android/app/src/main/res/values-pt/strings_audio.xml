@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audio_mic_permission_needed">O app precisa do microfone para ouvir o seu piano.</string>
+    <string name="audio_mic_start_failed">Não foi possível ligar o microfone.</string>
+</resources>

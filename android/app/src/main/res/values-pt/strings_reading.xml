@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reading_hand">Mão</string>
+    <string name="reading_hand_both">As duas mãos</string>
+    <string name="reading_notes">Notas</string>
+    <string name="reading_notes_one">Uma nota</string>
+    <string name="reading_notes_two">Duas notas</string>
+    <string name="reading_notes_all">Completo</string>
+    <string name="reading_show_keyboard">Mostrar teclado na tela</string>
+    <string name="reading_keyboard_connected">Teclado conectado</string>
+    <string name="reading_keyboard_connected_named">Teclado conectado: %s</string>
+    <string name="reading_score_has_no_notes">Esta partitura não tem notas.</string>
+</resources>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modo Estudo (practice), the on-screen piano keyboard and MIDI keyboards. Portuguese in values-pt/. -->
+<resources>
+    <string name="practice_title">Practice Mode</string>
+    <string name="practice_done">Done</string>
+    <string name="practice_close">Close</string>
+    <string name="practice_mode_menu">Practice mode</string>
+    <string name="practice_mic_turn_off">Turn off the microphone</string>
+    <string name="practice_mic_turn_on">Listen to the piano through the microphone</string>
+    <string name="practice_mic_needed">Microphone access is required to listen to your piano.</string>
+    <string name="practice_summary">Practice summary</string>
+    <string name="practice_accuracy">Accuracy</string>
+    <string name="practice_percent">%1$d%%</string>
+    <string name="practice_microphone_note">Microphone: %1$s</string>
+    <string name="practice_streak">Streak</string>
+    <string name="practice_mode">Mode</string>
+    <string name="practice_metronome_silent">With the microphone on and no headphones, the metronome stays silent and shows the beat on screen</string>
+    <string name="practice_tempo_label">Tempo:</string>
+    <string name="practice_bpm">%1$d BPM</string>
+    <string name="practice_measure">Measure</string>
+    <string name="practice_measure_progress">%1$d/%2$d</string>
+    <string name="practice_metronome">Metronome</string>
+    <string name="practice_start">Start</string>
+    <string name="practice_pause">Pause</string>
+    <string name="practice_resume">Resume</string>
+    <string name="practice_stop">Stop</string>
+    <string name="practice_chord_missed">I didn\'t hear all the notes. Play them together again.</string>
+    <string name="practice_score_missing">This score is no longer in the library.</string>
+    <string name="practice_keyboard">Piano keyboard</string>
+    <string name="practice_sustain" translatable="false">SUS</string>
+
+    <!-- Modes -->
+    <string name="practice_mode_free">Free play</string>
+    <string name="practice_mode_guided">Guided</string>
+    <string name="practice_mode_right_hand">Right hand</string>
+    <string name="practice_mode_left_hand">Left hand</string>
+    <string name="practice_mode_slow">Slow practice</string>
+
+    <!-- Session summary -->
+    <string name="practice_stats_correct">Correct notes</string>
+    <string name="practice_stats_wrong">Wrong notes</string>
+    <string name="practice_stats_longest_streak">Longest streak</string>
+    <string name="practice_stats_played">Notes played</string>
+    <string name="practice_stats_tempo">Tempo</string>
+    <string name="practice_stats_sections">Sections completed</string>
+    <string name="practice_stats_duration">Duration</string>
+    <string name="practice_stats_duration_value">%1$02dm %2$02ds</string>
+    <string name="practice_stats_rating">How did this session go?</string>
+    <plurals name="practice_stats_stars">
+        <item quantity="one">%1$d star</item>
+        <item quantity="other">%1$d stars</item>
+    </plurals>
+
+    <!-- MIDI keyboards -->
+    <string name="practice_midi_unknown_device">Unknown device</string>
+    <string name="practice_midi_unknown_manufacturer">Unknown</string>
+</resources>

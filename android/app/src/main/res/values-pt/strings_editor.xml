@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="editor_title">Editar partitura</string>
+    <string name="editor_close">Fechar</string>
+    <string name="editor_save">Salvar</string>
+    <string name="editor_position">Compasso %1$d • Tempo %2$s</string>
+    <string name="editor_staff_label">Pauta: %1$s</string>
+    <string name="editor_staff_treble_long">Clave de sol (mão dir.)</string>
+    <string name="editor_staff_bass_long">Clave de fá (mão esq.)</string>
+    <string name="editor_keyboard_hint">Toque numa tecla para inserir a nota</string>
+    <string name="editor_staff_treble">Sol 𝄞</string>
+    <string name="editor_staff_bass">Fá 𝄢</string>
+    <string name="editor_undo">Desfazer</string>
+    <string name="editor_redo">Refazer</string>
+    <string name="editor_delete_note">Apagar a última nota</string>
+    <string name="editor_add_measure">Compasso</string>
+    <string name="editor_whole">Semibreve</string>
+    <string name="editor_half">Mínima</string>
+    <string name="editor_rest">Pausa</string>
+    <string name="editor_dot">Ponto</string>
+    <string name="editor_discard_title">Descartar as mudanças?</string>
+    <string name="editor_discard_message">As notas colocadas desde que o editor abriu serão perdidas.</string>
+    <string name="editor_discard">Descartar</string>
+    <string name="editor_keep_editing">Continuar editando</string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tab_learn">Aprender</string>
+    <string name="tab_play">Tocar</string>
+    <string name="tab_tuner">Afinador</string>
+    <string name="tab_progress">Progresso</string>
+    <string name="tab_settings">Ajustes</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_close">Fechar</string>
+    <string name="action_back">Voltar</string>
+    <string name="action_delete">Apagar</string>
+    <string name="action_save">Salvar</string>
+    <string name="action_done">OK</string>
+    <string name="action_retry">Tentar de novo</string>
+    <string name="difficulty_beginner">Iniciante</string>
+    <string name="difficulty_intermediate">Intermediário</string>
+    <string name="difficulty_advanced">Avançado</string>
+    <string name="difficulty_expert">Virtuoso</string>
+    <string name="source_manual">Criadas no app</string>
+    <string name="source_imported">Importadas</string>
+    <string name="source_scanned">Digitalizadas</string>
+    <string name="loading">Carregando…</string>
+</resources>

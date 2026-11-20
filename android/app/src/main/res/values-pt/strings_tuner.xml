@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tuner_title">Afinador</string>
+    <string name="tuner_mode_guitar">Violão</string>
+    <string name="tuner_mode_piano">Piano</string>
+    <string name="tuner_play_string">Toque uma corda</string>
+    <string name="tuner_play_note">Toque uma nota</string>
+    <string name="tuner_in_tune">Afinado</string>
+    <string name="tuner_tighten">Aperte a corda</string>
+    <string name="tuner_loosen">Afrouxe a corda</string>
+    <string name="tuner_flat">Abaixo da nota</string>
+    <string name="tuner_sharp">Acima da nota</string>
+    <string name="tuner_heard">Ouvido</string>
+    <string name="tuner_target">Alvo</string>
+    <string name="tuner_string">Corda</string>
+    <string name="tuner_auto">Auto</string>
+    <string name="tuner_reference_a">Lá de referência</string>
+    <string name="tuner_reference_down">Diminuir o lá de referência</string>
+    <string name="tuner_reference_up">Aumentar o lá de referência</string>
+    <string name="tuner_reference_reset">Voltar para 440 Hz</string>
+    <string name="tuner_play_reference">Tocar referência</string>
+    <string name="tuner_listening">Ouvindo</string>
+    <string name="tuner_mic_off">Microfone desligado</string>
+    <string name="tuner_cents">%1$s cents</string>
+    <string name="tuner_permission_title">Deixe o afinador ouvir você</string>
+    <string name="tuner_permission_body">O afinador ouve o seu instrumento pelo microfone. Nada é gravado nem enviado.</string>
+    <string name="tuner_permission_allow">Permitir o microfone</string>
+    <string name="tuner_permission_denied">O acesso ao microfone está desligado para o luksMusic. Ligue-o nos ajustes do app para usar o afinador.</string>
+    <string name="tuner_permission_settings">Abrir ajustes</string>
+</resources>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sign-in, Settings (Ajustes), Progress (Progresso) and cloud sync. Portuguese in values-pt/strings_account.xml. -->
+<resources>
+    <!-- Login -->
+    <string name="account_tagline">Interactive sheet music and piano practice</string>
+    <string name="account_feature_cloud_title">Cloud library</string>
+    <string name="account_feature_cloud_subtitle">Sign in to save your scores</string>
+    <string name="account_feature_piano_title">Interactive Piano &amp; Practice</string>
+    <string name="account_feature_piano_subtitle">Interactive keyboard, metronome, and connected score</string>
+    <string name="account_sign_in_google">Sign in with Google</string>
+    <string name="account_sign_in_email">Sign in with Email</string>
+    <string name="account_email">Email</string>
+    <string name="account_password">Password</string>
+    <string name="account_show_password">Show password</string>
+    <string name="account_hide_password">Hide password</string>
+    <string name="account_sign_in_or_create">Sign In / Create Account</string>
+    <string name="account_continue_guest">Continue as Guest (Offline)</string>
+    <string name="account_apple_note">Created your account with Apple on an iPhone or iPad? Sign in with Apple isn\'t available on Android, but you can continue as a guest on this device.</string>
+
+    <!-- Profile -->
+    <string name="account_provider_google" translatable="false">Google</string>
+    <string name="account_provider_email">Email</string>
+    <string name="account_provider_apple" translatable="false">Apple</string>
+    <string name="account_provider_guest">Guest</string>
+    <string name="account_guest_name">Local Guest</string>
+    <string name="account_default_name">Pianist</string>
+    <string name="account_email_and_provider">%1$s (%2$s)</string>
+
+    <!-- Errors -->
+    <string name="account_error_google">Google sign-in failed: %1$s</string>
+    <string name="account_error_auth">Authentication error: %1$s</string>
+    <string name="account_error_delete">Couldn\'t delete your account: %1$s</string>
+    <string name="account_error_same_account">Confirm with the same account you\'re signed in with.</string>
+    <string name="account_error_sign_in_to_continue">Sign in to continue.</string>
+    <string name="account_error_session_expired">Your session has expired. Please sign in again.</string>
+    <string name="account_error_invalid_credentials">Invalid credentials</string>
+    <string name="account_error_invalid_response">Invalid response from Firebase</string>
+    <string name="account_error_unknown">Unknown error</string>
+    <string name="account_error_network">No internet connection. Check your connection and try again.</string>
+    <string name="account_google_not_configured">Google sign-in isn\'t set up in this version of the app yet. Use your email or continue as a guest.</string>
+    <string name="account_google_no_account">No Google account was found on this device. Add one in the device settings and try again.</string>
+    <string name="account_fb_invalid_login">Wrong email or password.</string>
+    <string name="account_fb_invalid_email">That email address isn\'t valid.</string>
+    <string name="account_fb_weak_password">The password must have at least 6 characters.</string>
+    <string name="account_fb_email_exists">This email is already in use.</string>
+    <string name="account_fb_user_disabled">This account has been disabled.</string>
+    <string name="account_fb_too_many">Too many attempts. Try again in a few minutes.</string>
+
+    <!-- Cloud sync -->
+    <string name="account_sync_error_sign_in">Sign in to sync your scores.</string>
+    <string name="account_sync_error">Couldn\'t sync: %1$s</string>
+    <string name="account_delete_cloud_error">Couldn\'t delete cloud data: %1$s</string>
+
+    <!-- Settings -->
+    <string name="account_section_account">Account &amp; cloud</string>
+    <string name="account_sync_button">Sync scores to the cloud</string>
+    <string name="account_sign_out">Sign out</string>
+    <string name="account_delete_account">Delete account</string>
+    <string name="account_section_midi">External MIDI keyboard</string>
+    <string name="account_midi_connection">MIDI connection</string>
+    <string name="account_midi_connected">Connected</string>
+    <string name="account_midi_connected_by">Connected · %1$s</string>
+    <string name="account_midi_none">No MIDI keyboard connected</string>
+    <string name="account_section_language">Language</string>
+    <string name="account_language_system">Device language</string>
+    <!-- Each language is named in itself, so anyone can find theirs -->
+    <string name="account_language_portuguese" translatable="false">Português</string>
+    <string name="account_language_english" translatable="false">English</string>
+    <string name="account_section_about">About</string>
+    <string name="account_app_version">App version</string>
+
+    <!-- Delete account -->
+    <string name="account_delete_title">Delete Account</string>
+    <string name="account_delete_explanation">Your account and the scores synced to the cloud will be permanently deleted. Scores saved on this device remain available in guest mode.</string>
+    <string name="account_delete_confirm_identity">Confirm your identity</string>
+    <string name="account_delete_password_for">Password for %1$s</string>
+    <string name="account_delete_permanently">Delete Account Permanently</string>
+    <string name="account_delete_with_google">Confirm with Google and Delete</string>
+    <string name="account_delete_apple_unavailable">This account uses Sign in with Apple, which isn\'t available on Android. Delete it from luksMusic on an iPhone or iPad.</string>
+
+    <!-- Progress -->
+    <string name="account_progress_empty_title">No practice sessions yet</string>
+    <string name="account_progress_empty_message">Open a score and tap Practice Mode to start practicing.</string>
+    <string name="account_progress_recent">Recent sessions</string>
+    <plurals name="account_progress_session_detail">
+        <item quantity="one">%1$s • %2$d note</item>
+        <item quantity="other">%1$s • %2$d notes</item>
+    </plurals>
+    <string name="account_progress_sessions">Sessions</string>
+    <string name="account_progress_average_accuracy">Average accuracy</string>
+    <string name="account_progress_longest_streak">Longest streak</string>
+    <string name="account_mode_free_play">Free play</string>
+    <string name="account_mode_guided">Guided</string>
+    <string name="account_mode_right_hand">Right hand</string>
+    <string name="account_mode_left_hand">Left hand</string>
+    <string name="account_mode_slow">Slow practice</string>
+</resources>

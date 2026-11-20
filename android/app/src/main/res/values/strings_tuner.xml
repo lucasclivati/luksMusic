@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tuner_title">Tuner</string>
+    <string name="tuner_mode_guitar">Guitar</string>
+    <string name="tuner_mode_piano">Piano</string>
+    <string name="tuner_play_string">Play a string</string>
+    <string name="tuner_play_note">Play a note</string>
+    <string name="tuner_in_tune">In tune</string>
+    <string name="tuner_tighten">Tighten the string</string>
+    <string name="tuner_loosen">Loosen the string</string>
+    <string name="tuner_flat">Flat</string>
+    <string name="tuner_sharp">Sharp</string>
+    <string name="tuner_heard">Heard</string>
+    <string name="tuner_target">Target</string>
+    <string name="tuner_string">String</string>
+    <string name="tuner_auto">Auto</string>
+    <string name="tuner_reference_a">Reference A</string>
+    <string name="tuner_reference_down">Lower the reference A</string>
+    <string name="tuner_reference_up">Raise the reference A</string>
+    <string name="tuner_reference_reset">Reset to 440 Hz</string>
+    <string name="tuner_play_reference">Play reference tone</string>
+    <string name="tuner_listening">Listening</string>
+    <string name="tuner_mic_off">Microphone off</string>
+    <string name="tuner_cents">%1$s cents</string>
+    <string name="tuner_permission_title">Let the tuner hear you</string>
+    <string name="tuner_permission_body">The tuner listens to your instrument through the microphone. Nothing is recorded or sent anywhere.</string>
+    <string name="tuner_permission_allow">Allow microphone</string>
+    <string name="tuner_permission_denied">Microphone access is turned off for luksMusic. Turn it on in the app\'s settings to use the tuner.</string>
+    <string name="tuner_permission_settings">Open settings</string>
+</resources>
