@@ -12,7 +12,7 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Process
 import android.util.Log
-import com.lukstrike.luksmusic.audio.synth.PianoRenderer
+import com.lukstrike.luksmusic.core.audio.synth.PianoRenderer
 
 internal class AudioOutput(context: Context, createRenderer: (sampleRate: Int) -> PianoRenderer) {
 

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=luksMusic
+GenericName=Piano practice
+Comment=Sight-reading and practice on a MIDI keyboard
+Comment[pt]=Treino de leitura e estudo no teclado MIDI
+Exec=/home/deck/Applications/luksMusic/bin/luksMusic
+Icon=/home/deck/Applications/luksMusic/luksMusic.png
+Terminal=false
+Categories=Education;Music;
+Keywords=piano;midi;sheet music;partitura;
+StartupWMClass=com-lukstrike-luksmusic-desktop-MainKt

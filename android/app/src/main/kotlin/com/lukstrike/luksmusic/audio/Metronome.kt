@@ -11,8 +11,8 @@ package com.lukstrike.luksmusic.audio
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import com.lukstrike.luksmusic.audio.synth.AudioClock
-import com.lukstrike.luksmusic.audio.synth.ClickScheduler
+import com.lukstrike.luksmusic.core.audio.synth.AudioClock
+import com.lukstrike.luksmusic.core.audio.synth.ClickScheduler
 
 class Metronome(private val audio: AudioEngine) {
 

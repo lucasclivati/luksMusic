@@ -8,7 +8,7 @@
 //  - velocity changes loudness and brightness (a harder blow excites more upper partials), plus a short filtered
 //    noise burst for the hammer's knock, and a faster attack;
 //  - the damper ends the note quickly on release, except in the top octave and a half, which has no dampers.
-package com.lukstrike.luksmusic.audio.synth
+package com.lukstrike.luksmusic.core.audio.synth
 
 import kotlin.math.PI
 import kotlin.math.abs
@@ -18,7 +18,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-internal class SynthPiano : PianoSound {
+class SynthPiano : PianoSound {
     override fun createVoice(sampleRate: Int): PianoVoice = SynthPianoVoice(sampleRate)
 }
 

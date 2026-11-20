@@ -19,9 +19,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
-import com.lukstrike.luksmusic.audio.synth.AudioClock
-import com.lukstrike.luksmusic.audio.synth.PianoRenderer
-import com.lukstrike.luksmusic.audio.synth.SynthPiano
+import com.lukstrike.luksmusic.core.audio.synth.AudioClock
+import com.lukstrike.luksmusic.core.audio.synth.PianoRenderer
+import com.lukstrike.luksmusic.core.audio.synth.SynthPiano
 import kotlin.math.pow
 
 class AudioEngine(private val context: Context) {

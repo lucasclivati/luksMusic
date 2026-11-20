@@ -1,7 +1,7 @@
 // PianoRendererTest.kt — the synthesized piano and its mixer, rendered offline: chords never clip, the damper and the
 // pedal end notes, voices are stolen past 32 keys, the metronome clock clicks on its exact sample, and 32 voices
 // render far faster than real time.
-package com.lukstrike.luksmusic.audio.synth
+package com.lukstrike.luksmusic.core.audio.synth
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

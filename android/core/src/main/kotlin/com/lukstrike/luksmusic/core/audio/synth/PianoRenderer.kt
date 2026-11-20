@@ -2,24 +2,24 @@
 // keeps up to 32 piano voices (stealing the quietest when a 33rd key comes), handles the dampers and the sustain
 // pedal, plays the metronome click at an exact sample, and sends the sum through the reverb, the master volume and
 // the limiter. Nothing here allocates or blocks for long once the audio runs.
-package com.lukstrike.luksmusic.audio.synth
+package com.lukstrike.luksmusic.core.audio.synth
 
 import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sin
 
 /** Something that keeps time on the audio thread (the metronome): it may schedule clicks inside each block. */
-internal interface AudioClock {
+interface AudioClock {
     /** Called on the audio thread before rendering the [frames] that start at absolute frame [blockStart]. */
     fun onBlock(blockStart: Long, frames: Int, sampleRate: Int, clicks: ClickScheduler)
 }
 
-internal fun interface ClickScheduler {
+fun interface ClickScheduler {
     /** Starts a click [offset] frames into the current block. */
     fun click(offset: Int, accent: Boolean)
 }
 
-internal class PianoRenderer(val sampleRate: Int, sound: PianoSound) {
+class PianoRenderer(val sampleRate: Int, sound: PianoSound) {
 
     private val voices = Array(MAX_VOICES + FADE_SLOTS) { sound.createVoice(sampleRate) }
     private val slotMidi = IntArray(voices.size)

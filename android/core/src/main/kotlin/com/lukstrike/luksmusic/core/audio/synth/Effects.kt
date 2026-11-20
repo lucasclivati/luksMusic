@@ -1,6 +1,6 @@
 // Effects.kt — the master effects after the piano voices: a light hall reverb (iOS uses AVAudioUnitReverb's medium
 // hall at 25 % wet) and a soft limiter, so a ten-note chord with the pedal down never clips. Audio thread only.
-package com.lukstrike.luksmusic.audio.synth
+package com.lukstrike.luksmusic.core.audio.synth
 
 import kotlin.math.abs
 import kotlin.math.exp

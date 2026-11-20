@@ -2,15 +2,15 @@
 // which key, when a key's damper falls (key up, sustain pedal) and which voice to steal; a PianoSound only makes the
 // sound of one string set. Today the sound is synthesized (SynthPiano); a sampled piano can replace it by implementing
 // these two interfaces, with no change to AudioEngine or the mixer.
-package com.lukstrike.luksmusic.audio.synth
+package com.lukstrike.luksmusic.core.audio.synth
 
 /** Makes voices of one piano sound. Called once per voice slot, before the audio starts. */
-internal interface PianoSound {
+interface PianoSound {
     fun createVoice(sampleRate: Int): PianoVoice
 }
 
 /** One sounding key. Every method runs on the audio render thread: no allocation, no locks, no I/O. */
-internal interface PianoVoice {
+interface PianoVoice {
     /** Whether the voice still makes sound; the mixer reuses it once false. */
     val isActive: Boolean
 

@@ -22,33 +22,38 @@ cd android
 
 `local.properties` (not committed) points to the Android SDK; Android Studio writes it on first open.
 
+The same Gradle project also builds **luksMusic for the Steam Deck** (`desktop/`, Compose for Desktop, sharing `core`
+and its piano synth): see [desktop/README.md](desktop/README.md).
+
 ## How the project is organized
 
 ```
 android/
 ├── core/                      Pure Kotlin, no Android: runs and is tested on the JVM
 │   └── com.lukstrike.luksmusic.core
+│       ├── audio/synth/       The synthesized piano and its mixer (shared by the Android and desktop apps)
 │       ├── model/             Note, Measure, Score, Clef, PracticeSession, Tuning… (ports of luksMusic/Models)
 │       ├── musicxml/          MusicXML parser/exporter, .mxl (zip)
 │       ├── pitch/             YIN pitch detection, strike detection, tuner tracker
 │       ├── playback/          Playback clock and note events built from a Score
 │       ├── practice/          Note matching and scoring for Modo Estudo, MIDI message parsing
 │       └── lessons/           Lessons, lesson catalog, reading drill
-└── app/                       The Android app
-    └── com.lukstrike.luksmusic
-        ├── AppContainer.kt    The shared services (the iOS `.shared` singletons), made once
-        ├── audio/             Piano synth (AudioTrack, low latency), metronome, microphone
-        ├── midi/              External MIDI keyboards (android.media.midi, USB and Bluetooth)
-        ├── account/           Firebase Auth + Firestore over REST (same backend as iOS)
-        ├── data/              Score library, practice history, saved settings
-        ├── ui/                Theme, navigation (tabs + routes), shared components (piano keyboard)
-        └── feature/           One package per area, each with its own <Name>Graph.kt
-            ├── learn/         Aprender: lessons, lesson player, reading drill
-            ├── library/       Tocar: library, import, online catalog, editor
-            ├── player/        Score player (OSMD in a WebView), playback
-            ├── practice/      Modo Estudo: falling notes, feedback, stats
-            ├── tuner/         Afinador (guitar and piano)
-            └── account/       Login, Ajustes, Progresso
+├── app/                       The Android app
+│   └── com.lukstrike.luksmusic
+│       ├── AppContainer.kt    The shared services (the iOS `.shared` singletons), made once
+│       ├── audio/             Sound output (AudioTrack) for core's piano synth, metronome, microphone
+│       ├── midi/              External MIDI keyboards (android.media.midi, USB and Bluetooth)
+│       ├── account/           Firebase Auth + Firestore over REST (same backend as iOS)
+│       ├── data/              Score library, practice history, saved settings
+│       ├── ui/                Theme, navigation (tabs + routes), shared components (piano keyboard)
+│       └── feature/           One package per area, each with its own <Name>Graph.kt
+│           ├── learn/         Aprender: lessons, lesson player, reading drill
+│           ├── library/       Tocar: library, import, online catalog, editor
+│           ├── player/        Score player (OSMD in a WebView), playback
+│           ├── practice/      Modo Estudo: falling notes, feedback, stats
+│           ├── tuner/         Afinador (guitar and piano)
+│           └── account/       Login, Ajustes, Progresso
+└── desktop/                   luksMusic for the Steam Deck (Compose for Desktop): see desktop/README.md
 ```
 
 Rules of thumb that keep it easy to maintain:
