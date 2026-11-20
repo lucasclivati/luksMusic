@@ -54,4 +54,7 @@
     <!-- MIDI keyboards -->
     <string name="practice_midi_unknown_device">Unknown device</string>
     <string name="practice_midi_unknown_manufacturer">Unknown</string>
+
+    <!-- Switch to the reading drill -->
+    <string name="practice_open_reading_drill">Sight-Reading</string>
 </resources>

@@ -470,4 +470,7 @@
     <string name="learn_l_ear_2_s1_text">Three notes between C and G. Start from middle C and compare as you go.</string>
     <string name="learn_l_ear_2_s2_title">Four notes</string>
     <string name="learn_l_ear_2_s2_text">Four notes between C and G.</string>
+
+    <!-- Reading drill: switch to Modo Estudo -->
+    <string name="learn_drill_open_practice">Practice Mode</string>
 </resources>

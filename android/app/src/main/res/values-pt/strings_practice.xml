@@ -50,4 +50,7 @@
 
     <string name="practice_midi_unknown_device">Dispositivo desconhecido</string>
     <string name="practice_midi_unknown_manufacturer">Desconhecido</string>
+
+    <!-- Switch to the reading drill -->
+    <string name="practice_open_reading_drill">Treino de leitura</string>
 </resources>

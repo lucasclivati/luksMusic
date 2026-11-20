@@ -28,11 +28,14 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,6 +55,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Piano
 import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.SportsScore
@@ -89,6 +93,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.pluralStringResource
@@ -118,7 +123,12 @@ import com.lukstrike.luksmusic.feature.learn.MusicGlyphs.trebleClef
 
 /** The drill for one score of the library. The score player can open it the same way (ReadingDrillScoreRoute). */
 @Composable
-fun ReadingTrainerScreen(scoreId: String, onBack: () -> Unit) {
+fun ReadingTrainerScreen(
+    scoreId: String,
+    onBack: () -> Unit,
+    /** Switches to Modo Estudo for the same score (it takes this screen's place). */
+    onOpenPracticeMode: () -> Unit,
+) {
     val context = LocalContext.current
     val container = appContainer()
     val viewModel: ReadingTrainerViewModel = viewModel {
@@ -146,12 +156,24 @@ fun ReadingTrainerScreen(scoreId: String, onBack: () -> Unit) {
         viewModel.stop()
         onBack()
     }
+    // To Modo Estudo: the drill stops (sound, listening) exactly as when it closes
+    val openPracticeMode = {
+        viewModel.stop()
+        onOpenPracticeMode()
+    }
+
+    // A phone on its side: the staff beside the controls, a shorter keyboard
+    val compactHeight = LocalConfiguration.current.screenHeightDp < 480
 
     BoxWithConstraints(Modifier.fillMaxSize().background(LearnColors.background)) {
-        val keyboardHeight = (maxHeight * 0.27f).coerceIn(130.dp, 230.dp)
+        val keyboardHeight = if (compactHeight) (maxHeight * 0.24f).coerceIn(72.dp, 120.dp)
+        else (maxHeight * 0.27f).coerceIn(130.dp, 230.dp)
         Column(Modifier.fillMaxSize()) {
-            LearnTopBar(stringResource(R.string.learn_drill_title), state.title, onBack = close) {
-                ChromeIconButton(Icons.Filled.Tune, stringResource(R.string.learn_drill_settings)) { showsSettings = true }
+            LearnTopBar(stringResource(R.string.learn_drill_title), state.title, onBack = close, compact = compactHeight) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    PracticeModeButton(onClick = openPracticeMode)
+                    ChromeIconButton(Icons.Filled.Tune, stringResource(R.string.learn_drill_settings)) { showsSettings = true }
+                }
             }
             if (state.isMissing) {
                 Text(
@@ -161,12 +183,29 @@ fun ReadingTrainerScreen(scoreId: String, onBack: () -> Unit) {
                 return@Column
             }
             val devices by container.midi.connectedDevices.collectAsStateWithLifecycle()
-            SetupBar(state, connectedKeyboard = devices.firstOrNull()?.name) { showsSettings = true }
-            StaffCard(state, Modifier.weight(1f))
-            StatusLine(state)
-            FeedbackLine(state)
-            Controls(state, viewModel)
-            StatsLine(state)
+            if (compactHeight) {
+                // Without the keyboard (which keeps itself above the navigation bar) the row keeps clear of it
+                val bottomInset = if (state.showsKeyboard) Modifier else {
+                    Modifier.windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                }
+                Row(Modifier.weight(1f).fillMaxWidth().then(bottomInset).padding(top = 8.dp)) {
+                    StaffCard(state, Modifier.weight(1.1f).fillMaxHeight().padding(bottom = 8.dp))
+                    Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+                        SetupBar(state, connectedKeyboard = devices.firstOrNull()?.name, compact = true) { showsSettings = true }
+                        StatusLine(state, compact = true)
+                        FeedbackLine(state)
+                        Controls(state, viewModel)
+                        StatsLine(state)
+                    }
+                }
+            } else {
+                SetupBar(state, connectedKeyboard = devices.firstOrNull()?.name) { showsSettings = true }
+                StaffCard(state, Modifier.weight(1f))
+                StatusLine(state)
+                FeedbackLine(state)
+                Controls(state, viewModel)
+                StatsLine(state)
+            }
             // Hidden in the settings when playing on a real piano or a MIDI keyboard
             AnimatedVisibility(
                 visible = state.showsKeyboard,
@@ -186,6 +225,29 @@ fun ReadingTrainerScreen(scoreId: String, onBack: () -> Unit) {
 
     if (showsSettings) {
         SettingsSheet(state, viewModel) { showsSettings = false }
+    }
+}
+
+/** "Modo Estudo" in the title bar: the same score in Modo Estudo. */
+@Composable
+private fun PracticeModeButton(onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(8.dp),
+        color = LearnColors.deepBlue,
+        modifier = Modifier.height(36.dp),
+    ) {
+        Row(
+            Modifier.padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(Icons.Filled.School, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+            Text(
+                stringResource(R.string.learn_drill_open_practice), color = Color.White, fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold, maxLines = 1,
+            )
+        }
     }
 }
 
@@ -218,9 +280,9 @@ private fun orderName(order: ReadingOrder) =
  * the MIDI keyboard.
  */
 @Composable
-private fun SetupBar(state: ReadingUiState, connectedKeyboard: String?, onOpenSettings: () -> Unit) {
+private fun SetupBar(state: ReadingUiState, connectedKeyboard: String?, compact: Boolean = false, onOpenSettings: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = if (compact) 0.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -350,8 +412,8 @@ private fun measuresLabel(measures: Pair<Int, Int>?): String {
 }
 
 @Composable
-private fun StatusLine(state: ReadingUiState) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp).padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun StatusLine(state: ReadingUiState, compact: Boolean = false) {
+    Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp).padding(top = if (compact) 6.dp else 8.dp), verticalAlignment = Alignment.CenterVertically) {
         val measures = measuresLabel(state.measures)
         Text(
             if (state.order == ReadingOrder.SEQUENTIAL && state.segmentCount > 0) {

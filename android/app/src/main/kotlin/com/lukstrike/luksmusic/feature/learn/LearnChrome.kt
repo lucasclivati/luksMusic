@@ -73,11 +73,13 @@ fun LearnTopBar(
     title: String,
     subtitle: String,
     onBack: () -> Unit,
+    /** Slimmer, for a phone held sideways. */
+    compact: Boolean = false,
     trailing: @Composable () -> Unit = {},
 ) {
     Column(Modifier.background(LearnColors.panel).windowInsetsPadding(WindowInsets.statusBars)) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = if (compact) 4.dp else 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {

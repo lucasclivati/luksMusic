@@ -116,6 +116,8 @@ fun PlayerTopBar(
     subtitle: String,
     onBack: () -> Unit,
     insets: WindowInsets,
+    /** Slimmer, for a phone held sideways: the title and the subtitle share one line. */
+    compact: Boolean = false,
     trailing: @Composable RowScope.() -> Unit,
 ) {
     Row(
@@ -126,12 +128,28 @@ fun PlayerTopBar(
                 drawRect(PlayerTheme.raised, topLeft = Offset(0f, size.height - 1.dp.toPx()))
             }
             .windowInsetsPadding(insets)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(horizontal = 12.dp, vertical = if (compact) 3.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
     ) {
-        PlayerIconButton(Icons.Rounded.ArrowBackIosNew, stringResource(R.string.player_back), onBack, iconSize = 16.dp)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        PlayerIconButton(
+            Icons.Rounded.ArrowBackIosNew, stringResource(R.string.player_back), onBack, iconSize = 16.dp,
+            size = if (compact) CompactButtonSize else ButtonSize,
+        )
+        if (compact) {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    title, color = PlayerTheme.text, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false),
+                )
+                if (subtitle.isNotEmpty()) {
+                    Text(
+                        subtitle, color = PlayerTheme.muted, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                }
+            }
+        } else Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 title, color = PlayerTheme.text, fontSize = 15.sp, fontWeight = FontWeight.Bold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -144,7 +162,11 @@ fun PlayerTopBar(
     }
 }
 
-/** Square icon button of the top bar ("…" menus, favorite). */
+private val ButtonSize = 36.dp
+/** The top bar's buttons on a phone held sideways. */
+val CompactButtonSize = 32.dp
+
+/** Square icon button of the top bar ("…" menus, favorite, reading drill, Modo Estudo). */
 @Composable
 fun PlayerIconButton(
     icon: ImageVector,
@@ -152,10 +174,11 @@ fun PlayerIconButton(
     onClick: () -> Unit,
     tint: Color = PlayerTheme.text,
     iconSize: Dp = 18.dp,
+    size: Dp = ButtonSize,
 ) {
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(size)
             .clip(ControlShape)
             .background(PlayerTheme.raised)
             .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
@@ -207,6 +230,11 @@ fun PlayerDock(
     insets: WindowInsets,
     keyboardHeight: Dp,
     modifier: Modifier = Modifier,
+    /**
+     * A phone held sideways: the timeline, the measure and the transport share one row, and the notes under the
+     * cursor are left out, so the score keeps most of the little height.
+     */
+    compact: Boolean = false,
 ) {
     Column(
         modifier = modifier
@@ -215,9 +243,17 @@ fun PlayerDock(
             .drawBehind { drawRect(PlayerTheme.raised, size = size.copy(height = 1.dp.toPx())) }
             .windowInsetsPadding(insets),
     ) {
-        Timeline(state, actions)
-        Transport(state, actions, metronomeClicks)
-        NotesUnderCursor(state.cursorNotes)
+        if (compact) {
+            Timeline(state, actions, compact = true) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    TransportButtons(state, actions, metronomeClicks, playSize = 40.dp)
+                }
+            }
+        } else {
+            Timeline(state, actions)
+            Transport(state, actions, metronomeClicks)
+            NotesUnderCursor(state.cursorNotes)
+        }
         AnimatedVisibility(
             visible = state.showKeyboard,
             enter = expandVertically(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)) + fadeIn(),
@@ -237,7 +273,13 @@ fun PlayerDock(
 // MARK: Timeline
 
 @Composable
-private fun Timeline(state: DockState, actions: DockActions) {
+private fun Timeline(
+    state: DockState,
+    actions: DockActions,
+    compact: Boolean = false,
+    /** More controls at the row's end (the transport, on a phone held sideways). */
+    trailing: @Composable RowScope.() -> Unit = {},
+) {
     val measureCount = max(1, state.measureCount)
     // Timeline position while the finger is on the slider; the player seeks when it lets go
     var scrub by remember { mutableStateOf<Float?>(null) }
@@ -248,9 +290,9 @@ private fun Timeline(state: DockState, actions: DockActions) {
     val seconds = scrub?.let { it * state.totalSeconds } ?: state.elapsedSeconds
 
     Row(
-        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp),
+        modifier = if (compact) Modifier.padding(horizontal = 10.dp, vertical = 2.dp) else Modifier.padding(start = 12.dp, end = 12.dp, top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 10.dp),
     ) {
         Text(
             "${clock(seconds)} / ${clock(state.totalSeconds)}",
@@ -281,6 +323,7 @@ private fun Timeline(state: DockState, actions: DockActions) {
                 .border(1.dp, PlayerTheme.border, RoundedCornerShape(6.dp))
                 .padding(horizontal = 8.dp, vertical = 4.dp),
         )
+        trailing()
     }
 }
 
@@ -299,43 +342,49 @@ private fun Transport(state: DockState, actions: DockActions, metronomeClicks: F
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        val repeatLabel = stringResource(
-            when (state.loopMode) {
-                LoopMode.OFF -> R.string.player_repeat_off
-                LoopMode.MEASURE -> R.string.player_repeat_measure
-                LoopMode.PIECE -> R.string.player_repeat_piece
-            },
-        )
-        ControlButton(
-            if (state.loopMode == LoopMode.MEASURE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-            repeatLabel, isOn = state.loopMode != LoopMode.OFF, onClick = actions::cycleLoopMode,
-        )
-        ControlButton(
-            Icons.Rounded.SkipPrevious,
-            stringResource(if (state.loopMode == LoopMode.MEASURE) R.string.player_restart_measure else R.string.player_restart),
-            onClick = actions::restart,
-        )
-        ControlButton(Icons.Rounded.FastRewind, stringResource(R.string.player_previous_note), onClick = actions::stepBackward)
-
-        PlayButton(state.isPlaying, actions::togglePlayback)
-
-        ControlButton(Icons.Rounded.FastForward, stringResource(R.string.player_next_note), onClick = actions::stepForward)
-        SpeedButton(state.speed, actions::setSpeed)
-        MetronomeButton(state.isMetronomeOn, actions::toggleMetronome, metronomeClicks)
-        ControlButton(Icons.Rounded.Tune, stringResource(R.string.player_mixer), onClick = actions::openMixer)
-        ControlButton(
-            Icons.Rounded.Piano, stringResource(R.string.player_keyboard), isOn = state.showKeyboard,
-            onClick = actions::toggleKeyboard,
-        )
+        TransportButtons(state, actions, metronomeClicks)
     }
 }
 
+/** Repeat, restart, previous, play, next, speed, metronome, mixer and keyboard, in a row the caller lays out. */
 @Composable
-private fun PlayButton(isPlaying: Boolean, onClick: () -> Unit) {
+private fun TransportButtons(state: DockState, actions: DockActions, metronomeClicks: Flow<Boolean>, playSize: Dp = 48.dp) {
+    val repeatLabel = stringResource(
+        when (state.loopMode) {
+            LoopMode.OFF -> R.string.player_repeat_off
+            LoopMode.MEASURE -> R.string.player_repeat_measure
+            LoopMode.PIECE -> R.string.player_repeat_piece
+        },
+    )
+    ControlButton(
+        if (state.loopMode == LoopMode.MEASURE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+        repeatLabel, isOn = state.loopMode != LoopMode.OFF, onClick = actions::cycleLoopMode,
+    )
+    ControlButton(
+        Icons.Rounded.SkipPrevious,
+        stringResource(if (state.loopMode == LoopMode.MEASURE) R.string.player_restart_measure else R.string.player_restart),
+        onClick = actions::restart,
+    )
+    ControlButton(Icons.Rounded.FastRewind, stringResource(R.string.player_previous_note), onClick = actions::stepBackward)
+
+    PlayButton(state.isPlaying, actions::togglePlayback, size = playSize)
+
+    ControlButton(Icons.Rounded.FastForward, stringResource(R.string.player_next_note), onClick = actions::stepForward)
+    SpeedButton(state.speed, actions::setSpeed)
+    MetronomeButton(state.isMetronomeOn, actions::toggleMetronome, metronomeClicks)
+    ControlButton(Icons.Rounded.Tune, stringResource(R.string.player_mixer), onClick = actions::openMixer)
+    ControlButton(
+        Icons.Rounded.Piano, stringResource(R.string.player_keyboard), isOn = state.showKeyboard,
+        onClick = actions::toggleKeyboard,
+    )
+}
+
+@Composable
+private fun PlayButton(isPlaying: Boolean, onClick: () -> Unit, size: Dp = 48.dp) {
     val label = stringResource(if (isPlaying) R.string.player_pause else R.string.player_play)
     Box(
         modifier = Modifier
-            .size(48.dp)
+            .size(size)
             .shadow(10.dp, CircleShape, ambientColor = PlayerTheme.blue, spotColor = PlayerTheme.blue)
             .clip(CircleShape)
             .background(Brush.verticalGradient(listOf(PlayerTheme.blue, PlayerTheme.deepBlue)))
@@ -346,7 +395,7 @@ private fun PlayButton(isPlaying: Boolean, onClick: () -> Unit) {
         Icon(
             if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
             contentDescription = null, tint = Color.White,
-            modifier = Modifier.size(28.dp).offset(x = if (isPlaying) 0.dp else 1.dp),
+            modifier = Modifier.size(size * 0.58f).offset(x = if (isPlaying) 0.dp else 1.dp),
         )
     }
 }

@@ -470,4 +470,7 @@
     <string name="learn_l_ear_2_s1_text">Três notas entre Dó e Sol. Comece pelo Dó central e vá comparando.</string>
     <string name="learn_l_ear_2_s2_title">Quatro notas</string>
     <string name="learn_l_ear_2_s2_text">Quatro notas entre Dó e Sol.</string>
+
+    <!-- Reading drill: switch to Modo Estudo -->
+    <string name="learn_drill_open_practice">Modo Estudo</string>
 </resources>

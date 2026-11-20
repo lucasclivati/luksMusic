@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -43,11 +44,14 @@ import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.MicOff
 import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -73,6 +77,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -110,7 +115,12 @@ private val beatLight = Color(234 / 255f, 179 / 255f, 8 / 255f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
+fun PracticeScreen(
+    route: PracticeRoute,
+    onClose: () -> Unit,
+    /** Switches to the reading drill of the same score (the drill takes this screen's place). */
+    onOpenReadingDrill: () -> Unit,
+) {
     val container = appContainer()
     val context = LocalContext.current
     val viewModel: PracticeViewModel = viewModel(
@@ -147,6 +157,16 @@ fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
         onClose()
     }
     BackHandler(onBack = finish)
+    // To the reading drill: practice stops and the session is saved, exactly like "Done"
+    val openReadingDrill = {
+        viewModel.stopPractice(showSummary = false)
+        onOpenReadingDrill()
+    }
+
+    // A phone on its side: a slimmer title bar, the scores and the controls on one row, a shorter keyboard
+    val configuration = LocalConfiguration.current
+    val compactHeight = configuration.screenHeightDp < 480
+    val roomForLabel = compactHeight || configuration.screenWidthDp >= 600
 
     // The microphone permission is asked only when the student turns it on
     val micNeeded = stringResource(R.string.practice_mic_needed)
@@ -168,6 +188,7 @@ fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
                 title = { Text(stringResource(R.string.practice_title)) },
                 navigationIcon = { TextButton(onClick = finish) { Text(stringResource(R.string.practice_done)) } },
                 actions = {
+                    ReadingDrillButton(showsLabel = roomForLabel, onClick = openReadingDrill)
                     IconButton(onClick = toggleMicrophone) {
                         Icon(
                             if (ui.isMicrophoneEnabled) Icons.Filled.Mic else Icons.Outlined.MicOff,
@@ -186,6 +207,7 @@ fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
+                expandedHeight = if (compactHeight) 48.dp else TopAppBarDefaults.TopAppBarExpandedHeight,
             )
         },
         snackbarHost = { SnackbarHost(snackbar) },
@@ -194,19 +216,23 @@ fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
             Modifier
                 .fillMaxSize()
                 .padding(top = padding.calculateTopPadding())
-                .consumeWindowInsets(padding)
+                // Only the top bar's part: the toolbar keeps itself above the navigation bar
+                .consumeWindowInsets(PaddingValues(top = padding.calculateTopPadding()))
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
         ) {
             if (!ui.isLoaded) {
                 CircularProgressIndicator(Modifier.align(Alignment.Center))
                 return@BoxWithConstraints
             }
-            // iOS: a 150 pt strip and a keyboard a third of the screen; the strip shrinks in landscape
-            val stripHeight = minOf(150.dp, maxHeight * 0.22f)
-            val keyboardHeight = maxHeight * 0.33f
+            // iOS: a 150 pt strip and a keyboard a third of the screen. On a phone held sideways the strip and the
+            // keyboard share the little height with the falling notes, and the scores sit beside the controls.
+            val stripHeight = if (compactHeight) maxHeight * 0.26f else minOf(150.dp, maxHeight * 0.22f)
+            val keyboardHeight = if (compactHeight) (maxHeight * 0.26f).coerceAtLeast(72.dp) else maxHeight * 0.33f
             Column(Modifier.fillMaxSize()) {
-                PracticeHud(ui, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                HorizontalDivider()
+                if (!compactHeight) {
+                    PracticeHud(ui, Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    HorizontalDivider()
+                }
 
                 // 1. Engraved score on one line, its cursor on the notes to play
                 Box(Modifier.fillMaxWidth().height(stripHeight).background(Color.White)) {
@@ -239,16 +265,23 @@ fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
                     onKeyRelease = viewModel::screenKeyReleased,
                 )
 
-                PracticeToolbar(
-                    ui = ui,
-                    viewModel = viewModel,
-                    onToggleMicrophone = toggleMicrophone,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .navigationBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                )
+                val toolbarModifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = if (compactHeight) 4.dp else 8.dp)
+                if (compactHeight) {
+                    Row(
+                        toolbarModifier,
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(20.dp),
+                    ) {
+                        PracticeHud(ui, Modifier.weight(0.42f))
+                        PracticeToolbar(ui = ui, viewModel = viewModel, onToggleMicrophone = toggleMicrophone, modifier = Modifier.weight(0.58f))
+                    }
+                } else {
+                    PracticeToolbar(ui = ui, viewModel = viewModel, onToggleMicrophone = toggleMicrophone, modifier = toolbarModifier)
+                }
             }
         }
     }
@@ -260,6 +293,29 @@ fun PracticeScreen(route: PracticeRoute, onClose: () -> Unit) {
 
 private fun clefFlow(settings: com.lukstrike.luksmusic.data.SettingsRepository, key: String) =
     settings.flow(stringPreferencesKey(key), ClefChoice.SCORE.raw).map(ClefChoice::fromRaw).catch { emit(ClefChoice.SCORE) }
+
+// MARK: - Reading drill
+
+/** Opens the reading drill of this score: with its name when there is room, otherwise the icon alone. */
+@Composable
+private fun ReadingDrillButton(showsLabel: Boolean, onClick: () -> Unit) {
+    val label = stringResource(R.string.practice_open_reading_drill)
+    if (showsLabel) {
+        FilledTonalButton(
+            onClick = onClick,
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            modifier = Modifier.height(36.dp),
+        ) {
+            Icon(Icons.Outlined.MusicNote, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+        }
+    } else {
+        FilledTonalIconButton(onClick = onClick) {
+            Icon(Icons.Outlined.MusicNote, contentDescription = label)
+        }
+    }
+}
 
 // MARK: - Menu
 

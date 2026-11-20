@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.layout.union
@@ -61,6 +62,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -119,7 +121,11 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
     // Deleted meanwhile: nothing to show
     LaunchedEffect(found) { if (!found) navController.popBackStack() }
 
-    ImmersiveWhilePlaying(isPlaying)
+    // A phone held sideways: a slimmer title bar, one row of controls and the keyboard hidden at first (its own
+    // remembered choice), so the engraving keeps most of the height. Upright, the player stays as it was.
+    val compactHeight = LocalConfiguration.current.screenHeightDp < 480
+
+    ImmersiveWhilePlaying(isPlaying, hidesStatusBar = compactHeight)
 
     val close = {
         viewModel.stop()
@@ -142,7 +148,7 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
         }
     }
 
-    val dockActions = remember(viewModel) {
+    val dockActions = remember(viewModel, compactHeight) {
         object : DockActions {
             override fun togglePlayback() = viewModel.togglePlayback()
             override fun restart() = viewModel.restart()
@@ -154,8 +160,8 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
             override fun toggleMetronome() = viewModel.toggleMetronome()
             override fun openMixer() { showMixer = true }
             override fun toggleKeyboard() {
-                val show = !(viewModel.display.value?.showKeyboard ?: true)
-                viewModel.updateSettings { setShowKeyboard(show) }
+                val show = !(viewModel.display.value?.showsKeyboard(compactHeight) ?: !compactHeight)
+                viewModel.updateSettings { setShowKeyboard(show, compactHeight) }
             }
             override fun pressKey(midi: Int) = container.audio.playNote(midi, velocity = 90)
             override fun releaseKey(midi: Int) = container.audio.stopNote(midi)
@@ -173,7 +179,13 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
     // The panels reach the screen's edges; their content stays clear of the bars and the camera cutout. The space
     // stays the same while the bars hide, so the engraving is not reflowed (the page re-renders on every resize).
     val safe = WindowInsets.systemBarsIgnoringVisibility.union(WindowInsets.displayCutout)
-    val compactHeight = LocalConfiguration.current.screenHeightDp < 480
+    // Sideways the status bar stays hidden, so the title bar only keeps clear of the camera and the navigation bar
+    val topInsets = if (compactHeight) {
+        WindowInsets.displayCutout.union(WindowInsets.navigationBarsIgnoringVisibility)
+    } else {
+        safe
+    }.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
+    val buttonSize = if (compactHeight) CompactButtonSize else 36.dp
 
     Box(Modifier.fillMaxSize().background(PlayerTheme.background)) {
         Column(Modifier.fillMaxSize()) {
@@ -181,26 +193,39 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
                 title = score?.title.orEmpty(),
                 subtitle = subtitle,
                 onBack = close,
-                insets = safe.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                insets = topInsets,
+                compact = compactHeight,
             ) {
+                val openReadingDrill = {
+                    viewModel.pause()
+                    navController.navigate(ReadingDrillScoreRoute(scoreId))
+                }
+                val openPractice = {
+                    viewModel.pause()
+                    navController.navigate(PracticeRoute(scoreId))
+                }
+                PlayerIconButton(
+                    Icons.Rounded.MusicNote, stringResource(R.string.player_reading_drill), onClick = openReadingDrill,
+                    size = buttonSize,
+                )
+                PlayerIconButton(
+                    Icons.Rounded.School, stringResource(R.string.player_practice_mode), onClick = openPractice,
+                    size = buttonSize,
+                )
                 val favorite = score?.isFavorite == true
                 PlayerIconButton(
                     if (favorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                     stringResource(if (favorite) R.string.player_remove_favorite else R.string.player_add_favorite),
                     onClick = viewModel::toggleFavorite,
                     tint = if (favorite) PlayerTheme.favorite else PlayerTheme.text,
+                    size = buttonSize,
                 )
                 ScoreMenu(
                     display = display ?: PlayerDisplay(),
                     canEdit = score?.isSample == false,
-                    onPractice = {
-                        viewModel.pause()
-                        navController.navigate(PracticeRoute(scoreId))
-                    },
-                    onReadingDrill = {
-                        viewModel.pause()
-                        navController.navigate(ReadingDrillScoreRoute(scoreId))
-                    },
+                    buttonSize = buttonSize,
+                    onPractice = openPractice,
+                    onReadingDrill = openReadingDrill,
                     onMixer = { showMixer = true },
                     onSettings = { showSettings = true },
                     onZoom = { zoom -> viewModel.updateSettings { setZoom(zoom) } },
@@ -258,12 +283,13 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
                     loopMode = loopMode,
                     isMetronomeOn = metronomeOn,
                     cursorNotes = cursorNotes,
-                    showKeyboard = display?.showKeyboard ?: true,
+                    showKeyboard = display?.showsKeyboard(compactHeight) ?: !compactHeight,
                 ),
                 actions = dockActions,
                 metronomeClicks = viewModel.metronomeClicks,
                 insets = safe.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
                 keyboardHeight = if (compactHeight) 64.dp else 100.dp,
+                compact = compactHeight,
             )
         }
     }
@@ -275,17 +301,18 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
     val settings = display
     if (showSettings && settings != null) {
         ScoreSettingsSheet(
-            display = settings,
+            // The keyboard switch is the one of the current orientation
+            display = settings.copy(showKeyboard = settings.showsKeyboard(compactHeight)),
             transposition = transposition,
             transpositionKeyText = viewModel.transpositionKeyText,
-            actions = remember(viewModel) {
+            actions = remember(viewModel, compactHeight) {
                 object : ScoreSettingsActions {
                     override fun setMode(mode: ScoreDisplayMode) = viewModel.updateSettings { setMode(mode) }
                     override fun setRightClef(choice: ClefChoice) = viewModel.updateSettings { setRightClef(choice) }
                     override fun setLeftClef(choice: ClefChoice) = viewModel.updateSettings { setLeftClef(choice) }
                     override fun setAutomaticUsesAlto(on: Boolean) = viewModel.updateSettings { setAutomaticUsesAlto(on) }
                     override fun setConcertHall(on: Boolean) = viewModel.updateSettings { setConcertHall(on) }
-                    override fun setShowKeyboard(show: Boolean) = viewModel.updateSettings { setShowKeyboard(show) }
+                    override fun setShowKeyboard(show: Boolean) = viewModel.updateSettings { setShowKeyboard(show, compactHeight) }
                     override fun setTransposition(semitones: Int) = viewModel.setTransposition(semitones)
                 }
             },
@@ -295,16 +322,23 @@ fun ScoreScreen(scoreId: String, navController: NavHostController) {
 }
 
 /** Hides the status and navigation bars while the piece plays (a swipe from the edge shows them for a moment) and
- *  keeps the screen on; everything comes back on pause or when the screen leaves. */
+ *  keeps the screen on; everything comes back on pause or when the screen leaves. With [hidesStatusBar] (a phone
+ *  held sideways) the status bar stays hidden on pause too, so the score has its height. */
 @Composable
-private fun ImmersiveWhilePlaying(isPlaying: Boolean) {
+private fun ImmersiveWhilePlaying(isPlaying: Boolean, hidesStatusBar: Boolean) {
     val view = LocalView.current
-    DisposableEffect(isPlaying) {
+    DisposableEffect(isPlaying, hidesStatusBar) {
         val window = view.context.findActivity()?.window
         val controller = window?.let { WindowCompat.getInsetsController(it, view) }
         controller?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        if (isPlaying) controller?.hide(WindowInsetsCompat.Type.systemBars())
-        else controller?.show(WindowInsetsCompat.Type.systemBars())
+        when {
+            isPlaying -> controller?.hide(WindowInsetsCompat.Type.systemBars())
+            hidesStatusBar -> {
+                controller?.show(WindowInsetsCompat.Type.navigationBars())
+                controller?.hide(WindowInsetsCompat.Type.statusBars())
+            }
+            else -> controller?.show(WindowInsetsCompat.Type.systemBars())
+        }
         view.keepScreenOn = isPlaying
         onDispose {
             controller?.show(WindowInsetsCompat.Type.systemBars())
@@ -329,6 +363,7 @@ private fun ScoreMenu(
     display: PlayerDisplay,
     /** False for the bundled sample pieces, which are not editable. */
     canEdit: Boolean,
+    buttonSize: Dp,
     onPractice: () -> Unit,
     onReadingDrill: () -> Unit,
     onMixer: () -> Unit,
@@ -347,7 +382,7 @@ private fun ScoreMenu(
     }
 
     Box {
-        PlayerIconButton(Icons.Rounded.MoreHoriz, stringResource(R.string.player_options), onClick = { expanded = true })
+        PlayerIconButton(Icons.Rounded.MoreHoriz, stringResource(R.string.player_options), onClick = { expanded = true }, size = buttonSize)
         DropdownMenu(expanded = expanded, onDismissRequest = ::dismiss) {
             when (page) {
                 MenuPage.MAIN -> {
