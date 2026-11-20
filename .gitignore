@@ -28,3 +28,7 @@ Pods/
 *.dSYM
 
 .firebase/
+
+# Python
+__pycache__/
+*.pyc
