@@ -17,7 +17,7 @@ android {
         targetSdk = 36
         // Same version as the iOS app (project.yml: MARKETING_VERSION / CURRENT_PROJECT_VERSION)
         versionCode = 31
-        versionName = "1.2"
+        versionName = "1.3"
     }
 
     // Release signing reads android/keystore.properties (never committed). Without it, release builds are unsigned.
