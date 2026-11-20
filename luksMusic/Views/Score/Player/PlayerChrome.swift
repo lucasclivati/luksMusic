@@ -30,6 +30,8 @@ struct PlayerTopBar<Trailing: View>: View {
     let title: String
     let subtitle: String
     var onBack: () -> Void
+    /// Slimmer bar for a phone held sideways, where every point of height goes to the music
+    var compact: Bool = false
     @ViewBuilder var trailing: Trailing
 
     var body: some View {
@@ -61,7 +63,7 @@ struct PlayerTopBar<Trailing: View>: View {
             trailing
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, compact ? 4 : 8)
         .background(PlayerTheme.panel.ignoresSafeArea(edges: .top))
         .overlay(alignment: .bottom) {
             Rectangle()
@@ -91,6 +93,9 @@ struct PlayerDock: View {
     @Bindable var viewModel: ScoreViewModel
     @Binding var showKeyboard: Bool
     var keyboardRange: ClosedRange<Int> = 36...96
+    /// A phone held sideways: one row with the timeline and the transport, no notes row and a short keyboard, so
+    /// the engraving keeps most of the height
+    var compact: Bool = false
     var onMixer: () -> Void
 
     /// Timeline position while the finger is on the slider; the player seeks when it lets go.
@@ -102,16 +107,20 @@ struct PlayerDock: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            timeline
-            transport
-            notesUnderCursor
+            if compact {
+                compactControls
+            } else {
+                timeline
+                transport
+                notesUnderCursor
+            }
             if showKeyboard {
                 PlayerKeyboard(
                     trebleKeys: viewModel.activeTrebleMidi,
                     bassKeys: viewModel.activeBassMidi,
                     range: keyboardRange
                 )
-                .frame(height: 100)
+                .frame(height: compact ? 64 : 100)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -138,41 +147,60 @@ struct PlayerDock: View {
         min(measureCount - 1, Int(progress * Double(measureCount)))
     }
 
+    /// The slider's position, the measure and the time shown: where the finger is while scrubbing, else the player's.
+    private var shownProgress: Double {
+        scrubProgress ?? progress
+    }
+
+    private var shownMeasure: Int {
+        scrubProgress.map { measureIndex(at: $0) } ?? viewModel.currentMeasureIndex
+    }
+
+    private var shownSeconds: Double {
+        scrubProgress.map { $0 * viewModel.totalSeconds } ?? viewModel.elapsedSeconds
+    }
+
     private var timeline: some View {
-        let shown = scrubProgress ?? progress
-        let measure = scrubProgress.map { measureIndex(at: $0) } ?? viewModel.currentMeasureIndex
-        let seconds = scrubProgress.map { $0 * viewModel.totalSeconds } ?? viewModel.elapsedSeconds
-
-        return HStack(spacing: 10) {
-            Text("\(Self.clock(seconds)) / \(Self.clock(viewModel.totalSeconds))")
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                .foregroundStyle(PlayerTheme.cyan)
-                .fixedSize()
-
-            Slider(
-                value: Binding(get: { shown }, set: { scrubProgress = $0 }),
-                in: 0...1,
-                onEditingChanged: { editing in
-                    guard !editing, let target = scrubProgress else { return }
-                    viewModel.seek(toMeasure: measureIndex(at: target), beat: 1.0)
-                    scrubProgress = nil
-                }
-            )
-            .tint(PlayerTheme.cyan)
-            .accessibilityLabel("Posição na música")
-
-            Text("Compasso \(measure + 1)/\(measureCount)")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(PlayerTheme.text)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
-                .fixedSize()
-                .accessibilityIdentifier("measureBadge")
+        HStack(spacing: 10) {
+            clockLabel
+            scrubber
+            measureBadge
         }
         .padding(.horizontal, 12)
         .padding(.top, 8)
+    }
+
+    private var clockLabel: some View {
+        Text("\(Self.clock(shownSeconds)) / \(Self.clock(viewModel.totalSeconds))")
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .foregroundStyle(PlayerTheme.cyan)
+            .fixedSize()
+    }
+
+    private var scrubber: some View {
+        Slider(
+            value: Binding(get: { shownProgress }, set: { scrubProgress = $0 }),
+            in: 0...1,
+            onEditingChanged: { editing in
+                guard !editing, let target = scrubProgress else { return }
+                viewModel.seek(toMeasure: measureIndex(at: target), beat: 1.0)
+                scrubProgress = nil
+            }
+        )
+        .tint(PlayerTheme.cyan)
+        .accessibilityLabel("Posição na música")
+    }
+
+    private var measureBadge: some View {
+        Text("Compasso \(shownMeasure + 1)/\(measureCount)")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(PlayerTheme.text)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
+            .fixedSize()
+            .accessibilityIdentifier("measureBadge")
     }
 
     private static func clock(_ seconds: Double) -> String {
@@ -186,71 +214,117 @@ struct PlayerDock: View {
         HStack(spacing: 0) {
             repeatButton
             Spacer(minLength: 4)
-            controlButton("backward.end.fill",
-                          label: viewModel.loopMode == .measure
-                              ? String(localized: "Voltar ao início do compasso") : String(localized: "Voltar ao início"),
-                          identifier: "Voltar ao início") {
-                viewModel.restart()
-            }
+            restartButton
             Spacer(minLength: 4)
-            controlButton("backward.frame.fill", label: String(localized: "Nota anterior"), identifier: "previousNoteButton") {
-                viewModel.stepBackward()
-            }
+            previousNoteButton
             Spacer(minLength: 4)
-
-            Button {
-                viewModel.togglePlayback()
-            } label: {
-                Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 19, weight: .bold))
-                    .foregroundStyle(.white)
-                    .offset(x: viewModel.isPlaying ? 0 : 2)
-                    .frame(width: 48, height: 48)
-                    .background(
-                        Circle().fill(LinearGradient(colors: [PlayerTheme.blue, PlayerTheme.deepBlue], startPoint: .top, endPoint: .bottom))
-                    )
-                    .shadow(color: PlayerTheme.blue.opacity(0.6), radius: 10)
-            }
-            .accessibilityLabel(viewModel.isPlaying ? String(localized: "Pausar") : String(localized: "Tocar"))
-            .accessibilityIdentifier("playPauseButton")
-
+            playButton(diameter: 48)
             Spacer(minLength: 4)
-            controlButton("forward.frame.fill", label: String(localized: "Próxima nota"), identifier: "nextNoteButton") {
-                viewModel.stepForward()
-            }
+            nextNoteButton
             Spacer(minLength: 4)
-
-            Menu {
-                Picker("Velocidade", selection: $viewModel.playbackSpeed) {
-                    ForEach(Self.speeds, id: \.self) { speed in
-                        Text(Self.speedLabel(speed)).tag(speed)
-                    }
-                }
-            } label: {
-                Text(Self.speedLabel(viewModel.playbackSpeed))
-                    .font(.system(size: 13, weight: .bold))
-                    .minimumScaleFactor(0.8)
-                    .foregroundStyle(viewModel.playbackSpeed == 1.0 ? PlayerTheme.text : PlayerTheme.cyan)
-                    .frame(width: 38, height: 36)
-                    .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
-            }
-            .accessibilityLabel("Velocidade")
-
+            speedMenu
             Spacer(minLength: 4)
             metronomeButton
             Spacer(minLength: 4)
-            controlButton("slider.vertical.3", label: String(localized: "Mixer de mãos"), identifier: "Mixer de mãos", action: onMixer)
+            mixerButton
             Spacer(minLength: 4)
-            controlButton("pianokeys", label: String(localized: "Teclado"), isOn: showKeyboard, identifier: "keyboardToggleButton") {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                    showKeyboard.toggle()
-                }
-            }
+            keyboardButton
         }
         // Nine controls fit a 375-point-wide phone
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
+    }
+
+    /// Sideways: the transport around the timeline in a single row (the clock gives its room to the slider).
+    private var compactControls: some View {
+        HStack(spacing: 6) {
+            repeatButton
+            restartButton
+            previousNoteButton
+            playButton(diameter: 38)
+            nextNoteButton
+            scrubber
+                .frame(minWidth: 80)
+                .padding(.horizontal, 4)
+            measureBadge
+            speedMenu
+            metronomeButton
+            mixerButton
+            keyboardButton
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+    }
+
+    private var restartButton: some View {
+        controlButton("backward.end.fill",
+                      label: viewModel.loopMode == .measure
+                          ? String(localized: "Voltar ao início do compasso") : String(localized: "Voltar ao início"),
+                      identifier: "Voltar ao início") {
+            viewModel.restart()
+        }
+    }
+
+    private var previousNoteButton: some View {
+        controlButton("backward.frame.fill", label: String(localized: "Nota anterior"), identifier: "previousNoteButton") {
+            viewModel.stepBackward()
+        }
+    }
+
+    private var nextNoteButton: some View {
+        controlButton("forward.frame.fill", label: String(localized: "Próxima nota"), identifier: "nextNoteButton") {
+            viewModel.stepForward()
+        }
+    }
+
+    private func playButton(diameter: CGFloat) -> some View {
+        let large = diameter >= 48
+        return Button {
+            viewModel.togglePlayback()
+        } label: {
+            Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: large ? 19 : 16, weight: .bold))
+                .foregroundStyle(.white)
+                .offset(x: viewModel.isPlaying ? 0 : 2)
+                .frame(width: diameter, height: diameter)
+                .background(
+                    Circle().fill(LinearGradient(colors: [PlayerTheme.blue, PlayerTheme.deepBlue], startPoint: .top, endPoint: .bottom))
+                )
+                .shadow(color: PlayerTheme.blue.opacity(0.6), radius: large ? 10 : 6)
+        }
+        .accessibilityLabel(viewModel.isPlaying ? String(localized: "Pausar") : String(localized: "Tocar"))
+        .accessibilityIdentifier("playPauseButton")
+    }
+
+    private var speedMenu: some View {
+        Menu {
+            Picker("Velocidade", selection: $viewModel.playbackSpeed) {
+                ForEach(Self.speeds, id: \.self) { speed in
+                    Text(Self.speedLabel(speed)).tag(speed)
+                }
+            }
+        } label: {
+            Text(Self.speedLabel(viewModel.playbackSpeed))
+                .font(.system(size: 13, weight: .bold))
+                .minimumScaleFactor(0.8)
+                .foregroundStyle(viewModel.playbackSpeed == 1.0 ? PlayerTheme.text : PlayerTheme.cyan)
+                .frame(width: 38, height: 36)
+                .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
+        }
+        .accessibilityLabel("Velocidade")
+    }
+
+    private var mixerButton: some View {
+        controlButton("slider.vertical.3", label: String(localized: "Mixer de mãos"), identifier: "Mixer de mãos", action: onMixer)
+    }
+
+    private var keyboardButton: some View {
+        controlButton("pianokeys", label: String(localized: "Teclado"), isOn: showKeyboard, identifier: "keyboardToggleButton") {
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                showKeyboard.toggle()
+            }
+        }
     }
 
     /// Switches between no repeat, the measure under the cursor and the whole piece, like the web player's loop button.

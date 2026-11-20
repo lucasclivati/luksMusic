@@ -107,7 +107,8 @@ final class ScreenshotTests: XCTestCase {
                 pause(4)
             }
 
-            if tapIfExists(app.buttons["scoreMenuButton"]), tapIfExists(app.buttons["Modo Estudo"]) {
+            // Modo Estudo's own button in the title bar (its label is also in the "…" menu)
+            if tapIfExists(app.buttons["practiceModeButton"]) {
                 // Let the engraved strip render in the web view
                 pause(5)
                 capture("04-practice")

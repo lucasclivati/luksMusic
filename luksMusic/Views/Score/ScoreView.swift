@@ -7,16 +7,26 @@
 
 import SwiftUI
 
+/// The two study screens the player opens full screen; switching from one to the other only changes the item.
+enum StudyScreen: String, Identifiable {
+    case practice
+    case reading
+
+    var id: String { rawValue }
+}
+
 struct ScoreView: View {
     @State var viewModel: ScoreViewModel
-    @State private var showPracticeMode: Bool = false
-    @State private var showReadingTrainer: Bool = false
+    /// Modo Estudo or the reading drill, over the player
+    @State private var studyScreen: StudyScreen?
     @State private var showEditorMode: Bool = false
     @State private var showMixerSheet: Bool = false
     @State private var showSettingsSheet: Bool = false
     @State private var showExportShare: Bool = false
     @State private var exportURL: URL? = nil
     @Environment(\.dismiss) private var dismiss
+    /// A phone held sideways
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     // Engraved score source, rebuilt when the score is edited
     @State private var musicXML: String = ""
@@ -26,6 +36,8 @@ struct ScoreView: View {
     // Zoom of the engraving (below 0.95 fits two measures per line)
     @AppStorage("scorePlayer.zoom") private var zoomScale: Double = 1.0
     @AppStorage("scorePlayer.showKeyboard") private var showKeyboard: Bool = true
+    // Sideways the keyboard is a choice of its own, hidden at first so the music keeps the height
+    @AppStorage("scorePlayer.showKeyboardLandscape") private var showKeyboardLandscape: Bool = false
     // "Sala de concerto": reverb on the piano
     @AppStorage("scorePlayer.concertHall") private var hqSoundEnabled: Bool = true
 
@@ -50,6 +62,16 @@ struct ScoreView: View {
         _isFavorite = State(initialValue: score.isFavorite)
     }
 
+    /// Sideways on a phone: slim top bar and a single control row, so the engraving keeps most of the height.
+    private var isCompactHeight: Bool {
+        verticalSizeClass == .compact
+    }
+
+    /// The keyboard setting for the way the phone is held.
+    private var keyboardBinding: Binding<Bool> {
+        isCompactHeight ? $showKeyboardLandscape : $showKeyboard
+    }
+
     /// "Página" fits two measures per line; "Ampliada" shows one larger measure per line.
     private var renderZoom: Double {
         zoomScale * (displayMode == .verticalScroll ? 0.8 : 1.0)
@@ -69,23 +91,31 @@ struct ScoreView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            PlayerTopBar(title: viewModel.score.title, subtitle: subtitle, onBack: close) {
-                Button {
-                    viewModel.score.isFavorite.toggle()
-                    isFavorite = viewModel.score.isFavorite
-                } label: {
-                    PlayerMenuLabel(systemName: isFavorite ? "heart.fill" : "heart",
-                                    tint: isFavorite ? Color(red: 244 / 255, green: 63 / 255, blue: 94 / 255) : PlayerTheme.text)
-                }
-                .accessibilityLabel(isFavorite ? String(localized: "Remover dos favoritos") : String(localized: "Adicionar aos favoritos"))
+            PlayerTopBar(title: viewModel.score.title, subtitle: subtitle, onBack: close, compact: isCompactHeight) {
+                HStack(spacing: 8) {
+                    Button {
+                        viewModel.score.isFavorite.toggle()
+                        isFavorite = viewModel.score.isFavorite
+                    } label: {
+                        PlayerMenuLabel(systemName: isFavorite ? "heart.fill" : "heart",
+                                        tint: isFavorite ? Color(red: 244 / 255, green: 63 / 255, blue: 94 / 255) : PlayerTheme.text)
+                    }
+                    .accessibilityLabel(isFavorite ? String(localized: "Remover dos favoritos") : String(localized: "Adicionar aos favoritos"))
 
-                Button(action: openReadingTrainer) {
-                    PlayerMenuLabel(systemName: "music.quarternote.3")
-                }
-                .accessibilityLabel("Treino de leitura")
-                .accessibilityIdentifier("readingTrainerButton")
+                    Button(action: openPracticeMode) {
+                        PlayerMenuLabel(systemName: "graduationcap")
+                    }
+                    .accessibilityLabel("Modo Estudo")
+                    .accessibilityIdentifier("practiceModeButton")
 
-                menu
+                    Button(action: openReadingTrainer) {
+                        PlayerMenuLabel(systemName: "music.quarternote.3")
+                    }
+                    .accessibilityLabel("Treino de leitura")
+                    .accessibilityIdentifier("readingTrainerButton")
+
+                    menu
+                }
             }
 
             ScoreWebView(
@@ -102,12 +132,12 @@ struct ScoreView: View {
                 horizontal: displayMode == .singleLine,
                 isDark: true,
                 topInset: 0,
-                bottomInset: 16
+                bottomInset: isCompactHeight ? 8 : 16
             ) { measure, beat in
                 viewModel.seek(toMeasure: measure, beat: beat)
             }
 
-            PlayerDock(viewModel: viewModel, showKeyboard: $showKeyboard) {
+            PlayerDock(viewModel: viewModel, showKeyboard: keyboardBinding, compact: isCompactHeight) {
                 showMixerSheet = true
             }
         }
@@ -136,11 +166,15 @@ struct ScoreView: View {
         .onChange(of: viewModel.playbackSpeed) { _, speed in
             UserDefaults.standard.set(speed, forKey: Self.speedKey)
         }
-        .sheet(isPresented: $showPracticeMode) {
-            PracticeView(score: viewModel.score)
-        }
-        .fullScreenCover(isPresented: $showReadingTrainer) {
-            ReadingTrainerView(score: viewModel.score, storageKey: viewModel.score.id.uuidString)
+        // One cover for both study screens: each one's button for the other just changes the item
+        .fullScreenCover(item: $studyScreen) { screen in
+            switch screen {
+            case .practice:
+                PracticeView(score: viewModel.score, onSwitchToReading: { studyScreen = .reading })
+            case .reading:
+                ReadingTrainerView(score: viewModel.score, storageKey: viewModel.score.id.uuidString,
+                                   onSwitchToPractice: { studyScreen = .practice })
+            }
         }
         .sheet(isPresented: $showEditorMode) {
             EditorView(score: viewModel.score)
@@ -154,7 +188,7 @@ struct ScoreView: View {
                 viewModel: viewModel,
                 displayMode: $displayMode,
                 hqSoundEnabled: $hqSoundEnabled,
-                showKeyboard: $showKeyboard
+                showKeyboard: keyboardBinding
             )
             .presentationDetents([.fraction(0.7)])
             .presentationDragIndicator(.hidden)
@@ -171,10 +205,7 @@ struct ScoreView: View {
     private var menu: some View {
         Menu {
             Section {
-                Button {
-                    viewModel.pause()
-                    showPracticeMode = true
-                } label: {
+                Button(action: openPracticeMode) {
                     Label("Modo Estudo", systemImage: "graduationcap")
                 }
                 .accessibilityIdentifier("menuPracticeButton")
@@ -260,9 +291,14 @@ struct ScoreView: View {
         dismiss()
     }
 
+    private func openPracticeMode() {
+        viewModel.pause()
+        studyScreen = .practice
+    }
+
     private func openReadingTrainer() {
         viewModel.pause()
-        showReadingTrainer = true
+        studyScreen = .reading
     }
 
     private func exportScore() {

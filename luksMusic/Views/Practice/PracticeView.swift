@@ -9,20 +9,23 @@ import SwiftData
 
 struct PracticeView: View {
     let score: Score
+    /// Opens the reading drill in this screen's place (the player's cover switches screens); no button when nil
+    var onSwitchToReading: (() -> Void)?
 
     /// Built once, when the screen appears. The player re-creates this view every time it redraws, and building
     /// the practice session each time (it reads every note of the score) kept the app busy.
     @State private var viewModel: PracticeViewModel?
     @State private var keyboardVM: PianoKeyboardViewModel?
 
-    init(score: Score) {
+    init(score: Score, onSwitchToReading: (() -> Void)? = nil) {
         self.score = score
+        self.onSwitchToReading = onSwitchToReading
     }
 
     var body: some View {
         Group {
             if let viewModel, let keyboardVM {
-                PracticeScreen(viewModel: viewModel, keyboardVM: keyboardVM)
+                PracticeScreen(viewModel: viewModel, keyboardVM: keyboardVM, onSwitchToReading: onSwitchToReading)
             } else {
                 Color(.systemBackground).ignoresSafeArea()
             }
@@ -52,7 +55,10 @@ private struct PracticeScreen: View {
 
     @Bindable var viewModel: PracticeViewModel
     @Bindable var keyboardVM: PianoKeyboardViewModel
+    var onSwitchToReading: (() -> Void)? = nil
     @State private var showStats: Bool = false
+    /// Closing or switching to the reading drill: the session saved on the way out doesn't open its summary
+    @State private var isLeaving: Bool = false
 
     // Engraved score source for the staff strip, in each hand's clef from the score player's settings
     @State private var musicXML: String = ""
@@ -63,48 +69,63 @@ private struct PracticeScreen: View {
     var body: some View {
         NavigationStack {
             GeometryReader { geo in
+                // A phone held sideways: the summary joins the controls' row, the score strip and the keyboard
+                // get shorter, so the falling notes keep room
+                let compact = geo.size.height < 500
                 VStack(spacing: 0) {
-                    practiceHUD()
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color(.systemBackground))
-                    
-                    Divider()
-                    
+                    if !compact {
+                        practiceHUD()
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color(.systemBackground))
+
+                        Divider()
+                    }
+
                     // 1. Engraved score on one line, its cursor on the notes to play
                     sheetMusicTopSection
-                        .frame(height: 150)
+                        .frame(height: compact ? 96 : 150)
                         .background(Color.white)
-                    
+
                     Divider()
-                    
+
                     // 2. Falling Notes cascading down in matching beat colors
                     fallingNotesSection
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    
+
                     Divider()
-                    
+
                     // 3. Piano Keyboard illuminating in beat colors
-                    keyboardSection(height: geo.size.height * 0.33)
-                    
-                    practiceToolbar()
+                    keyboardSection(height: compact ? min(110, max(80, geo.size.height * 0.28)) : geo.size.height * 0.33)
+
+                    practiceToolbar(compact: compact)
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color(.secondarySystemBackground))
+                        .padding(.vertical, compact ? 4 : 8)
+                        .background(Color(.secondarySystemBackground).ignoresSafeArea(edges: .bottom))
                 }
             }
+            .background(Color(.systemBackground).ignoresSafeArea())
             .navigationTitle("Modo Estudo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Concluir") {
-                        viewModel.stopPractice(modelContext: modelContext)
-                        dismiss()
+                        leave { dismiss() }
                     }
                 }
-                
+
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 12) {
+                        if let onSwitchToReading {
+                            Button {
+                                leave(then: onSwitchToReading)
+                            } label: {
+                                Image(systemName: "music.quarternote.3")
+                            }
+                            .accessibilityLabel("Treino de leitura")
+                            .accessibilityIdentifier("practiceReadingButton")
+                        }
+
                         Button {
                             viewModel.toggleMicrophoneListening()
                         } label: {
@@ -123,7 +144,7 @@ private struct PracticeScreen: View {
                 musicXML = MusicXMLExporter.export(viewModel.score)
                 viewModel.startMetronomeIfOn()
             }
-            // Closing with "Concluir" or by swiping the sheet down
+            // Closing with "Concluir" or switching to the reading drill
             .onDisappear {
                 viewModel.stopMetronome()
             }
@@ -143,13 +164,21 @@ private struct PracticeScreen: View {
                 keyboardVM.incorrectKeys = incorrect
             }
             .onChange(of: viewModel.sessionCompleted) { _, completed in
-                if completed {
+                if completed && !isLeaving {
                     showStats = true
                 }
             }
         }
     }
-    
+
+    /// Stops the practice (and the microphone) and saves the session, as "Concluir" always did, before closing the
+    /// screen or switching to the reading drill.
+    private func leave(then action: () -> Void) {
+        isLeaving = true
+        viewModel.stopPractice(modelContext: modelContext)
+        action()
+    }
+
     // MARK: - Sections
     
     /// OpenSheetMusicDisplay line scaled to the strip; tapping a note moves practice there.
@@ -227,6 +256,16 @@ private struct PracticeScreen: View {
                 showStats = true
             } label: {
                 Label("Resumo do estudo", systemImage: "chart.bar")
+            }
+
+            if let onSwitchToReading {
+                Divider()
+
+                Button {
+                    leave(then: onSwitchToReading)
+                } label: {
+                    Label("Treino de leitura", systemImage: "music.quarternote.3")
+                }
             }
         } label: {
             Image(systemName: "slider.horizontal.3")
@@ -322,8 +361,8 @@ private struct PracticeScreen: View {
     // MARK: - Bottom Practice Controls
     
     @ViewBuilder
-    private func practiceToolbar() -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func practiceToolbar(compact: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: compact ? 3 : 6) {
             if viewModel.isMetronomeSilent {
                 Label("Com o microfone sem fone de ouvido, o metrônomo fica em silêncio e marca o pulso na tela",
                       systemImage: "headphones")
@@ -333,10 +372,57 @@ private struct PracticeScreen: View {
                     .minimumScaleFactor(0.8)
                     .accessibilityIdentifier("practiceMetronomeSilent")
             }
-            practiceControls()
+            if compact {
+                HStack(spacing: 14) {
+                    compactHUD()
+                    practiceControls()
+                }
+            } else {
+                practiceControls()
+            }
         }
     }
-    
+
+    /// Sideways: accuracy and streak in the controls' row, in place of the summary bar above the score.
+    @ViewBuilder
+    private func compactHUD() -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Precisão")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text(String(format: "%.0f%%", viewModel.accuracyPercentage))
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(viewModel.accuracyPercentage >= 80 ? .green : .orange)
+            }
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Sequência")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                HStack(spacing: 3) {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(.orange)
+                        .font(.caption)
+                    Text("\(viewModel.currentStreak)")
+                        .font(.subheadline.weight(.bold))
+                }
+            }
+
+            if viewModel.isMicrophoneEnabled {
+                Text("Microfone: \(viewModel.microphoneService.detectedNoteName)")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.green)
+                    .lineLimit(1)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.green.opacity(0.15), in: Capsule())
+            }
+        }
+        .fixedSize()
+    }
+
     @ViewBuilder
     private func practiceControls() -> some View {
         HStack(spacing: 12) {

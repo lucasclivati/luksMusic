@@ -11,21 +11,24 @@ struct ReadingTrainerView: View {
     let score: Score
     /// Identifies the score for the remembered position
     let storageKey: String
+    /// Opens Modo Estudo in this screen's place (the player's cover switches screens); no button when nil
+    var onSwitchToPractice: (() -> Void)?
 
     /// Built once, when the screen appears. The player re-creates this view every time it redraws, and building
     /// the drill each time (it reads the score and saves the position, which redraws the player) never let the app
     /// settle.
     @State private var viewModel: ReadingTrainerViewModel?
 
-    init(score: Score, storageKey: String) {
+    init(score: Score, storageKey: String, onSwitchToPractice: (() -> Void)? = nil) {
         self.score = score
         self.storageKey = storageKey
+        self.onSwitchToPractice = onSwitchToPractice
     }
 
     var body: some View {
         Group {
             if let viewModel {
-                ReadingTrainerScreen(viewModel: viewModel)
+                ReadingTrainerScreen(viewModel: viewModel, onSwitchToPractice: onSwitchToPractice)
             } else {
                 PlayerTheme.background.ignoresSafeArea()
             }
@@ -40,29 +43,59 @@ struct ReadingTrainerView: View {
 
 private struct ReadingTrainerScreen: View {
     @Bindable var viewModel: ReadingTrainerViewModel
+    var onSwitchToPractice: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @State private var midi = MIDIService.shared
 
     var body: some View {
         GeometryReader { geo in
+            // A phone held sideways: the staff beside the status and the controls, a shorter keyboard below
+            let compact = geo.size.height < 500
             VStack(spacing: 0) {
-                PlayerTopBar(title: String(localized: "Treino de leitura"), subtitle: viewModel.title, onBack: close) {
-                    settingsMenu
+                PlayerTopBar(title: String(localized: "Treino de leitura"), subtitle: viewModel.title, onBack: close,
+                             compact: compact) {
+                    HStack(spacing: 8) {
+                        if onSwitchToPractice != nil {
+                            practiceButton
+                        }
+                        settingsMenu
+                    }
                 }
 
-                setupBar
+                if compact {
+                    HStack(alignment: .top, spacing: 0) {
+                        staffCard
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.vertical, 6)
 
-                staffCard
+                        VStack(spacing: 0) {
+                            setupBar
+                            statusLine
+                            feedbackLine
+                            controls
+                            statsLine
+                            Spacer(minLength: 0)
+                        }
+                        .frame(width: min(400, geo.size.width * 0.46))
+                    }
                     .frame(maxHeight: .infinity)
+                } else {
+                    setupBar
 
-                statusLine
-                feedbackLine
-                controls
-                statsLine
+                    staffCard
+                        .frame(maxHeight: .infinity)
+
+                    statusLine
+                    feedbackLine
+                    controls
+                    statsLine
+                }
 
                 if viewModel.showsKeyboard {
                     keyboard
-                        .frame(height: min(230, max(130, geo.size.height * 0.27)))
+                        .frame(height: compact
+                               ? min(120, max(90, geo.size.height * 0.3))
+                               : min(230, max(130, geo.size.height * 0.27)))
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
@@ -76,6 +109,33 @@ private struct ReadingTrainerScreen: View {
     private func close() {
         viewModel.stop()
         dismiss()
+    }
+
+    /// Stops what the drill is playing, as closing does, and opens Modo Estudo in its place.
+    private func switchToPractice() {
+        viewModel.stop()
+        onSwitchToPractice?()
+    }
+
+    /// Modo Estudo, with its name, next to the settings: the other way of studying the same piece.
+    private var practiceButton: some View {
+        Button(action: switchToPractice) {
+            HStack(spacing: 5) {
+                Image(systemName: "graduationcap")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Modo Estudo")
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(PlayerTheme.text)
+            .padding(.horizontal, 10)
+            .frame(height: 36)
+            .background(PlayerTheme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(PlayerTheme.border, lineWidth: 1))
+            .fixedSize()
+        }
+        .accessibilityLabel("Modo Estudo")
+        .accessibilityIdentifier("readingPracticeButton")
     }
 
     // MARK: - Current Setup
@@ -382,6 +442,14 @@ private struct ReadingTrainerScreen: View {
 
     private var settingsMenu: some View {
         Menu {
+            if onSwitchToPractice != nil {
+                Button(action: switchToPractice) {
+                    Label("Modo Estudo", systemImage: "graduationcap")
+                }
+
+                Divider()
+            }
+
             Picker(selection: Binding(get: { viewModel.hand }, set: { viewModel.setHand($0) })) {
                 ForEach(ReadingHand.allCases) { hand in
                     Text(hand.displayName).tag(hand)
