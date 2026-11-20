@@ -1,0 +1,4 @@
+# Shell scripts keep Unix line endings on every machine (gradlew runs in Linux containers and on macOS)
+*.sh text eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf

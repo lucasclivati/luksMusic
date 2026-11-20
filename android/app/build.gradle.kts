@@ -16,7 +16,7 @@ android {
         minSdk = 26
         targetSdk = 36
         // Same version as the iOS app (project.yml: MARKETING_VERSION / CURRENT_PROJECT_VERSION)
-        versionCode = 30
+        versionCode = 31
         versionName = "1.2"
     }
 
