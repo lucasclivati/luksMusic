@@ -214,13 +214,16 @@ struct ScoreView: View {
             }
 
             Section {
-                Button {
-                    viewModel.pause()
-                    showEditorMode = true
-                } label: {
-                    Label("Editar partitura", systemImage: "square.and.pencil")
+                // The bundled sample pieces are not editable
+                if !viewModel.score.isSample {
+                    Button {
+                        viewModel.pause()
+                        showEditorMode = true
+                    } label: {
+                        Label("Editar partitura", systemImage: "square.and.pencil")
+                    }
+                    .accessibilityIdentifier("menuEditButton")
                 }
-                .accessibilityIdentifier("menuEditButton")
 
                 Button {
                     exportScore()

@@ -59,7 +59,8 @@ final class CloudSyncService {
         do {
             let idToken = try await authService.freshIdToken()
             var count = 0
-            for score in scores {
+            // The bundled sample pieces come with every install: nothing to keep in the cloud
+            for score in scores where !score.isSample {
                 let measuresDataStr = score.measuresData != nil ? (String(data: score.measuresData!, encoding: .utf8) ?? "[]") : "[]"
                 let payload = RemoteScorePayload(
                     id: score.id.uuidString,

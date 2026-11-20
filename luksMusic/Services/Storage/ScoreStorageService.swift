@@ -46,6 +46,7 @@ final class ScoreStorageService {
     func preloadSampleScoresIfNeeded(modelContext: ModelContext) {
         removeLegacyDarkDream(modelContext: modelContext)
         replaceSampleSketches(modelContext: modelContext)
+        markBundledSamples(modelContext: modelContext)
 
         let descriptor = FetchDescriptor<Score>()
         let existingScores = (try? modelContext.fetch(descriptor)) ?? []
@@ -70,7 +71,24 @@ final class ScoreStorageService {
         score.difficulty = piece.difficulty
         score.isFavorite = piece.isFavorite
         score.source = .manual
+        score.sampleId = piece.file
         return score
+    }
+
+    /// Libraries seeded before `sampleId` existed: their sample pieces are marked once, so they stop syncing and
+    /// editing. Only an untouched copy is a sample (it still has its file); one whose notes were edited stays the user's.
+    private func markBundledSamples(modelContext: ModelContext) {
+        let key = "luksMusic_markedBundledSamples"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        let scores = (try? modelContext.fetch(FetchDescriptor<Score>())) ?? []
+        for piece in Self.samplePieces {
+            for score in scores where score.sampleId == nil && score.catalogId == nil
+                && score.title == piece.title && score.musicXMLData != nil {
+                score.sampleId = piece.file
+            }
+        }
+        try? modelContext.save()
+        UserDefaults.standard.set(true, forKey: key)
     }
 
     /// App builds up to 20 seeded hand-made sketches of these pieces, one to four measures long. The full editions

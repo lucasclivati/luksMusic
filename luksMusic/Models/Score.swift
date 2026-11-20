@@ -115,6 +115,13 @@ final class Score {
     /// twice. `nil` for the scores made or imported on the phone.
     var catalogId: String?
 
+    /// The bundled sample piece this score was seeded from (its `SampleScores/<file>.musicxml` name). Every install
+    /// has the samples, so they are never synced to the cloud, and they are not editable. `nil` for every other score.
+    var sampleId: String?
+
+    /// A piece bundled with the app (see `sampleId`).
+    var isSample: Bool { sampleId != nil }
+
     init(
         title: String = "Untitled Piano Piece",
         composer: String = "Anonymous",
